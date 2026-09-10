@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1b5e20">
+<title>TurfTrack — Greenkeeper's Companion</title>
+<style>
+  :root{
+    --green:#1b5e20;
+    --green2:#2e7d32;
+    --lime:#7cb342;
+    --bg:#f2f6f2;
+    --card:#ffffff;
+    --text:#1b2a1d;
+    --muted:#6c7d70;
+    --line:#dde7de;
+    --amber:#ef6c00;
+    --red:#c62828;
+    --blue:#1565c0;
+    --radius:14px;
+    --shadow:0 1px 3px rgba(0,0,0,.08), 0 6px 20px rgba(0,0,0,.05);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--text);
+    padding-bottom:78px;
+    font-size:15px; line-height:1.45;
+  }
+  /* ---------- Header ---------- */
+  header{
+    background:linear-gradient(135deg,var(--green) 0%,var(--green2) 100%);
+    color:#fff; padding:14px 16px 16px;
+    position:sticky; top:0; z-index:50;
+    box-shadow:0 2px 12px rgba(0,0,0,.15);
+  }
+  .head-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:17px;letter-spacing:.2px}
+  .brand .logo{
+    width:28px;height:28px;border-radius:9px;background:rgba(255,255,255,.18);
+    display:grid;place-items:center;font-size:15px
+  }
+  .head-sub{font-size:12px;opacity:.8;margin-top:2px;padding-left:37px}
+  .icon-btn{
+    background:rgba(255,255,255,.15);border:0;color:#fff;border-radius:9px;
+    padding:7px 11px;font-size:13px;cursor:pointer;font-weight:600
+  }
+  .icon-btn:active{background:rgba(255,255,255,.3)}
+
+  /* ---------- Layout ---------- */
+  main{padding:14px;max-width:820px;margin:0 auto}
+  .hidden{display:none !important}
+
+  /* ---------- Cards ---------- */
+  .card{
+    background:var(--card);border-radius:var(--radius);padding:14px;
+    box-shadow:var(--shadow);margin-bottom:12px;border:1px solid var(--line)
+  }
+  .card h3{margin:0 0 10px;font-size:14px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+  .sec-head{display:flex;align-items:center;justify-content:space-between;margin:4px 0 10px}
+  .sec-head h2{margin:0;font-size:19px}
+  .add-btn{
+    background:var(--green);color:#fff;border:0;border-radius:10px;
+    width:36px;height:36px;font-size:20px;line-height:1;cursor:pointer;
+    display:grid;place-items:center;box-shadow:0 2px 8px rgba(27,94,32,.3)
+  }
+  .add-btn:active{transform:scale(.94)}
+
+  /* ---------- Stats ---------- */
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:12px}
+  .stat{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:12px 8px;text-align:center;box-shadow:var(--shadow)
+  }
+  .stat b{display:block;font-size:24px;color:var(--green);line-height:1.1}
+  .stat span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+
+  /* ---------- Job / Report items ---------- */
+  .item{
+    display:flex;gap:11px;align-items:flex-start;
+    padding:11px 0;border-bottom:1px solid var(--line)
+  }
+  .item:last-child{border-bottom:0;padding-bottom:0}
+  .tick{
+    flex:0 0 22px;height:22px;border-radius:7px;border:2px solid #c3d3c5;
+    background:#fff;cursor:pointer;display:grid;place-items:center;
+    font-size:13px;color:#fff;margin-top:1px;transition:.15s
+  }
+  .tick.on{background:var(--green);border-color:var(--green)}
+  .item-body{flex:1;min-width:0}
+  .item-title{font-weight:600;font-size:14.5px;word-wrap:break-word}
+  .item-title.done{text-decoration:line-through;color:var(--muted);font-weight:500}
+  .item-meta{font-size:12px;color:var(--muted);margin-top:3px;display:flex;flex-wrap:wrap;gap:6px}
+  .item-note{font-size:13px;color:#40513f;margin-top:5px;white-space:pre-wrap;word-wrap:break-word}
+  .del{
+    background:none;border:0;color:#b9c7bb;font-size:17px;cursor:pointer;
+    padding:0 4px;line-height:1;flex:0 0 auto
+  }
+  .del:active{color:var(--red)}
+
+  /* ---------- Pills ---------- */
+  .pill{
+    display:inline-block;padding:2px 8px;border-radius:20px;
+    font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px
+  }
+  .p-high{background:#fdecea;color:var(--red)}
+  .p-med{background:#fff3e0;color:var(--amber)}
+  .p-low{background:#e8f5e9;color:var(--green2)}
+  .p-area{background:#eef3ee;color:#4a5c4c}
+  .p-type{background:#e3f2fd;color:var(--blue)}
+  .p-overdue{background:#fdecea;color:var(--red)}
+
+  /* ---------- Empty ---------- */
+  .empty{text-align:center;color:var(--muted);padding:22px 10px;font-size:13.5px}
+  .empty .big{font-size:28px;display:block;margin-bottom:6px;opacity:.5}
+
+  /* ---------- Calendar ---------- */
+  .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .cal-head h2{margin:0;font-size:17px;text-transform:capitalize}
+  .cal-nav{display:flex;gap:6px}
+  .cal-nav button{
+    background:#eef3ee;border:0;border-radius:9px;width:34px;height:34px;
+    font-size:16px;cursor:pointer;color:var(--green);font-weight:700
+  }
+  .cal-nav button:active{background:#dbe7dc}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+  .cal-dow{
+    text-align:center;font-size:10.5px;font-weight:700;color:var(--muted);
+    text-transform:uppercase;padding:4px 0;letter-spacing:.4px
+  }
+  .cal-day{
+    aspect-ratio:1/1;border-radius:9px;background:#f7faf7;border:1px solid transparent;
+    display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+    padding:4px 2px;cursor:pointer;position:relative;font-size:12.5px;overflow:hidden
+  }
+  .cal-day.blank{background:transparent;cursor:default}
+  .cal-day .num{font-weight:600;font-size:12px;color:#465a48}
+  .cal-day.today{background:#e8f5e9;border-color:var(--lime)}
+  .cal-day.today .num{color:var(--green);font-weight:800}
+  .cal-day.sel{border-color:var(--green);background:#dcedd f;background:#dcedd8}
+  .dots{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;margin-top:3px}
+  .dot{width:5px;height:5px;border-radius:50%}
+  .d-agronomy{background:var(--green2)}
+  .d-club{background:#8e24aa}
+  .d-staff{background:var(--blue)}
+  .d-equipment{background:var(--amber)}
+  .d-chemical{background:#00838f}
+  .legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;font-size:11px;color:var(--muted)}
+  .legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
+
+  /* ---------- Forms / overlay ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(15,30,18,.55);z-index:200;
+    display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(2px)
+  }
+  .sheet{
+    background:#fff;width:100%;max-width:560px;border-radius:20px 20px 0 0;
+    max-height:92vh;overflow-y:auto;animation:up .22s ease
+  }
+  @keyframes up{from{transform:translateY(30px);opacity:.4}to{transform:none;opacity:1}}
+  .sheet-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 16px 10px;position:sticky;top:0;background:#fff;
+    border-bottom:1px solid var(--line);z-index:2
+  }
+  .sheet-head h3{margin:0;font-size:17px}
+  .sheet-head button{background:none;border:0;font-size:20px;color:var(--muted);cursor:pointer}
+  .sheet-body{padding:16px}
+  label{display:block;font-size:12px;font-weight:700;color:var(--muted);
+    text-transform:uppercase;letter-spacing:.5px;margin:0 0 5px}
+  .field{margin-bottom:13px}
+  input,select,textarea{
+    width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:11px;
+    font-size:15px;font-family:inherit;background:#fbfdfb;color:var(--text)
+  }
+  input:focus,select:focus,textarea:focus{
+    outline:none;border-color:var(--green2);background:#fff;
+    box-shadow:0 0 0 3px rgba(46,125,50,.1)
+  }
+  textarea{resize:vertical;min-height:76px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .submit{
+    width:100%;background:var(--green);color:#fff;border:0;padding:14px;
+    border-radius:12px;font-size:15.5px;font-weight:700;cursor:pointer;margin-top:6px
+  }
+  .submit:active{background:var(--green2)}
+
+  /* ---------- Calculators ---------- */
+  details.calc{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
+  details.calc summary{
+    padding:12px 14px;font-weight:600;cursor:pointer;background:#f7faf7;
+    font-size:14px;list-style:none
+  }
+  details.calc summary::-webkit-details-marker{display:none}
+  details.calc summary::before{content:"▸ ";color:var(--green2)}
+  details.calc[open] summary::before{content:"▾ "}
+  .calc-body{padding:14px;border-top:1px solid var(--line)}
+  .result{
+    background:#e8f5e9;border-radius:11px;padding:12px;margin-top:12px;
+    font-size:14px;line-height:1.7;border-left:4px solid var(--green2)
+  }
+  .result b{color:var(--green)}
+
+  /* ---------- Bottom nav ---------- */
+  nav{
+    position:fixed;bottom:0;left:0;right:0;background:#fff;z-index:100;
+    display:grid;grid-template-columns:repeat(5,1fr);
+    border-top:1px solid var(--line);
+    padding-bottom:env(safe-area-inset-bottom);
+    box-shadow:0 -2px 14px rgba(0,0,0,.06)
+  }
+  nav button{
+    background:none;border:0;padding:9px 2px 10px;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    color:#96a698;font-size:10.5px;font-weight:600;font-family:inherit
+  }
+  nav button .ni{font-size:19px;line-height:1}
+  nav button.active{color:var(--green)}
+  nav button.active .ni{transform:translateY(-1px)}
+
+  .toast{
+    position:fixed;bottom:92px;left:50%;transform:translateX(-50%);
+    background:#263a29;color:#fff;padding:10px 18px;border-radius:22px;
+    font-size:13.5px;z-index:300;opacity:0;pointer-events:none;transition:.25s;
+    white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
+  .hint{font-size:11.5px;color:var(--muted);margin-top:-6px;margin-bottom:12px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="head-row">
+    <div>
+      <div class="brand"><span class="logo">⛳</span> TurfTrack</div>
+      <div class="head-sub" id="headSub">Greenkeeper's Companion</div>
+    </div>
+    <button class="icon-btn" data-action="menu">⚙︎ Data</button>
+  </div>
+</header>
+
+<main id="view"></main>
+
+<nav>
+  <button data-action="nav" data-tab="dash"    class="active"><span class="ni">🏠</span>Home</button>
+  <button data-action="nav" data-tab="jobs"><span class="ni">✅</span>Jobs</button>
+  <button data-action="nav" data-tab="reports"><span class="ni">📋</span>Reports</button>
+  <button data-action="nav" data-tab="calendar"><span class="ni">📅</span>Calendar</button>
+  <button data-action="nav" data-tab="learn"><span class="ni">🎓</span>Learn</button>
+</nav>
+
+<div class="overlay hidden" id="overlay">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h3 id="sheetTitle">Add</h3>
+      <button type="button" id="sheetClose">✕</button>
+    </div>
+    <form class="sheet-body" id="sheetForm"></form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   TurfTrack — single-file greenkeeping app
+   Data persists in localStorage. Export/Import via ⚙︎ Data.
+   ========================================================= */
+
+const STORE_KEY = 'turftrack_v1';
+
+const AREAS = ['Greens','Tees','Fairways','Rough','Bunkers','Practice Area',
+               'Clubhouse Grounds','Irrigation','Equipment','Whole Course'];
+
+const JOB_TYPES = ['Mowing','Aeration','Topdressing','Fertiliser','Spraying',
+                   'Irrigation','Bunker Work','Landscaping','Project','Other'];
+
+const REPORT_TYPES = ['Daily Course Report','Chemical / Fertiliser Log',
+                      'Equipment Fault','Irrigation Issue','Disease / Pest Scout',
+                      'Incident / Near Miss','Tournament Prep','Weekly Summary'];
+
+const EVENT_TYPES = ['agronomy','club','staff','equipment','chemical'];
+
+const EVENT_LABEL = {
+  agronomy:'Agronomy', club:'Club Event', staff:'Staff',
+  equipment:'Equipment', chemical:'Chemical'
+};
+
+/* ---------- State ---------- */
+let state = {
+  jobs: [], reports: [], events: [], learn: [],
+  weather: '', courseStatus: 'Open',
+  seq: 1
+};
+
+let activeTab = 'dash';
+let calCursor = new Date();
+let selectedDay = null;
+
+/* ---------- Helpers ---------- */
+const $  = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+
+function uid(prefix){
+  state.seq = (state.seq || 1) + 1;
+  return prefix + '_' + Date.now().toString(36) + '_' + state.seq;
+}
+
+function iso(d){
+  const x = d instanceof Date ? d : new Date(d);
+  return x.getFullYear() + '-' +
+    String(x.getMonth()+1).padStart(2,'0') + '-' +
+    String(x.getDate()).padStart(2,'0');
+}
+const todayISO = () => iso(new Date());
+
+function prettyDate(s){
+  if(!s) return '';
+  const [y,m,d] = s.split('-').map(Number);
+  const dt = new Date(y, m-1, d);
+  const t  = todayISO();
+  if(s === t) return 'Today';
+  const tm = new Date(); tm.setDate(tm.getDate()+1);
+  if(s === iso(tm)) return 'Tomorrow';
+  const yd = new Date(); yd.setDate(yd.getDate()-1);
+  if(s === iso(yd)) return 'Yesterday';
+  return dt.toLocaleDateString(undefined,{weekday:'short', day:'numeric', month:'short'});
+}
+
+function esc(str){
+  return String(str == null ? '' : str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function save(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+  catch(e){ console.warn('Save failed', e); }
+}
+
+function load(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw){ state = Object.assign(state, JSON.parse(raw)); return true; }
+  }catch(e){ console.warn('Load failed', e); }
+  return false;
+}
+
+function toast(msg){
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+/* =========================================================
+   SEED DATA — first run
+   ========================================================= */
+function seedEvents(){
+  const y = new Date().getFullYear();
+  // [MM-DD, title, type]
+  const tpl = [
+    ['01-06','Equipment service programme begins','equipment'],
+    ['01-20','Irrigation system repairs','agronomy'],
+    ['02-03','Winter tree work / clearing','agronomy'],
+    ['02-17','Budget & programme planning','staff'],
+    ['03-03','Pre-emergent herbicide application','chemical'],
+    ['03-17','Irrigation start-up & checks','agronomy'],
+    ['03-24','Mower setup & reel grinding','equipment'],
+    ['04-07','Spring aeration (greens)','agronomy'],
+    ['04-14','Topdressing & overseeding','agronomy'],
+    ['04-28','First full fertiliser round','chemical'],
+    ['05-12','Growth regulator programme starts','chemical'],
+    ['05-26','Bunker renovation & edging','agronomy'],
+    ['06-09','Disease scouting programme','agronomy'],
+    ['06-23','Summer aeration (greens)','agronomy'],
+    ['07-07','Club Championships prep','club'],
+    ['07-14','Club Championships','club'],
+    ['07-28','Moisture management / syringing','agronomy'],
+    ['08-11','Summer topdressing','agronomy'],
+    ['08-25','Member-Guest Day','club'],
+    ['09-08','Autumn aeration (greens)','agronomy'],
+    ['09-22','Overseeding fairways','agronomy'],
+    ['10-06','Autumn fertiliser application','chemical'],
+    ['10-20','Leaf cleanup programme','agronomy'],
+    ['11-03','Winterisation of irrigation','equipment'],
+    ['11-17','Drainage works','agronomy'],
+    ['12-01','End of season equipment service','equipment'],
+    ['12-15','Staff training & review','staff']
+  ];
+  return tpl.map(([md, title, type], i) => ({
+    id: 'ev' + (i+1),
+    date: y + '-' + md,
+    title, type,
+    notes: '',
+    done: false
+  }));
+}
+
+function seedJobs(){
+  const t = todayISO();
+  return [
+    { id:uid('j'), title:'Mow greens — front nine', area:'Greens', type:'Mowing',
+      priority:'High', due:t, assignee:'', notes:'Cut at 3.2mm. Check dew removal first.',
+      status:'todo', created:t },
+    { id:uid('j'), title:'Rake bunkers — holes 1–9', area:'Bunkers', type:'Bunker Work',
+      priority:'Medium', due:t, assignee:'', notes:'', status:'todo', created:t },
+    { id:uid('j'), title:'Hand water 4th & 7th green', area:'Greens', type:'Irrigation',
+      priority:'High', due:t, assignee:'', notes:'Moisture meter reading was low yesterday.',
+      status:'todo', created:t },
+    { id:uid('j'), title:'Check mower reel heights', area:'Equipment', type:'Other',
+      priority:'Low', due:t, assignee:'', notes:'', status:'todo', created:t }
+  ];
+}
+
+/* =========================================================
+   RENDER ROUTER
+   ========================================================= */
+function render(){
+  const v = $('#view');
+  if(activeTab === 'dash')      v.innerHTML = viewDash();
+  if(activeTab === 'jobs')      v.innerHTML = viewJobs();
+  if(activeTab === 'reports')   v.innerHTML = viewReports();
+  if(activeTab === 'calendar')  v.innerHTML = viewCalendar();
+  if(activeTab === 'learn')     v.innerHTML = viewLearn();
+
+  $$('nav button').forEach(b =>
+    b.classList.toggle('active', b.dataset.tab === activeTab));
+
+  $('#headSub').textContent =
+    new Date().toLocaleDateString(undefined,{weekday:'long', day:'numeric', month:'long'});
+
+  window.scrollTo({top:0, behavior:'instant' in window ? 'instant' : 'auto'});
+}
+
+/* =========================================================
+   VIEW: DASHBOARD
+   ========================================================= */
+function viewDash(){
+  const t = todayISO();
+  const todays = state.jobs.filter(j => j.due === t);
+  const open   = state.jobs.filter(j => j.status !== 'done').length;
+  const overdue= state.jobs.filter(j => j.status !== 'done' && j.due && j.due < t).length;
+
+  const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7);
+  const repWeek = state.reports.filter(r => r.date >= iso(weekAgo)).length;
+
+  const upcoming = state.events
+    .filter(e => e.date >= t)
+    .sort((a,b) => a.date.localeCompare(b.date))
+    .slice(0,6);
+
+  let html = `
+    <div class="stats">
+      <div class="stat"><b>${todays.filter(j=>j.status!=='done').length}</b><span>Today</span></div>
+      <div class="stat"><b>${open}</b><span>Open</span></div>
+      <div class="stat"><b>${repWeek}</b><span>Reports 7d</span></div>
+    </div>`;
+
+  if(overdue > 0){
+    html += `<div class="card" style="border-left:4px solid var(--red)">
+      <h3 style="color:var(--red)">⚠ ${overdue} overdue job${overdue>1?'s':''}</h3>
+      <div style="font-size:13.5px;color:#5a6b5c">Check the Jobs tab and reschedule.</div>
+    </div>`;
+  }
+
+  html += `
+    <div class="card">
+      <h3>Course Conditions</h3>
+      <div class="row2">
+        <div class="field" style="margin:0">
+          <label>Status</label>
+          <select id="dashStatus">
+            ${['Open','Closed','Temp Greens','Buggy Ban','Frost Delay','Preferred Lies']
+              .map(s => `<option ${state.courseStatus===s?'selected':''}>${s}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field" style="margin:0">
+          <label>Weather / notes</label>
+          <input id="dashWeather" placeholder="e.g. 14°C, light NW" value="${esc(state.weather)}">
+        </div>
+      </div>
+      <button class="submit" style="margin-top:12px;padding:10px;font-size:14px"
+        data-action="save-conditions">Save Conditions</button>
+    </div>
+
+    <div class="sec-head">
+      <h2>Today's Jobs</h2>
+      <button class="add-btn" data-action="add-job">+</button>
+    </div>
+    <div class="card">
+      ${todays.length ? todays.map(jobItem).join('')
+        : `<div class="empty"><span class="big">🌱</span>No jobs scheduled for today.</div>`}
+    </div>
+
+    <div class="sec-head"><h2>Upcoming</h2></div>
+    <div class="card">
+      ${upcoming.length ? upcoming.map(evItem).join('')
+        : `<div class="empty"><span class="big">📅</span>Nothing scheduled ahead.</div>`}
+    </div>`;
+
+  return html;
+}
+
+/* =========================================================
+   VIEW: JOBS
+   ========================================================= */
+function viewJobs(){
+  const t = todayISO();
+  const groups = [
+    { key:'todo',  label:'To Do' },
+    { key:'doing', label:'In Progress' },
+    { key:'done',  label:'Completed' }
+  ];
+
+  let html = `
+    <div class="sec-head">
+      <h2>Jobs</h2>
+      <button class="add-btn" data-action="add-job">+</button>
+    </div>`;
+
+  groups.forEach(g => {
+    let list = state.jobs.filter(j => j.status === g.key);
+    if(g.key !== 'done'){
+      list.sort((a,b) => (a.due||'9999').localeCompare(b.due||'9999'));
+    } else {
+      list = list.slice(-12).reverse();
+    }
+
+    html += `<div class="card">
+      <h3>${g.label} <span style="color:#b9c7bb">· ${list.length}</span></h3>
+      ${list.length ? list.map(jobItem).join('')
+        : `<div class="empty" style="padding:12px">Nothing here.</div>`}
+    </div>`;
+  });
+
+  return html;
+}
+
+function jobItem(j){
+  const t = todayISO();
+  const overdue = j.status !== 'done' && j.due && j.due < t;
+  const done = j.status === 'done';
+  return `
+    <div class="item">
+      <div class="tick ${done?'on':''}" data-action="toggle-job" data-id="${j.id}">
+        ${done?'✓':''}
+      </div>
+      <div class="item-body">
+        <div class="item-title ${done?'done':''}">${esc(j.title)}</div>
+        <div class="item-meta">
+          ${j.area ? `<span class="pill p-area">${esc(j.area)}</span>` : ''}
+          ${j.type ? `<span class="pill p-type">${esc(j.type)}</span>` : ''}
+          ${j.priority ? `<span class="pill p-${j.priority.toLowerCase()}">${esc(j.priority)}</span>` : ''}
+          ${overdue ? `<span class="pill p-overdue">Overdue</span>` : ''}
+          ${j.due ? `<span>${prettyDate(j.due)}</span>` : ''}
+          ${j.assignee ? `<span>· ${esc(j.assignee)}</span>` : ''}
+        </div>
+        ${j.notes ? `<div class="item-note">${esc(j.notes)}</div>` : ''}
+      </div>
+      <button class="del" data-action="del-job" data-id="${j.id}" title="Delete">✕</button>
+    </div>`;
+}
+
+/* =========================================================
+   VIEW: REPORTS
+   ========================================================= */
+function viewReports(){
+  const sorted = [...state.reports].sort((a,b) =>
+    (b.date||'').localeCompare(a.date||'') || (b.created||'').localeCompare(a.created||''));
+
+  return `
+    <div class="sec-head">
+      <h2>Reports &amp; Logs</h2>
+      <button class="add-btn" data-action="add-report">+</button>
+    </div>
+    <div class="card">
+      ${sorted.length ? sorted.map(repItem).join('')
+        : `<div class="empty"><span class="big">📋</span>
+             No reports yet. Tap <b>+</b> to log a daily report,
+             chemical application or equipment fault.</div>`}
+    </div>`;
+}
+
+function repItem(r){
+  const rows = [];
+  if(r.area)     rows.push(`<span class="pill p-area">${esc(r.area)}</span>`);
+  if(r.weather)  rows.push(esc(r.weather));
+  if(r.temp)     rows.push(esc(r.temp) + '°C');
+  if(r.staff)    rows.push('👤 ' + esc(r.staff));
+
+  const detail = [];
+  if(r.products) detail.push('Product: ' + esc(r.products));
+  if(r.rate)     detail.push('Rate: ' + esc(r.rate));
+
+  return `
+    <div class="item">
+      <div class="item-body">
+        <div class="item-title">${esc(r.type)}</div>
+        <div class="item-meta">
+          <span>${prettyDate(r.date)}</span>
+          ${rows.join('')}
+        </div>
+        ${detail.length ? `<div class="item-note">${detail.join('\n')}</div>` : ''}
+        ${r.notes ? `<div class="item-note">${esc(r.notes)}</div>` : ''}
+      </div>
+      <button class="del" data-action="del-report" data-id="${r.id}" title="Delete">✕</button>
+    </div>`;
+}
+
+/* =========================================================
+   VIEW: CALENDAR
+   ========================================================= */
+function viewCalendar(){
+  const y = calCursor.getFullYear();
+  const m = calCursor.getMonth();
+
+  const first = new Date(y, m, 1);
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const offset = (first.getDay() + 6) % 7; // Monday start
+
+  const monthName = first.toLocaleDateString(undefined,{month:'long', year:'numeric'});
+  const t = todayISO();
+
+  let cells = '';
+  for(let i=0;i<offset;i++) cells += `<div class="cal-day blank"></div>`;
+
+  for(let d=1; d<=daysInMonth; d++){
+    const ds = iso(new Date(y, m, d));
+    const evs = state.events.filter(e => e.date === ds);
+    const dots = evs.slice(0,4)
+      .map(e => `<span class="dot d-${e.type}"></span>`).join('');
+    cells += `
+      <div class="cal-day ${ds===t?'today':''} ${ds===selectedDay?'sel':''}"
+           data-action="cal-day" data-date="${ds}">
+        <span class="num">${d}</span>
+        <div class="dots">${dots}</div>
+      </div>`;
+  }
+
+  // selected day panel
+  let dayPanel = '';
+  if(selectedDay){
+    const evs = state.events
+      .filter(e => e.date === selectedDay)
+      .sort((a,b) => a.title.localeCompare(b.title));
+    dayPanel = `
+      <div class="card">
+        <div class="sec-head" style="margin:0 0 8px">
+          <h3 style="margin:0">${prettyDate(selectedDay)}</h3>
+          <button class="add-btn" style="width:32px;height:32px;font-size:18px"
+            data-action="add-event" data-date="${selectedDay}">+</button>
+        </div>
+        ${evs.length ? evs.map(evItem).join('')
+          : `<div class="empty" style="padding:10px">Nothing on this day.</div>`}
+      </div>`;
+  }
+
+  // next 30 days
+  const in30 = new Date(); in30.setDate(in30.getDate()+30);
+  const upcoming = state.events
+    .filter(e => e.date >= t && e.date <= iso(in30))
+    .sort((a,b) => a.date.localeCompare(b.date));
+
+  return `
+    <div class="sec-head">
+      <h2>Calendar</h2>
+      <button class="add-btn" data-action="add-event" data-date="${t}">+</button>
+    </div>
+
+    <div class="card">
+      <div class="cal-head">
+        <h2>${monthName}</h2>
+        <div class="cal-nav">
+          <button data-action="cal-prev">‹</button>
+          <button data-action="cal-today">•</button>
+          <button data-action="cal-next">›</button>
+        </div>
+      </div>
+      <div class="cal-grid">
+        ${['M','T','W','T','F','S','S'].map(d=>`<div class="cal-dow">${d}</div>`).join('')}
+        ${cells}
+      </div>
+      <div class="legend">
+        ${EVENT_TYPES.map(tp =>
+          `<span><i class="dot d-${tp}" style="display:inline-block"></i>${EVENT_LABEL[tp]}</span>`
+        ).join('')}
+      </div>
+    </div>
+
+    ${dayPanel}
+
+    <div class="sec-head"><h2>Next 30 Days</h2></div>
+    <div class="card">
+      ${upcoming.length ? upcoming.map(evItem).join('')
+        : `<div class="empty"><span class="big">📅</span>No events in the next 30 days.</div>`}
+    </div>`;
+}
+
+function evItem(e){
+  return `
+    <div class="item">
+      <div class="tick ${e.done?'on':''}" data-action="toggle-event" data-id="${e.id}">
+        ${e.done?'✓':''}
+      </div>
+      <div class="item-body">
+        <div class="item-title ${e.done?'done':''}">${esc(e.title)}</div>
+        <div class="item-meta">
+          <span class="pill p-type">${EVENT_LABEL[e.type] || e.type}</span>
+          <span>${prettyDate(e.date)}</span>
+        </div>
+        ${e.notes ? `<div class="item-note">${esc(e.notes)}</div>` : ''}
+      </div>
+      <button class="del" data-action="del-event" data-id="${e.id}" title="Delete">✕</button>
+    </div>`;
+}
+
+/* =========================================================
+   VIEW: LEARN
+   ========================================================= */
+function viewLearn(){
+  const entries = [...state.learn].sort((a,b) =>
+    (b.date||'').localeCompare(a.date||''));
+
+  const totalHours = entries.reduce((s,e) => s + (parseFloat(e.hours) || 0), 0);
+  const topics = new Set(entries.map(e => (e.topic||'').trim().toLowerCase()).filter(Boolean));
+
+  return `
+    <div class="sec-head">
+      <h2>Learning Journal</h2>
+      <button class="add-btn" data-action="add-learn">+</button>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><b>${entries.length}</b><span>Entries</span></div>
+      <div class="stat"><b>${totalHours.toFixed(1)}</b><span>Hours</span></div>
+      <div class="stat"><b>${topics.size}</b><span>Topics</span></div>
+    </div>
+
+    <div class="card">
+      <h3>Useful Calculators</h3>
+
+      <details class="calc">
+        <summary>Spray / Liquid Mix Calculator</summary>
+        <div class="calc-body">
+          <div class="field">
+            <label>Area to spray (m²)</label>
+            <input type="number" id="cArea" placeholder="e.g. 500" inputmode="decimal">
+          </div>
+          <div class="row2">
+            <div class="field">
+              <label>Product rate (per 100 m²)</label>
+              <input type="number" id="cRate" placeholder="e.g. 30" inputmode="decimal">
+            </div>
+            <div class="field">
+              <label>Spray volume (L / 100 m²)</label>
+              <input type="number" id="cVol" placeholder="e.g. 8" inputmode="decimal">
+            </div>
+          </div>
+          <div class="field">
+            <label>Tank size (L)</label>
+            <input type="number" id="cTank" placeholder="e.g. 400" inputmode="decimal">
+          </div>
+          <button class="submit" style="padding:11px;font-size:14px"
+            data-action="calc-spray">Calculate</button>
+          <div id="cSprayOut"></div>
+        </div>
+      </details>
+
+      <details class="calc">
+        <summary>Fertiliser Calculator</summary>
+        <div class="calc-body">
+          <div class="field">
+            <label>Area (m²)</label>
+            <input type="number" id="fArea" placeholder="e.g. 1200" inputmode="decimal">
+          </div>
+          <div class="field">
+            <label>Target nitrogen rate (g N / m²)</label>
+            <input type="number" id="fN" placeholder="e.g. 2.5" inputmode="decimal" step="0.1">
+          </div>
+          <div class="field">
+            <label>Product N analysis (%)</label>
+            <input type="number" id="fPct" placeholder="e.g. 21" inputmode="decimal">
+          </div>
+          <button class="submit" style="padding:11px;font-size:14px"
+            data-action="calc-fert">Calculate</button>
+          <div id="cFertOut"></div>
+        </div>
+      </details>
+
+      <details class="calc">
+        <summary>Area Calculator (rectangle)</summary>
+        <div class="calc-body">
+          <div class="row2">
+            <div class="field">
+              <label>Length (m)</label>
+              <input type="number" id="aLen" placeholder="e.g. 40" inputmode="decimal">
+            </div>
+            <div class="field">
+              <label>Width (m)</label>
+              <input type="number" id="aWid" placeholder="e.g. 25" inputmode="decimal">
+            </div>
+          </div>
+          <button class="submit" style="padding:11px;font-size:14px"
+            data-action="calc-area">Calculate</button>
+          <div id="cAreaOut"></div>
+        </div>
+      </details>
+    </div>
+
+    <div class="card">
+      <h3>Journal Entries</h3>
+      ${entries.length ? entries.map(learnItem).join('')
+        : `<div class="empty"><span class="big">🎓</span>
+             Log what you learned today — tasks, machinery,
+             diseases, calculations, anything.</div>`}
+    </div>`;
+}
+
+function learnItem(e){
+  return `
+    <div class="item">
+      <div class="item-body">
+        <div class="item-title">${esc(e.topic)}</div>
+        <div class="item-meta">
+          <span>${prettyDate(e.date)}</span>
+          ${e.category ? `<span class="pill p-area">${esc(e.category)}</span>` : ''}
+          ${e.hours ? `<span>${esc(e.hours)} h</span>` : ''}
+          ${e.supervisor ? `<span>· 👤 ${esc(e.supervisor)}</span>` : ''}
+        </div>
+        ${e.notes ? `<div class="item-note">${esc(e.notes)}</div>` : ''}
+      </div>
+      <button class="del" data-action="del-learn" data-id="${e.id}" title="Delete">✕</button>
+    </div>`;
+}
+
+/* =========================================================
+   MODAL / SHEET
+   ========================================================= */
+const overlay = $('#overlay');
+const sheetForm = $('#sheetForm');
+
+function openSheet(title, fieldsHtml, onSubmit){
+  $('#sheetTitle').textContent = title;
+  sheetForm.innerHTML = fieldsHtml +
+    `<button type="submit" class="submit">Save</button>`;
+
+  overlay.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+
+  sheetForm.onsubmit = (ev) => {
+    ev.preventDefault();
+    const data = {};
+    new FormData(sheetForm).forEach((v,k) => data[k] = v);
+    const keepOpen = onSubmit(data);
+    if(keepOpen === false) return;
+    closeSheet();
+    save();
+    render();
+  };
+}
+
+function closeSheet(){
+  overlay.classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+$('#sheetClose').addEventListener('click', closeSheet);
+overlay.addEventListener('click', e => { if(e.target === overlay) closeSheet(); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeSheet(); });
+
+/* ---------- Field builders ---------- */
+function optList(arr, sel){
+  return arr.map(o => `<option ${o===sel?'selected':''}>${esc(o)}</option>`).join('');
+}
+
+/* =========================================================
+   FORMS
+   ========================================================= */
+function formJob(){
+  const t = todayISO();
+  openSheet('New Job', `
+    <div class="field">
+      <label>Job title *</label>
+      <input name="title" required placeholder="e.g. Mow greens — back nine">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Area</label>
+        <select name="area">${optList(AREAS)}</select>
+      </div>
+      <div class="field">
+        <label>Type</label>
+        <select name="type">${optList(JOB_TYPES)}</select>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Priority</label>
+        <select name="priority">${optList(['High','Medium','Low'],'Medium')}</select>
+      </div>
+      <div class="field">
+        <label>Due date</label>
+        <input type="date" name="due" value="${t}">
+      </div>
+    </div>
+    <div class="field">
+      <label>Assigned to</label>
+      <input name="assignee" placeholder="Name or team">
+    </div>
+    <div class="field">
+      <label>Notes / SOP</label>
+      <textarea name="notes" placeholder="Height of cut, safety notes, tools needed..."></textarea>
+    </div>
+  `, d => {
+    state.jobs.push({
+      id: uid('j'),
+      title: d.title.trim(),
+      area: d.area, type: d.type, priority: d.priority,
+      due: d.due, assignee: d.assignee.trim(),
+      notes: d.notes.trim(),
+      status: 'todo',
+      created: new Date().toISOString()
+    });
+    toast('Job added');
+  });
+}
+
+function formReport(){
+  const t = todayISO();
+  openSheet('New Report', `
+    <div class="field">
+      <label>Report type</label>
+      <select name="type" id="repType">${optList(REPORT_TYPES)}</select>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Date</label>
+        <input type="date" name="date" value="${t}">
+      </div>
+      <div class="field">
+        <label>Area</label>
+        <select name="area">${optList(AREAS)}</select>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Weather</label>
+        <input name="weather" placeholder="e.g. Overcast, light wind">
+      </div>
+      <div class="field">
+        <label>Temp (°C)</label>
+        <input name="temp" inputmode="decimal" placeholder="e.g. 16">
+      </div>
+    </div>
+    <div class="field">
+      <label>Staff involved</label>
+      <input name="staff" placeholder="Names">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Product used</label>
+        <input name="products" placeholder="e.g. Primo Maxx">
+      </div>
+      <div class="field">
+        <label>Rate / amount</label>
+        <input name="rate" placeholder="e.g. 0.4 L/ha">
+      </div>
+    </div>
+    <div class="field">
+      <label>Notes / observations</label>
+      <textarea name="notes" placeholder="What was done, what you saw, follow-up needed..."></textarea>
+    </div>
+  `, d => {
+    state.reports.push({
+      id: uid('r'),
+      type: d.type, date: d.date, area: d.area,
+      weather: d.weather.trim(), temp: d.temp.trim(),
+      staff: d.staff.trim(),
+      products: d.products.trim(), rate: d.rate.trim(),
+      notes: d.notes.trim(),
+      created: new Date().toISOString()
+    });
+    toast('Report saved');
+  });
+}
+
+function formEvent(dateStr){
+  openSheet('New Calendar Event', `
+    <div class="field">
+      <label>Title *</label>
+      <input name="title" required placeholder="e.g. Spring aeration — greens">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Date</label>
+        <input type="date" name="date" value="${dateStr || todayISO()}">
+      </div>
+      <div class="field">
+        <label>Type</label>
+        <select name="type">
+          ${EVENT_TYPES.map(t =>
+            `<option value="${t}" ${t==='agronomy'?'selected':''}>${EVENT_LABEL[t]}</option>`
+          ).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Notes</label>
+      <textarea name="notes" placeholder="Details, contractors, equipment needed..."></textarea>
+    </div>
+  `, d => {
+    state.events.push({
+      id: uid('e'),
+      title: d.title.trim(),
+      date: d.date,
+      type: d.type,
+      notes: d.notes.trim(),
+      done: false
+    });
+    selectedDay = d.date;
+    toast('Event added');
+  });
+}
+
+function formLearn(){
+  const t = todayISO();
+  openSheet('Learning Journal Entry', `
+    <div class="field">
+      <label>What did you learn? *</label>
+      <input name="topic" required placeholder="e.g. Setting reel height on greens mower">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Date</label>
+        <input type="date" name="date" value="${t}">
+      </div>
+      <div class="field">
+        <label>Category</label>
+        <select name="category">
+          ${optList(['Machinery','Agronomy','Irrigation','Chemicals',
+                     'Health & Safety','Course Setup','Admin','Other'])}
+        </select>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Hours</label>
+        <input name="hours" inputmode="decimal" placeholder="e.g. 1.5">
+      </div>
+      <div class="field">
+        <label>Supervisor</label>
+        <input name="supervisor" placeholder="Who signed it off">
+      </div>
+    </div>
+    <div class="field">
+      <label>Notes / reflection</label>
+      <textarea name="notes" placeholder="Key steps, things to remember, questions to ask..."></textarea>
+    </div>
+  `, d => {
+    state.learn.push({
+      id: uid('l'),
+      topic: d.topic.trim(),
+      date: d.date,
+      category: d.category,
+      hours: d.hours.trim(),
+      supervisor: d.supervisor.trim(),
+      notes: d.notes.trim()
+    });
+    toast('Journal entry saved');
+  });
+}
+
+function formData(){
+  openSheet('Data & Backup', `
+    <p style="font-size:13.5px;color:var(--muted);margin:0 0 14px">
+      Your data is saved in this browser only. Export a backup file regularly —
+      especially before clearing your browser data or switching devices.
+    </p>
+    <button type="button" class="submit" data-action="export">⬇ Export backup (.json)</button>
+    <div class="field" style="margin-top:14px">
+      <label>Import backup</label>
+      <input type="file" id="importFile" accept="application/json">
+    </div>
+    <button type="button" class="submit" style="background:#c62828" data-action="wipe">
+      Delete all data
+    </button>
+  `, () => {});
+}
+
+/* =========================================================
+   EVENT DELEGATION
+   ========================================================= */
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-action]');
+  if(!el) return;
+  const a = el.dataset.action;
+  const id = el.dataset.id;
+
+  switch(a){
+
+    /* --- nav --- */
+    case 'nav':
+      activeTab = el.dataset.tab;
+      closeSheet();
+      render();
+      break;
+
+    /* --- dashboard --- */
+    case 'save-conditions':
+      state.courseStatus = $('#dashStatus').value;
+      state.weather = $('#dashWeather').value.trim();
+      save(); toast('Conditions updated');
+      break;
+
+    /* --- jobs --- */
+    case 'add-job': formJob(); break;
+
+    case 'toggle-job': {
+      const j = state.jobs.find(x => x.id === id);
+      if(!j) return;
+      j.status = j.status === 'done' ? 'todo'
+               : j.status === 'todo'  ? 'doing'
+               : 'done';
+      save(); render();
+      break;
+    }
+
+    case 'del-job':
+      state.jobs = state.jobs.filter(x => x.id !== id);
+      save(); render(); toast('Job deleted');
+      break;
+
+    /* --- reports --- */
+    case 'add-report': formReport(); break;
+
+    case 'del-report':
+      state.reports = state.reports.filter(x => x.id !== id);
+      save(); render(); toast('Report deleted');
+      break;
+
+    /* --- calendar --- */
+    case 'cal-prev':
+      calCursor.setMonth(calCursor.getMonth() - 1); render(); break;
+    case 'cal-next':
+      calCursor.setMonth(calCursor.getMonth() + 1); render(); break;
+    case 'cal-today':
+      calCursor = new Date(); selectedDay = todayISO(); render(); break;
+    case 'cal-day':
+      selectedDay = (selectedDay === el.dataset.date) ? null : el.dataset.date;
+      render();
+      break;
+
+    case 'add-event': formEvent(el.dataset.date); break;
+
+    case 'toggle-event': {
+      const ev = state.events.find(x => x.id === id);
+      if(!ev) return;
+      ev.done = !ev.done;
+      save(); render();
+      break;
+    }
+
+    case 'del-event':
+      state.events = state.events.filter(x => x.id !== id);
+      save(); render(); toast('Event deleted');
+      break;
+
+    /* --- learn --- */
+    case 'add-learn': formLearn(); break;
+
+    case 'del-learn':
+      state.learn = state.learn.filter(x => x.id !== id);
+      save(); render(); toast('Entry deleted');
+      break;
+
+    /* --- calculators --- */
+    case 'calc-spray': {
+      const area = parseFloat($('#cArea').value) || 0;
+      const rate = parseFloat($('#cRate').value) || 0;
+      const vol  = parseFloat($('#cVol').value)  || 0;
+      const tank = parseFloat($('#cTank').value) || 0;
+      if(!area){ toast('Enter an area'); break; }
+      const units = area / 100;
+      const product = units * rate;
+      const water   = units * vol;
+      const tanks   = tank > 0 ? (water / tank) : 0;
+      $('#cSprayOut').innerHTML = `<div class="result">
+        Product needed: <b>${product.toFixed(2)}</b> (mL or g, match your rate unit)<br>
+        Water needed: <b>${water.toFixed(1)} L</b><br>
+        ${tank > 0 ? `Tank fills: <b>${tanks.toFixed(2)}</b> (${Math.ceil(tanks)} loads of ${tank} L)<br>` : ''}
+        <span style="font-size:12px;color:var(--muted)">
+          Always double-check against the product label.
+        </span>
+      </div>`;
+      break;
+    }
+
+    case 'calc-fert': {
+      const area = parseFloat($('#fArea').value) || 0;
+      const n    = parseFloat($('#fN').value)    || 0;
+      const pct  = parseFloat($('#fPct').value)  || 0;
+      if(!area || !n || !pct){ toast('Fill in all three fields'); break; }
+      const totalN   = area * n;            // grams of N
+      const productG = totalN / (pct / 100); // grams of product
+      $('#cFertOut').innerHTML = `<div class="result">
+        Total N required: <b>${(totalN/1000).toFixed(2)} kg</b><br>
+        Product required: <b>${(productG/1000).toFixed(2)} kg</b>
+        <span style="font-size:12px;color:var(--muted)">(${productG.toFixed(0)} g)</span><br>
+        <span style="font-size:12px;color:var(--muted)">
+          Always double-check against the product label.
+        </span>
+      </div>`;
+      break;
+    }
+
+    case 'calc-area': {
+      const L = parseFloat($('#aLen').value) || 0;
+      const W = parseFloat($('#aWid').value) || 0;
+      if(!L || !W){ toast('Enter length and width'); break; }
+      const area = L * W;
+      $('#cAreaOut').innerHTML = `<div class="result">
+        Area: <b>${area.toFixed(1)} m²</b><br>
+        = <b>${(area/100).toFixed(2)}</b> × 100 m² units<br>
+        = <b>${(area/10000).toFixed(4)} ha</b>
+      </div>`;
+      break;
+    }
+
+    /* --- data --- */
+    case 'menu': formData(); break;
+
+    case 'export': {
+      const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a2 = document.createElement('a');
+      a2.href = url;
+      a2.download = 'turftrack-backup-' + todayISO() + '.json';
+      a2.click();
+      URL.revokeObjectURL(url);
+      toast('Backup downloaded');
+      break;
+    }
+
+    case 'wipe': {
+      if(confirm('Delete ALL jobs, reports, events and journal entries? This cannot be undone.')){
+        localStorage.removeItem(STORE_KEY);
+        location.reload();
+      }
+      break;
+    }
+  }
+});
+
+/* ---------- Import handler ---------- */
+document.addEventListener('change', (e) => {
+  if(e.target.id !== 'importFile') return;
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const data = JSON.parse(reader.result);
+      if(!data || typeof data !== 'object') throw new Error('bad file');
+      state = Object.assign({
+        jobs:[], reports:[], events:[], learn:[],
+        weather:'', courseStatus:'Open', seq:1
+      }, data);
+      save(); closeSheet(); render();
+      toast('Backup imported');
+    }catch(err){
+      toast('Could not read that file');
+    }
+  };
+  reader.readAsText(file);
+});
+
+/* =========================================================
+   BOOT
+   ========================================================= */
+(function init(){
+  const had = load();
+  if(!had || (!state.events.length && !state.jobs.length)){
+    state.events = state.events.length ? state.events : seedEvents();
+    state.jobs   = state.jobs.length   ? state.jobs   : seedJobs();
+    save();
+  }
+  selectedDay = todayISO();
+  render();
+})();
+</script>
+</body>
+</html>
