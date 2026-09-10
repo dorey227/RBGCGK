@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1b5e20">
 <title>TurfTrack — Greenkeeper's Companion</title>
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
   :root{
     --green:#1b5e20; --green2:#2e7d32; --lime:#7cb342;
@@ -43,7 +44,7 @@
 
   .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:12px}
   .stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:12px 8px;text-align:center;box-shadow:var(--shadow)}
-  .stat b{display:block;font-size:24px;color:var(--green);line-height:1.1}
+  .stat b{display:block;font-size:22px;color:var(--green);line-height:1.1;word-break:break-word}
   .stat span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
 
   .item{display:flex;gap:11px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--line)}
@@ -117,37 +118,24 @@
   .result{background:#e8f5e9;border-radius:11px;padding:12px;margin-top:12px;font-size:14px;line-height:1.7;border-left:4px solid var(--green2)}
   .result b{color:var(--green)}
 
-  nav{position:fixed;bottom:0;left:0;right:0;background:#fff;z-index:100;display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -2px 14px rgba(0,0,0,.06)}
-  nav button{background:none;border:0;padding:9px 2px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;color:#96a698;font-size:10.5px;font-weight:600;font-family:inherit}
-  nav button .ni{font-size:19px;line-height:1}
+  nav{position:fixed;bottom:0;left:0;right:0;background:#fff;z-index:100;display:grid;grid-template-columns:repeat(6,1fr);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -2px 14px rgba(0,0,0,.06)}
+  nav button{background:none;border:0;padding:9px 1px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;color:#96a698;font-size:9.5px;font-weight:600;font-family:inherit}
+  nav button .ni{font-size:18px;line-height:1}
   nav button.active{color:var(--green)}
 
   .toast{position:fixed;bottom:92px;left:50%;transform:translateX(-50%);background:#263a29;color:#fff;padding:10px 18px;border-radius:22px;font-size:13.5px;z-index:300;opacity:0;pointer-events:none;transition:.25s;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
 
-  /* ---------- Auth screen ---------- */
   #authScreen{
     position:fixed;inset:0;z-index:400;
     background:linear-gradient(160deg,#1b5e20 0%,#2e7d32 55%,#43a047 100%);
     color:#fff;display:flex;align-items:center;justify-content:center;padding:22px;
   }
-  .auth-card{
-    background:#fff;color:var(--text);border-radius:20px;padding:26px 22px;
-    width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.3)
-  }
-  .auth-logo{
-    width:56px;height:56px;border-radius:16px;
-    background:linear-gradient(135deg,var(--green),var(--lime));
-    display:grid;place-items:center;font-size:28px;margin:0 auto 14px;
-  }
+  .auth-card{background:#fff;color:var(--text);border-radius:20px;padding:26px 22px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+  .auth-logo{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,var(--green),var(--lime));display:grid;place-items:center;font-size:28px;margin:0 auto 14px}
   .auth-card h1{margin:0 0 4px;font-size:23px;text-align:center;color:var(--green)}
   .auth-card p.sub{margin:0 0 22px;text-align:center;color:var(--muted);font-size:13.5px}
-  .auth-btn{
-    width:100%;padding:13px;border-radius:12px;border:1.5px solid var(--line);
-    background:#fff;color:var(--text);font-size:15px;font-weight:600;
-    cursor:pointer;font-family:inherit;margin-bottom:10px;
-    display:flex;align-items:center;justify-content:center;gap:9px;
-  }
+  .auth-btn{width:100%;padding:13px;border-radius:12px;border:1.5px solid var(--line);background:#fff;color:var(--text);font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:9px}
   .auth-btn:hover{background:#f7faf7}
   .auth-btn.primary{background:var(--green);color:#fff;border-color:var(--green)}
   .auth-btn.primary:hover{background:var(--green2)}
@@ -157,10 +145,7 @@
   .auth-switch{text-align:center;margin-top:8px;font-size:13px;color:var(--muted)}
   .auth-switch a{color:var(--green);font-weight:600;cursor:pointer;text-decoration:none}
 
-  .sync-badge{
-    font-size:10.5px;background:rgba(255,255,255,.15);
-    padding:3px 8px;border-radius:20px;font-weight:600
-  }
+  .sync-badge{font-size:10.5px;background:rgba(255,255,255,.15);padding:3px 8px;border-radius:20px;font-weight:600}
 </style>
 </head>
 <body>
@@ -202,7 +187,6 @@
 
 <!-- ================= MAIN APP ================= -->
 <div id="app" class="hidden">
-
   <header>
     <div class="head-row">
       <div>
@@ -219,10 +203,11 @@
   <main id="view"></main>
 
   <nav>
-    <button data-action="nav" data-tab="dash"    class="active"><span class="ni">🏠</span>Home</button>
+    <button data-action="nav" data-tab="dash"     class="active"><span class="ni">🏠</span>Home</button>
     <button data-action="nav" data-tab="jobs"><span class="ni">✅</span>Jobs</button>
     <button data-action="nav" data-tab="reports"><span class="ni">📋</span>Reports</button>
     <button data-action="nav" data-tab="calendar"><span class="ni">📅</span>Calendar</button>
+    <button data-action="nav" data-tab="program"><span class="ni">🧪</span>Program</button>
     <button data-action="nav" data-tab="learn"><span class="ni">🎓</span>Learn</button>
   </nav>
 </div>
@@ -268,10 +253,8 @@ const fbApp = initializeApp(firebaseConfig);
 const db    = getFirestore(fbApp);
 const auth  = getAuth(fbApp);
 
-// keep session across reloads
 setPersistence(auth, browserLocalPersistence).catch(()=>{});
 
-// offline cache
 enableIndexedDbPersistence(db).catch(err => {
   if(err.code === 'failed-precondition') console.warn('Offline cache: multiple tabs open');
   else if(err.code === 'unimplemented')  console.warn('Offline cache: not supported');
@@ -301,13 +284,14 @@ const EVENT_LABEL = {
    State
    ========================================================= */
 let state = {
-  jobs:[], reports:[], events:[], learn:[],
+  jobs:[], reports:[], events:[], learn:[], program:[],
   weather:'', courseStatus:'Open'
 };
 let activeTab = 'dash';
 let calCursor = new Date();
 let selectedDay = null;
 let currentUser = null;
+let notifyInterval = null;
 
 /* =========================================================
    Helpers
@@ -363,36 +347,36 @@ function setSyncStatus(txt, isErr){
 }
 
 /* =========================================================
-   Firestore layer
+   Firestore
    ========================================================= */
-function userPath(){
-  if(!currentUser) throw new Error('No user');
-  return ['users', currentUser.uid];
-}
+function userPath(){ return currentUser ? currentUser.uid : null; }
 
 async function fsLoadAll(){
-  const [u] = userPath();
+  const u = userPath();
+  if(!u) return;
   const load = async (sub) => {
     const snap = await getDocs(collection(db, 'users', u, sub));
     return snap.docs.map(d => ({ id: d.id, ...d.data() }));
   };
   try{
     setSyncStatus('⏳ Loading');
-    const [jobs, reports, events, learn] = await Promise.all([
-      load('jobs'), load('reports'), load('events'), load('learn')
+    const [jobs, reports, events, learn, program] = await Promise.all([
+      load('jobs'), load('reports'), load('events'), load('learn'), load('program')
     ]);
     state.jobs = jobs;
     state.reports = reports;
     state.events = events;
     state.learn = learn;
+    state.program = program;
 
-    // settings doc
     try{
       const sSnap = await getDocs(collection(db, 'users', u, 'settings'));
       sSnap.forEach(d => {
         const data = d.data();
-        if(data.weather !== undefined) state.weather = data.weather;
-        if(data.courseStatus !== undefined) state.courseStatus = data.courseStatus;
+        if(d.id === 'main'){
+          if(data.weather !== undefined) state.weather = data.weather;
+          if(data.courseStatus !== undefined) state.courseStatus = data.courseStatus;
+        }
       });
     }catch(e){ /* ignore */ }
 
@@ -405,8 +389,8 @@ async function fsLoadAll(){
 }
 
 async function fsSave(sub, obj){
-  if(!currentUser) return;
-  const [u] = userPath();
+  const u = userPath();
+  if(!u) return;
   try{
     setSyncStatus('⏳ Saving');
     const { id, ...data } = obj;
@@ -421,8 +405,8 @@ async function fsSave(sub, obj){
 }
 
 async function fsDelete(sub, id){
-  if(!currentUser) return;
-  const [u] = userPath();
+  const u = userPath();
+  if(!u) return;
   try{
     setSyncStatus('⏳ Saving');
     await deleteDoc(doc(db, 'users', u, sub, id));
@@ -434,8 +418,8 @@ async function fsDelete(sub, id){
 }
 
 async function fsSaveSettings(){
-  if(!currentUser) return;
-  const [u] = userPath();
+  const u = userPath();
+  if(!u) return;
   try{
     await setDoc(doc(db, 'users', u, 'settings', 'main'), {
       weather: state.weather,
@@ -450,7 +434,7 @@ async function fsSaveSettings(){
    ========================================================= */
 const authScreen = $('#authScreen');
 const appRoot    = $('#app');
-let authMode = 'signin'; // 'signin' | 'signup'
+let authMode = 'signin';
 
 function showAuthError(msg){
   const e = $('#authErr');
@@ -469,7 +453,8 @@ function friendlyAuthError(code){
     'auth/weak-password':'Password must be at least 6 characters.',
     'auth/unauthorized-domain':'This domain is not authorised in Firebase. Add it under Authentication → Settings → Authorized domains.',
     'auth/popup-blocked':'Popup was blocked. Allow popups for this site.',
-    'auth/popup-closed-by-user':'Sign-in cancelled.'
+    'auth/popup-closed-by-user':'Sign-in cancelled.',
+    'auth/configuration-not-found':'Sign-in method not enabled. Enable Google and Email/Password in Firebase Console → Authentication → Sign-in method.'
   };
   return map[code] || ('Sign-in failed: ' + code);
 }
@@ -523,19 +508,23 @@ onAuthStateChanged(auth, async (user) => {
     appRoot.classList.remove('hidden');
     await fsLoadAll();
     if(!state.events.length && !state.jobs.length){
-      state.events = seedEvents();
-      state.jobs   = seedJobs();
+      state.events  = seedEvents();
+      state.jobs    = seedJobs();
+      state.program = seedProgram();
       await Promise.all([
         ...state.jobs.map(j => fsSave('jobs', j)),
-        ...state.events.map(e => fsSave('events', e))
+        ...state.events.map(e => fsSave('events', e)),
+        ...state.program.map(p => fsSave('program', p))
       ]);
     }
     selectedDay = todayISO();
     render();
+    startNotifyLoop();
   }else{
     appRoot.classList.add('hidden');
     authScreen.classList.remove('hidden');
-    state = { jobs:[], reports:[], events:[], learn:[], weather:'', courseStatus:'Open' };
+    state = { jobs:[], reports:[], events:[], learn:[], program:[], weather:'', courseStatus:'Open' };
+    if(notifyInterval){ clearInterval(notifyInterval); notifyInterval = null; }
   }
 });
 
@@ -594,6 +583,82 @@ function seedJobs(){
   ];
 }
 
+function seedProgram(){
+  // Greens program at Redland Bay Golf Club, prepared by Paul Spencer.
+  // weekStart dates are illustrative — edit them to match your actual weeks.
+  const y = new Date().getFullYear();
+  return [
+    { id:'p_jul', month:'July ' + y, weeks: [
+      { week:1, weekStart: y+'-07-06', items:[
+        { id:'p_jul_1_1', product:'Gypsum', rate:'500kg', done:false },
+        { id:'p_jul_1_2', product:'LiquiMaxx K 12-0-20', rate:'20L', done:false },
+        { id:'p_jul_1_3', product:'Supa Humus', rate:'10L', done:false }
+      ]},
+      { week:2, weekStart: y+'-07-13', items:[
+        { id:'p_jul_2_1', product:'Organic Plus', rate:'20L', done:false },
+        { id:'p_jul_2_2', product:'Supa Stand Phos', rate:'20L', done:false },
+        { id:'p_jul_2_3', product:'Moca', rate:'10L', done:false }
+      ]},
+      { week:3, weekStart: y+'-07-20', items:[
+        { id:'p_jul_3_1', product:'Nitro-Iron Adv', rate:'20L', done:false },
+        { id:'p_jul_3_2', product:'Resilience', rate:'10L', done:false }
+      ]},
+      { week:4, weekStart: y+'-07-27', items:[
+        { id:'p_jul_4_1', product:'HydroForce Ultra', rate:'12.5L', done:false },
+        { id:'p_jul_4_2', product:'Grocal MGB', rate:'20L', done:false }
+      ]}
+    ]},
+    { id:'p_aug', month:'August ' + y, weeks: [
+      { week:1, weekStart: y+'-08-03', items:[
+        { id:'p_aug_1_1', product:'Gypsum', rate:'500kg', done:false },
+        { id:'p_aug_1_2', product:'SoluPak 28-3-13', rate:'40kg', done:false },
+        { id:'p_aug_1_3', product:'Supa Humus', rate:'10L', done:false }
+      ]},
+      { week:2, weekStart: y+'-08-10', items:[
+        { id:'p_aug_2_1', product:'Agador', rate:'2L', done:false },
+        { id:'p_aug_2_2', product:'Organic Plus', rate:'20L', done:false },
+        { id:'p_aug_2_3', product:'Supa Stand Phos', rate:'20L', done:false },
+        { id:'p_aug_2_4', product:'Moca', rate:'10L', done:false }
+      ]},
+      { week:3, weekStart: y+'-08-17', items:[
+        { id:'p_aug_3_1', product:'Nitro-Iron Adv', rate:'20L', done:false },
+        { id:'p_aug_3_2', product:'Resilience', rate:'10L', done:false }
+      ]},
+      { week:4, weekStart: y+'-08-24', items:[
+        { id:'p_aug_4_1', product:'HydroForce Ultra', rate:'12.5L', done:false },
+        { id:'p_aug_4_2', product:'Grocal MGB', rate:'20L', done:false }
+      ]},
+      { week:5, weekStart: y+'-08-31', items:[
+        { id:'p_aug_5_1', product:'Evolution Adv', rate:'2.2L', done:false },
+        { id:'p_aug_5_2', product:'Drop-Zone', rate:'10L', done:false }
+      ]}
+    ]},
+    { id:'p_jan', month:'January ' + (y+1), weeks: [
+      { week:1, weekStart: (y+1)+'-01-05', items:[
+        { id:'p_jan_1_1', product:'Gypsum', rate:'500kg', done:false },
+        { id:'p_jan_1_2', product:'SoluPak 28-3-13', rate:'40kg', done:false }
+      ]},
+      { week:2, weekStart: (y+1)+'-01-12', items:[
+        { id:'p_jan_2_1', product:'Rumbler', rate:'3.4L', done:false },
+        { id:'p_jan_2_2', product:'Organic Plus', rate:'20L', done:false },
+        { id:'p_jan_2_3', product:'Supa Stand Phos', rate:'20L', done:false }
+      ]},
+      { week:3, weekStart: (y+1)+'-01-19', items:[
+        { id:'p_jan_3_1', product:'Nitro-Iron Adv', rate:'20L', done:false },
+        { id:'p_jan_3_2', product:'Resilience', rate:'10L', done:false }
+      ]},
+      { week:4, weekStart: (y+1)+'-01-26', items:[
+        { id:'p_jan_4_1', product:'HydroForce Ultra', rate:'12.5L', done:false },
+        { id:'p_jan_4_2', product:'Microlife', rate:'3L', done:false }
+      ]},
+      { week:5, weekStart: (y+1)+'-01-31', items:[
+        { id:'p_jan_5_1', product:'Signature', rate:'12.5kg', done:false },
+        { id:'p_jan_5_2', product:'Drop-Zone', rate:'10L', done:false }
+      ]}
+    ]}
+  ];
+}
+
 /* =========================================================
    Router
    ========================================================= */
@@ -603,6 +668,7 @@ function render(){
   if(activeTab === 'jobs')      v.innerHTML = viewJobs();
   if(activeTab === 'reports')   v.innerHTML = viewReports();
   if(activeTab === 'calendar')  v.innerHTML = viewCalendar();
+  if(activeTab === 'program')   v.innerHTML = viewProgram();
   if(activeTab === 'learn')     v.innerHTML = viewLearn();
 
   $$('nav button').forEach(b =>
@@ -614,7 +680,133 @@ function render(){
 }
 
 /* =========================================================
-   Views
+   Reminders builder
+   ========================================================= */
+function buildReminders(){
+  const today = new Date();
+  const todayStr    = iso(today);
+  const tomorrowStr = iso(new Date(today.getTime() + 864e5));
+  const weekEndStr  = iso(new Date(today.getTime() + 6 * 864e5));
+
+  const todayList = [], tomorrowList = [], weekList = [];
+
+  (state.program || []).forEach(month => {
+    (month.weeks || []).forEach(wk => {
+      if(!wk.weekStart) return;
+      const ws = wk.weekStart;
+      const pending = (wk.items || []).filter(i => !i.done);
+      if(!pending.length) return;
+      const label = `${month.month} · Week ${wk.week}`;
+
+      if(ws === todayStr){
+        pending.forEach(i => todayList.push({
+          title: `Apply ${i.product}`,
+          detail: `${label} · ${i.rate}`,
+          type: 'Program'
+        }));
+      } else if(ws === tomorrowStr){
+        pending.forEach(i => tomorrowList.push({
+          title: `Tomorrow: ${i.product}`,
+          detail: `${label} · ${i.rate}`,
+          type: 'Program'
+        }));
+      } else if(ws > todayStr && ws <= weekEndStr){
+        pending.forEach(i => weekList.push({
+          title: i.product,
+          detail: `${label} · ${i.rate}`,
+          type: 'Program'
+        }));
+      }
+    });
+  });
+
+  state.jobs.filter(j => j.status !== 'done').forEach(j => {
+    if(j.due === todayStr)    todayList.push({ title: j.title, detail: j.area || '', type: 'Job' });
+    if(j.due === tomorrowStr) tomorrowList.push({ title: j.title, detail: j.area || '', type: 'Job' });
+  });
+
+  state.events.filter(e => !e.done).forEach(e => {
+    if(e.date === todayStr)    todayList.push({ title: e.title, detail: EVENT_LABEL[e.type] || '', type: 'Event' });
+    if(e.date === tomorrowStr) tomorrowList.push({ title: e.title, detail: EVENT_LABEL[e.type] || '', type: 'Event' });
+    if(e.date > tomorrowStr && e.date <= weekEndStr)
+      weekList.push({ title: e.title, detail: EVENT_LABEL[e.type] || '', type: 'Event' });
+  });
+
+  return { today: todayList, tomorrow: tomorrowList, week: weekList };
+}
+
+/* =========================================================
+   Local notifications
+   ========================================================= */
+function notificationsSupported(){
+  return typeof Notification !== 'undefined';
+}
+
+async function requestNotifyPermission(){
+  if(!notificationsSupported()){
+    toast('This browser does not support notifications');
+    return false;
+  }
+  if(Notification.permission === 'granted') return true;
+  if(Notification.permission === 'denied'){
+    toast('Notifications blocked — enable in browser settings');
+    return false;
+  }
+  const perm = await Notification.requestPermission();
+  return perm === 'granted';
+}
+
+function showNotification(title, body, tag){
+  if(!notificationsSupported() || Notification.permission !== 'granted') return;
+  try{
+    new Notification(title, {
+      body,
+      tag: tag || 'turftrack',
+      icon: 'icon-192.png',
+      badge: 'icon-192.png'
+    });
+  }catch(e){
+    console.warn('Notification failed', e);
+  }
+}
+
+function checkAndNotify(){
+  if(!notificationsSupported() || Notification.permission !== 'granted') return;
+  if(!currentUser) return;
+
+  const r = buildReminders();
+  const todayStr = todayISO();
+  const lastKey = 'tt_last_notify_' + currentUser.uid;
+  const lastSent = localStorage.getItem(lastKey);
+  if(lastSent === todayStr) return;
+
+  if(r.today.length){
+    const body = r.today.length === 1
+      ? r.today[0].title
+      : `${r.today.length} items due today — tap to open`;
+    showNotification('🔔 TurfTrack — Today', body, 'tt_today');
+    localStorage.setItem(lastKey, todayStr);
+  } else if(r.tomorrow.length){
+    const body = r.tomorrow.length === 1
+      ? `Tomorrow: ${r.tomorrow[0].title}`
+      : `${r.tomorrow.length} items coming tomorrow`;
+    showNotification('⏰ TurfTrack — Tomorrow', body, 'tt_tomorrow');
+    localStorage.setItem(lastKey, todayStr);
+  } else if(r.week.length){
+    showNotification('📅 TurfTrack — This Week',
+      `${r.week.length} items scheduled this week`, 'tt_week');
+    localStorage.setItem(lastKey, todayStr);
+  }
+}
+
+function startNotifyLoop(){
+  if(notifyInterval) return;
+  setTimeout(checkAndNotify, 2000);
+  notifyInterval = setInterval(checkAndNotify, 30 * 60 * 1000);
+}
+
+/* =========================================================
+   VIEW: Dashboard
    ========================================================= */
 function viewDash(){
   const t = todayISO();
@@ -625,6 +817,7 @@ function viewDash(){
   const repWeek = state.reports.filter(r => r.date >= iso(weekAgo)).length;
   const upcoming = state.events.filter(e => e.date >= t)
     .sort((a,b) => a.date.localeCompare(b.date)).slice(0,6);
+  const reminders = buildReminders();
 
   let html = `
     <div class="stats">
@@ -638,6 +831,24 @@ function viewDash(){
       <h3 style="color:var(--red)">⚠ ${overdue} overdue job${overdue>1?'s':''}</h3>
       <div style="font-size:13.5px;color:#5a6b5c">Check the Jobs tab and reschedule.</div>
     </div>`;
+  }
+
+  if(reminders.today.length || reminders.tomorrow.length || reminders.week.length){
+    html += `<div class="card" style="border-left:4px solid var(--amber)">
+      <h3 style="color:var(--amber)">🔔 Reminders</h3>`;
+    if(reminders.today.length){
+      html += `<div style="font-size:12px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.5px;margin:8px 0 4px">Today</div>`;
+      html += reminders.today.map(r => reminderRow(r, 'p-high')).join('');
+    }
+    if(reminders.tomorrow.length){
+      html += `<div style="font-size:12px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.5px;margin:10px 0 4px">Tomorrow</div>`;
+      html += reminders.tomorrow.map(r => reminderRow(r, 'p-med')).join('');
+    }
+    if(reminders.week.length){
+      html += `<div style="font-size:12px;font-weight:700;color:var(--green2);text-transform:uppercase;letter-spacing:.5px;margin:10px 0 4px">This Week</div>`;
+      html += reminders.week.map(r => reminderRow(r, 'p-low')).join('');
+    }
+    html += `</div>`;
   }
 
   html += `
@@ -677,6 +888,22 @@ function viewDash(){
   return html;
 }
 
+function reminderRow(r, cls){
+  return `
+    <div class="item" style="padding:8px 0">
+      <div class="item-body">
+        <div class="item-title" style="font-size:13.5px">${esc(r.title)}</div>
+        <div class="item-meta">
+          <span class="pill ${cls}">${esc(r.type)}</span>
+          <span>${esc(r.detail)}</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* =========================================================
+   VIEW: Jobs
+   ========================================================= */
 function viewJobs(){
   const groups = [
     { key:'todo',  label:'To Do' },
@@ -726,6 +953,9 @@ function jobItem(j){
     </div>`;
 }
 
+/* =========================================================
+   VIEW: Reports
+   ========================================================= */
 function viewReports(){
   const sorted = [...state.reports].sort((a,b) =>
     (b.date||'').localeCompare(a.date||'') || (b.created||'').localeCompare(a.created||''));
@@ -766,6 +996,9 @@ function repItem(r){
     </div>`;
 }
 
+/* =========================================================
+   VIEW: Calendar
+   ========================================================= */
 function viewCalendar(){
   const y = calCursor.getFullYear();
   const m = calCursor.getMonth();
@@ -863,6 +1096,98 @@ function evItem(e){
     </div>`;
 }
 
+/* =========================================================
+   VIEW: Program
+   ========================================================= */
+function viewProgram(){
+  let html = `
+    <div class="sec-head">
+      <h2>Nutrition Program</h2>
+    </div>
+
+    <div class="card" style="border-left:4px solid var(--green)">
+      <h3>Redland Bay Golf Club — Budget 26/27</h3>
+      <div class="stats" style="grid-template-columns:1fr 1fr; margin-bottom:0">
+        <div class="stat"><b>$2,388</b><span>July</span></div>
+        <div class="stat"><b>$60,640</b><span>Total Year</span></div>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px">
+        Prepared by Paul Spencer, Greenway Turf Solutions
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Nutrient Summary (Total Year)</h3>
+      <div class="stats" style="margin-bottom:0">
+        <div class="stat"><b>282.9</b><span>Nitrogen</span></div>
+        <div class="stat"><b>80.6</b><span>Phosphorus</span></div>
+        <div class="stat"><b>226.1</b><span>Potassium</span></div>
+      </div>
+    </div>
+  `;
+
+  if(!state.program.length){
+    html += `<div class="card"><div class="empty">
+      <span class="big">🧪</span>No program yet.
+    </div></div>`;
+    return html;
+  }
+
+  // sort by earliest weekStart
+  const sorted = [...state.program].sort((a,b) => {
+    const aS = a.weeks?.[0]?.weekStart || '9999';
+    const bS = b.weeks?.[0]?.weekStart || '9999';
+    return aS.localeCompare(bS);
+  });
+
+  sorted.forEach(month => {
+    const done = (month.weeks||[]).reduce((n,w) =>
+      n + (w.items||[]).filter(i => i.done).length, 0);
+    const total = (month.weeks||[]).reduce((n,w) =>
+      n + (w.items||[]).length, 0);
+
+    html += `
+      <div class="card">
+        <div class="sec-head" style="margin-bottom:6px">
+          <h2 style="font-size:16px">${esc(month.month)}</h2>
+          <span style="font-size:11px;color:var(--muted);font-weight:600">
+            ${done}/${total} applied
+          </span>
+        </div>`;
+
+    (month.weeks || []).forEach(wk => {
+      html += `
+        <div style="margin-top:12px">
+          <div style="font-size:12px;font-weight:700;color:var(--green2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">
+            Week ${wk.week}${wk.weekStart ? ` · ${prettyDate(wk.weekStart)}` : ''}
+          </div>
+          ${(wk.items||[]).map(item => `
+            <div class="item" style="padding:8px 0">
+              <div class="tick ${item.done?'on':''}"
+                   data-action="toggle-program"
+                   data-month="${month.id}"
+                   data-week="${wk.week}"
+                   data-item="${item.id}">
+                ${item.done?'✓':''}
+              </div>
+              <div class="item-body">
+                <div class="item-title ${item.done?'done':''}" style="font-size:13.5px">${esc(item.product)}</div>
+                <div class="item-meta"><span>Rate: ${esc(item.rate)}</span></div>
+              </div>
+            </div>
+          `).join('')}
+        </div>`;
+    });
+
+    html += `</div>`;
+  });
+
+  return html;
+}
+
+/* =========================================================
+   VIEW: Learn
+   ========================================================= */
 function viewLearn(){
   const entries = [...state.learn].sort((a,b) => (b.date||'').localeCompare(a.date||''));
   const totalHours = entries.reduce((s,e) => s + (parseFloat(e.hours) || 0), 0);
@@ -896,7 +1221,7 @@ function viewLearn(){
           </div>
           <div class="field"><label>Tank size (L)</label>
             <input type="number" id="cTank" placeholder="e.g. 400" inputmode="decimal"></div>
-          <button class="submit" style="padding:11px;font-size:14px" data-action="calc-spray">Calculate</button>
+          <button type="button" class="submit" style="padding:11px;font-size:14px" data-action="calc-spray">Calculate</button>
           <div id="cSprayOut"></div>
         </div>
       </details>
@@ -910,7 +1235,7 @@ function viewLearn(){
             <input type="number" id="fN" placeholder="e.g. 2.5" inputmode="decimal" step="0.1"></div>
           <div class="field"><label>Product N analysis (%)</label>
             <input type="number" id="fPct" placeholder="e.g. 21" inputmode="decimal"></div>
-          <button class="submit" style="padding:11px;font-size:14px" data-action="calc-fert">Calculate</button>
+          <button type="button" class="submit" style="padding:11px;font-size:14px" data-action="calc-fert">Calculate</button>
           <div id="cFertOut"></div>
         </div>
       </details>
@@ -924,7 +1249,7 @@ function viewLearn(){
             <div class="field"><label>Width (m)</label>
               <input type="number" id="aWid" placeholder="e.g. 25" inputmode="decimal"></div>
           </div>
-          <button class="submit" style="padding:11px;font-size:14px" data-action="calc-area">Calculate</button>
+          <button type="button" class="submit" style="padding:11px;font-size:14px" data-action="calc-area">Calculate</button>
           <div id="cAreaOut"></div>
         </div>
       </details>
@@ -1140,14 +1465,29 @@ function formLearn(){
 }
 
 function formData(){
+  const hasPerm = notificationsSupported() && Notification.permission === 'granted';
   openSheet('Account & Data', `
     <p style="font-size:13.5px;color:var(--muted);margin:0 0 14px">
-      Signed in as <b>${esc(currentUser?.email || '')}</b>.<br>
-      All your data is synced to Firebase Firestore and cached offline on this device.
+      Signed in as <b>${esc(currentUser?.email || '')}</b>
     </p>
-    <button type="button" class="submit" style="background:#1565c0" data-action="signout">
-      Sign out
-    </button>
+
+    <div class="card" style="background:#f7faf7;box-shadow:none;margin-bottom:14px">
+      <h3 style="margin-bottom:8px">Reminders</h3>
+      <p style="font-size:12.5px;color:var(--muted);margin:0 0 10px">
+        Get a notification when you open TurfTrack with items due today,
+        tomorrow or this week. Works right in your browser — no server needed.
+      </p>
+      <button type="button" class="submit" style="background:var(--green2);padding:11px;font-size:14px"
+        data-action="enable-notifications">
+        ${hasPerm ? '✓ Notifications enabled' : '🔔 Enable Notifications'}
+      </button>
+      <button type="button" class="submit" style="background:#ef6c00;padding:11px;font-size:14px;margin-top:8px"
+        data-action="test-notification">
+        Send a test notification
+      </button>
+    </div>
+
+    <button type="button" class="submit" style="background:#1565c0" data-action="signout">Sign out</button>
     <button type="button" class="submit" style="background:#c62828;margin-top:10px" data-action="wipe">
       Delete all my data
     </button>
@@ -1233,6 +1573,22 @@ document.addEventListener('click', async (e) => {
       toast('Event deleted');
       break;
 
+    case 'toggle-program': {
+      const mId = el.dataset.month;
+      const wkNum = parseInt(el.dataset.week);
+      const itemId = el.dataset.item;
+      const month = state.program.find(m => m.id === mId);
+      if(!month) return;
+      const week = (month.weeks || []).find(w => w.week === wkNum);
+      if(!week) return;
+      const item = (week.items || []).find(i => i.id === itemId);
+      if(!item) return;
+      item.done = !item.done;
+      render();
+      await fsSave('program', month);
+      break;
+    }
+
     case 'add-learn': formLearn(); break;
 
     case 'del-learn':
@@ -1292,6 +1648,31 @@ document.addEventListener('click', async (e) => {
 
     case 'menu': formData(); break;
 
+    case 'enable-notifications': {
+      const ok = await requestNotifyPermission();
+      if(ok){
+        toast('Notifications enabled 🎉');
+        if(currentUser) localStorage.removeItem('tt_last_notify_' + currentUser.uid);
+        checkAndNotify();
+        formData();
+      } else {
+        toast('Permission not granted');
+      }
+      break;
+    }
+
+    case 'test-notification': {
+      const ok = await requestNotifyPermission();
+      if(ok){
+        showNotification(
+          '⛳ TurfTrack test',
+          'If you can see this, notifications are working!',
+          'tt_test_' + Date.now()
+        );
+      }
+      break;
+    }
+
     case 'signout':
       closeSheet();
       await signOut(auth);
@@ -1303,20 +1684,29 @@ document.addEventListener('click', async (e) => {
       }
       closeSheet();
       setSyncStatus('⏳ Deleting');
-      const [u] = userPath();
-      const subs = ['jobs','reports','events','learn'];
+      const u = userPath();
+      const subs = ['jobs','reports','events','learn','program'];
       for(const sub of subs){
         const snap = await getDocs(collection(db, 'users', u, sub));
         for(const d of snap.docs){
           try{ await deleteDoc(d.ref); }catch(e){ console.warn(e); }
         }
       }
-      state = { jobs:[], reports:[], events:[], learn:[], weather:'', courseStatus:'Open' };
+      state = { jobs:[], reports:[], events:[], learn:[], program:[], weather:'', courseStatus:'Open' };
       setSyncStatus('☁️ Synced');
       render();
       toast('All data deleted');
       break;
     }
+  }
+});
+
+/* =========================================================
+   Auto-notify on visibility change
+   ========================================================= */
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'visible' && currentUser){
+    checkAndNotify();
   }
 });
 </script>
