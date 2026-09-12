@@ -306,7 +306,7 @@ Respond with JSON only. No markdown, no commentary.`;
    State
    ========================================================= */
 let state = {
-  jobs:[], reports:[], events:[], learn:[], program:[], plantIds:[],
+  jobs:[], reports:[], events:[], learn:[], program:[], plantIds:[], plantChats:[],
   weather:'', courseStatus:'Open'
 };
 let activeTab = 'dash';
@@ -383,9 +383,9 @@ async function fsLoadAll(){
   };
   try{
     setSyncStatus('⏳ Loading');
-    const [jobs, reports, events, learn, program, plantIds] = await Promise.all([
+    const [jobs, reports, events, learn, program, plantIds, plantChats] = await Promise.all([
       load('jobs'), load('reports'), load('events'),
-      load('learn'), load('program'), load('plantIds')
+      load('learn'), load('program'), load('plantIds'), load('plantChats')
     ]);
     state.jobs = jobs;
     state.reports = reports;
@@ -393,6 +393,7 @@ async function fsLoadAll(){
     state.learn = learn;
     state.program = program;
     state.plantIds = plantIds;
+    state.plantChats = plantChats;
 
     try{
       const sSnap = await getDocs(collection(db, 'users', u, 'settings'));
@@ -548,7 +549,7 @@ onAuthStateChanged(auth, async (user) => {
   }else{
     appRoot.classList.add('hidden');
     authScreen.classList.remove('hidden');
-    state = { jobs:[], reports:[], events:[], learn:[], program:[], plantIds:[],
+    state = { jobs:[], reports:[], events:[], learn:[], program:[], plantIds:[], plantChats:[],
               weather:'', courseStatus:'Open' };
     if(notifyInterval){ clearInterval(notifyInterval); notifyInterval = null; }
   }
@@ -1268,6 +1269,9 @@ function plantItem(p){
     'Unknown': 'p-area'
   }[p.category] || 'p-area';
 
+  const chat = state.plantChats.find(c => c.plantId === p.id);
+  const hasChat = chat && chat.messages && chat.messages.length > 0;
+
   return `
     <div class="item" data-action="view-plant" data-id="${p.id}" style="cursor:pointer">
       ${p.thumb ? `<img src="${p.thumb}" style="width:52px;height:52px;border-radius:10px;object-fit:cover;flex:0 0 52px">` : ''}
@@ -1277,6 +1281,7 @@ function plantItem(p){
           <span class="pill ${catClass}">${esc(p.category || 'Unknown')}</span>
           <span>${p.confidence ? p.confidence + '%' : ''}</span>
           <span>${prettyDate((p.created||'').slice(0,10))}</span>
+          ${hasChat ? `<span style="color:var(--green2);font-weight:700">💬 ${chat.messages.length}</span>` : ''}
         </div>
       </div>
       <button class="del" data-action="del-plant" data-id="${p.id}" title="Delete"
@@ -1386,7 +1391,7 @@ async function identifyPlant(dataUrl){
   return parsed;
 }
 
-function openPlantSheet(dataUrl, result, loading, errorMsg){
+function openPlantSheet(dataUrl, result, loading, errorMsg, plantId){
   const overlay = $('#overlay');
   const sheetForm = $('#sheetForm');
 
@@ -1462,13 +1467,17 @@ function openPlantSheet(dataUrl, result, loading, errorMsg){
     <div class="row2" style="margin-top:14px">
       <button type="button" class="submit" data-action="close-sheet"
         style="background:#eef3ee;color:var(--text);padding:12px;font-size:14px">
-        Discard
+        ${plantId ? 'Close' : 'Discard'}
       </button>
-      <button type="button" class="submit"
-        data-action="save-plant" id="savePlantBtn"
-        style="padding:12px;font-size:14px">
-        💾 Save
-      </button>
+      ${plantId
+        ? `<button type="button" class="submit" data-action="ask-plant" data-id="${plantId}"
+             style="padding:12px;font-size:14px">
+             💬 Ask AI
+           </button>`
+        : `<button type="button" class="submit" data-action="save-plant" id="savePlantBtn"
+             style="padding:12px;font-size:14px">
+             💾 Save
+           </button>`}
     </div>
 
     <div id="plantSaveData" style="display:none">${esc(JSON.stringify(result))}</div>
@@ -1477,6 +1486,135 @@ function openPlantSheet(dataUrl, result, loading, errorMsg){
   overlay.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
   _plantPhotoData = dataUrl;
+}
+
+/* =========================================================
+   Plant Chat — ask follow-up questions about a plant
+   ========================================================= */
+async function openPlantChat(plantId){
+  const plant = state.plantIds.find(p => p.id === plantId);
+  if(!plant) return;
+
+  let chat = state.plantChats.find(c => c.plantId === plantId);
+  if(!chat){
+    chat = { id: uid('pc'), plantId, messages: [], created: new Date().toISOString() };
+    state.plantChats.push(chat);
+    await fsSave('plantChats', chat);
+  }
+
+  renderPlantChat(plant, chat);
+}
+
+function renderPlantChat(plant, chat){
+  const overlay   = $('#overlay');
+  const sheetForm = $('#sheetForm');
+
+  $('#sheetTitle').textContent = 'Ask about this plant';
+  sheetForm.onsubmit = (ev) => ev.preventDefault();
+
+  const messagesHtml = chat.messages.length
+    ? chat.messages.map(m => chatBubble(m)).join('')
+    : `<div style="text-align:center;color:var(--muted);padding:26px 12px;font-size:13px;line-height:1.6">
+         <div style="font-size:30px;margin-bottom:8px">💬</div>
+         Ask anything about this plant:<br>
+         treatment, prevention, timing, rates, safety...
+       </div>`;
+
+  sheetForm.innerHTML = `
+    <div style="display:flex;gap:10px;align-items:center;padding:0 0 12px;border-bottom:1px solid var(--line);margin-bottom:14px">
+      ${plant.thumb ? `<img src="${plant.thumb}" style="width:46px;height:46px;border-radius:9px;object-fit:cover;flex:0 0 46px">` : ''}
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:14.5px">${esc(plant.name)}</div>
+        <div style="font-size:11.5px;color:var(--muted);font-style:italic">${esc(plant.botanicalName)}</div>
+      </div>
+      <button type="button" class="del" data-action="close-sheet"
+        style="font-size:20px;padding:4px 8px;color:var(--muted)">✕</button>
+    </div>
+
+    <div id="chatMessages"
+      style="min-height:180px;max-height:50vh;overflow-y:auto;padding-right:4px;margin-bottom:12px">
+      ${messagesHtml}
+    </div>
+
+    <div style="display:flex;gap:8px;position:sticky;bottom:0;background:#fff;padding:10px 0 4px;border-top:1px solid var(--line)">
+      <input id="chatInput" placeholder="Ask a question..." autocomplete="off"
+        style="flex:1;padding:11px 12px">
+      <button type="button" class="submit"
+        style="margin:0;width:auto;padding:11px 18px;font-size:14px"
+        data-action="chat-send" data-plant="${plant.id}">Send</button>
+    </div>
+  `;
+
+  overlay.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+
+  setTimeout(() => {
+    const el = $('#chatInput');
+    if(el){
+      el.focus();
+      el.addEventListener('keydown', (ev) => {
+        if(ev.key === 'Enter' && !ev.shiftKey){
+          ev.preventDefault();
+          document.querySelector('[data-action="chat-send"]')?.click();
+        }
+      });
+    }
+    scrollChatBottom();
+  }, 80);
+}
+
+function scrollChatBottom(){
+  const el = $('#chatMessages');
+  if(el) el.scrollTop = el.scrollHeight;
+}
+
+function chatBubble(m){
+  const isUser = m.role === 'user';
+  const text = esc(m.content).replace(/\n/g, '<br>');
+  return `
+    <div style="display:flex;justify-content:${isUser ? 'flex-end' : 'flex-start'};margin-bottom:9px">
+      <div style="max-width:82%;padding:9px 13px;border-radius:15px;font-size:13.5px;line-height:1.5;
+        ${isUser
+          ? 'background:var(--green);color:#fff;border-bottom-right-radius:5px'
+          : 'background:#eef3ee;color:var(--text);border-bottom-left-radius:5px'}">
+        ${text}
+      </div>
+    </div>`;
+}
+
+async function askAboutPlant(plant, history){
+  const systemPrompt = `You are a turf management assistant for Australian golf courses.
+The user has identified this plant/issue:
+- Name: ${plant.name}
+- Botanical name: ${plant.botanicalName}
+- Category: ${plant.category}
+- Description: ${plant.description}
+- Recommended action: ${plant.action}
+- Products: ${plant.products}
+- Safety: ${plant.safety}
+
+Answer their follow-up questions about this plant, its treatment, identification, or related turf management.
+Be practical, concise, and specific to Australian golf course conditions.
+If you don't know something, say so honestly. Keep answers under 4 sentences unless asked for more detail.`;
+
+  const messages = [
+    { role: 'system', content: systemPrompt },
+    ...history.map(m => ({ role: m.role, content: m.content }))
+  ];
+
+  const res = await fetch(PROXY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages })
+  });
+
+  if(!res.ok){
+    const err = await res.text().catch(() => '');
+    throw new Error(`Proxy ${res.status}: ${err.slice(0,120)}`);
+  }
+
+  const data = await res.json();
+  return data?.choices?.[0]?.message?.content || '(No response)';
 }
 
 /* =========================================================
@@ -1908,7 +2046,7 @@ document.addEventListener('click', async (e) => {
         action: p.action,
         products: p.products,
         safety: p.safety
-      }, false);
+      }, false, null, p.id);
       break;
     }
 
@@ -1957,10 +2095,64 @@ document.addEventListener('click', async (e) => {
     case 'del-plant':
       if(e.stopPropagation) e.stopPropagation();
       state.plantIds = state.plantIds.filter(x => x.id !== id);
+      state.plantChats = state.plantChats.filter(c => c.plantId !== id);
       render();
       await fsDelete('plantIds', id);
       toast('Deleted');
       break;
+
+    /* ---- Plant Chat ---- */
+    case 'ask-plant':
+      await openPlantChat(id);
+      break;
+
+    case 'chat-send': {
+      const plantId = el.dataset.plant;
+      const input = $('#chatInput');
+      if(!input) break;
+      const text = input.value.trim();
+      if(!text) break;
+
+      const plant = state.plantIds.find(p => p.id === plantId);
+      const chat  = state.plantChats.find(c => c.plantId === plantId);
+      if(!plant || !chat) break;
+
+      input.disabled = true;
+      input.value = '';
+
+      chat.messages.push({ role: 'user', content: text, ts: Date.now() });
+
+      const msgsEl = $('#chatMessages');
+      if(msgsEl){
+        msgsEl.innerHTML += chatBubble({ role: 'user', content: text });
+        msgsEl.innerHTML += `<div id="typingIndicator" style="display:flex;justify-content:flex-start;margin-bottom:9px">
+          <div style="padding:9px 13px;border-radius:15px;background:#eef3ee;color:var(--muted);font-size:13px;font-style:italic">
+            Thinking…
+          </div>
+        </div>`;
+        scrollChatBottom();
+      }
+
+      try{
+        const reply = await askAboutPlant(plant, chat.messages);
+        chat.messages.push({ role: 'assistant', content: reply, ts: Date.now() });
+        await fsSave('plantChats', chat);
+        renderPlantChat(plant, chat);
+      }catch(err){
+        console.error(err);
+        const ti = $('#typingIndicator');
+        if(ti) ti.remove();
+        if(msgsEl){
+          msgsEl.innerHTML += `<div style="text-align:center;color:var(--red);font-size:12.5px;padding:8px">
+            ⚠ ${esc(err.message || 'Failed to get response')}
+          </div>`;
+          scrollChatBottom();
+        }
+        if(input) input.disabled = false;
+        await fsSave('plantChats', chat);
+      }
+      break;
+    }
 
     /* ---- Learn ---- */
     case 'add-learn': formLearn(); break;
@@ -2060,14 +2252,14 @@ document.addEventListener('click', async (e) => {
       closeSheet();
       setSyncStatus('⏳ Deleting');
       const u = userPath();
-      const subs = ['jobs','reports','events','learn','program','plantIds'];
+      const subs = ['jobs','reports','events','learn','program','plantIds','plantChats'];
       for(const sub of subs){
         const snap = await getDocs(collection(db, 'users', u, sub));
         for(const d of snap.docs){
           try{ await deleteDoc(d.ref); }catch(e){ console.warn(e); }
         }
       }
-      state = { jobs:[], reports:[], events:[], learn:[], program:[], plantIds:[],
+      state = { jobs:[], reports:[], events:[], learn:[], program:[], plantIds:[], plantChats:[],
                 weather:'', courseStatus:'Open' };
       setSyncStatus('☁️ Synced');
       render();
