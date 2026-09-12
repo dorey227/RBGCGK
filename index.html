@@ -118,9 +118,9 @@
   .result{background:#e8f5e9;border-radius:11px;padding:12px;margin-top:12px;font-size:14px;line-height:1.7;border-left:4px solid var(--green2)}
   .result b{color:var(--green)}
 
-  nav{position:fixed;bottom:0;left:0;right:0;background:#fff;z-index:100;display:grid;grid-template-columns:repeat(6,1fr);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -2px 14px rgba(0,0,0,.06)}
-  nav button{background:none;border:0;padding:9px 1px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;color:#96a698;font-size:9.5px;font-weight:600;font-family:inherit}
-  nav button .ni{font-size:18px;line-height:1}
+  nav{position:fixed;bottom:0;left:0;right:0;background:#fff;z-index:100;display:grid;grid-template-columns:repeat(7,1fr);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -2px 14px rgba(0,0,0,.06)}
+  nav button{background:none;border:0;padding:9px 1px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;color:#96a698;font-size:9px;font-weight:600;font-family:inherit}
+  nav button .ni{font-size:17px;line-height:1}
   nav button.active{color:var(--green)}
 
   .toast{position:fixed;bottom:92px;left:50%;transform:translateX(-50%);background:#263a29;color:#fff;padding:10px 18px;border-radius:22px;font-size:13.5px;z-index:300;opacity:0;pointer-events:none;transition:.25s;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis}
@@ -208,7 +208,8 @@
     <button data-action="nav" data-tab="reports"><span class="ni">📋</span>Reports</button>
     <button data-action="nav" data-tab="calendar"><span class="ni">📅</span>Calendar</button>
     <button data-action="nav" data-tab="program"><span class="ni">🧪</span>Program</button>
-    <button data-action="nav" data-tab="learn"><span class="ni">🎓</span>Learn</button>
+    <button data-action="nav" data-tab="plant"><span class="ni">🌿</span>Plant</button>
+    <button data-action="nav" data-tab="learn"><span class="ni">📚</span>Learn</button>
   </nav>
 </div>
 
@@ -261,8 +262,10 @@ enableIndexedDbPersistence(db).catch(err => {
 });
 
 /* =========================================================
-   Constants
+   Constants — EDIT THIS to your Vercel URL
    ========================================================= */
+const PROXY_URL = 'https://YOUR-PROJECT.vercel.app/api/proxy';
+
 const AREAS = ['Greens','Tees','Fairways','Rough','Bunkers','Practice Area',
                'Clubhouse Grounds','Irrigation','Equipment','Whole Course'];
 
@@ -280,11 +283,30 @@ const EVENT_LABEL = {
   equipment:'Equipment', chemical:'Chemical'
 };
 
+const PLANT_PROMPT = `You are a turf management assistant for Australian golf courses.
+You will be given a photo taken on a golf course. Identify what you see and respond ONLY
+with valid JSON in this exact format:
+
+{
+  "name": "Common name",
+  "botanicalName": "Botanical name or 'Unknown'",
+  "category": "Weed" | "Disease" | "Pest" | "Desirable Turf" | "Unknown",
+  "confidence": 0-100,
+  "description": "2-3 sentences describing what you see and how you know",
+  "action": "Recommended action in plain English",
+  "products": "Any relevant products, rates or treatments — or 'None'",
+  "safety": "Any handling or safety notes — or 'None'"
+}
+
+If you are unsure, use category "Unknown" and confidence below 50.
+Never invent botanical names — say "Unknown" instead.
+Respond with JSON only. No markdown, no commentary.`;
+
 /* =========================================================
    State
    ========================================================= */
 let state = {
-  jobs:[], reports:[], events:[], learn:[], program:[],
+  jobs:[], reports:[], events:[], learn:[], program:[], plantIds:[],
   weather:'', courseStatus:'Open'
 };
 let activeTab = 'dash';
@@ -292,6 +314,7 @@ let calCursor = new Date();
 let selectedDay = null;
 let currentUser = null;
 let notifyInterval = null;
+let _plantPhotoData = null;
 
 /* =========================================================
    Helpers
@@ -360,14 +383,16 @@ async function fsLoadAll(){
   };
   try{
     setSyncStatus('⏳ Loading');
-    const [jobs, reports, events, learn, program] = await Promise.all([
-      load('jobs'), load('reports'), load('events'), load('learn'), load('program')
+    const [jobs, reports, events, learn, program, plantIds] = await Promise.all([
+      load('jobs'), load('reports'), load('events'),
+      load('learn'), load('program'), load('plantIds')
     ]);
     state.jobs = jobs;
     state.reports = reports;
     state.events = events;
     state.learn = learn;
     state.program = program;
+    state.plantIds = plantIds;
 
     try{
       const sSnap = await getDocs(collection(db, 'users', u, 'settings'));
@@ -523,13 +548,14 @@ onAuthStateChanged(auth, async (user) => {
   }else{
     appRoot.classList.add('hidden');
     authScreen.classList.remove('hidden');
-    state = { jobs:[], reports:[], events:[], learn:[], program:[], weather:'', courseStatus:'Open' };
+    state = { jobs:[], reports:[], events:[], learn:[], program:[], plantIds:[],
+              weather:'', courseStatus:'Open' };
     if(notifyInterval){ clearInterval(notifyInterval); notifyInterval = null; }
   }
 });
 
 /* =========================================================
-   Seed
+   Seed data
    ========================================================= */
 function seedEvents(){
   const y = new Date().getFullYear();
@@ -584,8 +610,6 @@ function seedJobs(){
 }
 
 function seedProgram(){
-  // Greens program at Redland Bay Golf Club, prepared by Paul Spencer.
-  // weekStart dates are illustrative — edit them to match your actual weeks.
   const y = new Date().getFullYear();
   return [
     { id:'p_jul', month:'July ' + y, weeks: [
@@ -669,6 +693,7 @@ function render(){
   if(activeTab === 'reports')   v.innerHTML = viewReports();
   if(activeTab === 'calendar')  v.innerHTML = viewCalendar();
   if(activeTab === 'program')   v.innerHTML = viewProgram();
+  if(activeTab === 'plant')     v.innerHTML = viewPlant();
   if(activeTab === 'learn')     v.innerHTML = viewLearn();
 
   $$('nav button').forEach(b =>
@@ -1133,7 +1158,6 @@ function viewProgram(){
     return html;
   }
 
-  // sort by earliest weekStart
   const sorted = [...state.program].sort((a,b) => {
     const aS = a.weeks?.[0]?.weekStart || '9999';
     const bS = b.weeks?.[0]?.weekStart || '9999';
@@ -1183,6 +1207,276 @@ function viewProgram(){
   });
 
   return html;
+}
+
+/* =========================================================
+   VIEW: Plant ID
+   ========================================================= */
+function viewPlant(){
+  const history = [...(state.plantIds || [])]
+    .sort((a,b) => (b.created||'').localeCompare(a.created||''));
+
+  const todayCount = history.filter(p =>
+    (p.created||'').slice(0,10) === todayISO()).length;
+
+  return `
+    <div class="sec-head">
+      <h2>Plant ID</h2>
+      <span style="font-size:11px;color:var(--muted);font-weight:600">
+        ${todayCount}/20 today
+      </span>
+    </div>
+
+    <div class="card" style="text-align:center;padding:22px 16px">
+      <div style="font-size:40px;margin-bottom:8px">🌿</div>
+      <h3 style="text-transform:none;font-size:15px;color:var(--text);margin-bottom:6px">
+        Identify a plant, weed, disease or pest
+      </h3>
+      <p style="font-size:13px;color:var(--muted);margin:0 0 18px">
+        Take a clear photo — fill the frame, good light, focus on leaves or symptoms.
+      </p>
+
+      <button type="button" class="submit"
+        style="background:var(--green);padding:14px;font-size:15px;margin-bottom:8px"
+        data-action="plant-camera">
+        📷 Take Photo
+      </button>
+      <button type="button" class="submit"
+        style="background:#fff;color:var(--green);border:1.5px solid var(--green);padding:13px;font-size:14px"
+        data-action="plant-gallery">
+        🖼 Choose from Gallery
+      </button>
+
+      <input type="file" id="plantInputCamera" accept="image/*" capture="environment" style="display:none">
+      <input type="file" id="plantInputGallery" accept="image/*" style="display:none">
+    </div>
+
+    <div class="sec-head"><h2>Recent IDs</h2></div>
+    <div class="card">
+      ${history.length ? history.slice(0,30).map(plantItem).join('')
+        : `<div class="empty"><span class="big">📸</span>
+             No identifications yet. Tap Take Photo to start.</div>`}
+    </div>`;
+}
+
+function plantItem(p){
+  const catClass = {
+    'Weed': 'p-high',
+    'Disease': 'p-high',
+    'Pest': 'p-med',
+    'Desirable Turf': 'p-low',
+    'Unknown': 'p-area'
+  }[p.category] || 'p-area';
+
+  return `
+    <div class="item" data-action="view-plant" data-id="${p.id}" style="cursor:pointer">
+      ${p.thumb ? `<img src="${p.thumb}" style="width:52px;height:52px;border-radius:10px;object-fit:cover;flex:0 0 52px">` : ''}
+      <div class="item-body">
+        <div class="item-title">${esc(p.name || 'Unknown')}</div>
+        <div class="item-meta">
+          <span class="pill ${catClass}">${esc(p.category || 'Unknown')}</span>
+          <span>${p.confidence ? p.confidence + '%' : ''}</span>
+          <span>${prettyDate((p.created||'').slice(0,10))}</span>
+        </div>
+      </div>
+      <button class="del" data-action="del-plant" data-id="${p.id}" title="Delete"
+        onclick="event.stopPropagation()">✕</button>
+    </div>`;
+}
+
+/* =========================================================
+   Plant ID — photo + AI
+   ========================================================= */
+async function compressImage(file, maxSize = 900, quality = 0.75){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if(width > height && width > maxSize){
+          height = Math.round(height * maxSize / width);
+          width = maxSize;
+        } else if(height > maxSize){
+          width = Math.round(width * maxSize / height);
+          height = maxSize;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handlePlantPhoto(inputEl){
+  const file = inputEl.files?.[0];
+  if(!file) return;
+
+  const todayCount = (state.plantIds||[]).filter(p =>
+    (p.created||'').slice(0,10) === todayISO()).length;
+  if(todayCount >= 20){
+    toast('Daily limit reached (20)');
+    inputEl.value = '';
+    return;
+  }
+
+  try{
+    toast('Compressing photo…');
+    const dataUrl = await compressImage(file);
+
+    openPlantSheet(dataUrl, null, true);
+
+    const result = await identifyPlant(dataUrl);
+    openPlantSheet(dataUrl, result, false);
+    inputEl.value = '';
+  }catch(e){
+    console.error(e);
+    openPlantSheet(null, null, false, e.message || 'Unknown error');
+    inputEl.value = '';
+  }
+}
+
+async function identifyPlant(dataUrl){
+  if(PROXY_URL.includes('YOUR-PROJECT')){
+    throw new Error('Set your Vercel PROXY_URL in the code first.');
+  }
+
+  const base64 = dataUrl.split(',')[1];
+
+  const res = await fetch(PROXY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      messages: [
+        { role: 'system', content: PLANT_PROMPT },
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: 'Identify this.' },
+            { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${base64}` } }
+          ]
+        }
+      ]
+    })
+  });
+
+  if(!res.ok){
+    const err = await res.text().catch(() => '');
+    throw new Error(`Proxy ${res.status}: ${err.slice(0,120)}`);
+  }
+
+  const data = await res.json();
+  const raw = data?.choices?.[0]?.message?.content || '';
+
+  const clean = raw.replace(/^```json\s*|\s*```$/g, '').trim();
+  let parsed;
+  try{ parsed = JSON.parse(clean); }
+  catch(e){
+    console.warn('AI returned non-JSON:', raw);
+    throw new Error('AI returned unexpected format');
+  }
+
+  return parsed;
+}
+
+function openPlantSheet(dataUrl, result, loading, errorMsg){
+  const overlay = $('#overlay');
+  const sheetForm = $('#sheetForm');
+
+  $('#sheetTitle').textContent = loading ? 'Identifying…' : 'Identification';
+
+  if(loading){
+    sheetForm.innerHTML = `
+      <div style="text-align:center;padding:12px 0 24px">
+        <img src="${dataUrl}" style="width:100%;max-width:280px;border-radius:14px;margin-bottom:16px;opacity:.85">
+        <div style="font-size:38px;margin:8px 0">🔍</div>
+        <div style="font-size:14px;color:var(--muted)">Analysing species, symptoms and treatments…</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:10px">Usually 3–8 seconds</div>
+      </div>`;
+    overlay.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    return;
+  }
+
+  if(!result){
+    sheetForm.innerHTML = `
+      ${dataUrl ? `<img src="${dataUrl}" style="width:100%;border-radius:14px;margin-bottom:16px">` : ''}
+      <div class="result" style="border-left-color:var(--red);background:#fdecea">
+        <b>Could not identify.</b><br>${esc(errorMsg || 'Try a clearer photo.')}
+      </div>
+      <button type="button" class="submit" data-action="close-sheet" style="margin-top:12px">Close</button>`;
+    overlay.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    return;
+  }
+
+  const catClass = {
+    'Weed': 'p-high', 'Disease': 'p-high', 'Pest': 'p-med',
+    'Desirable Turf': 'p-low', 'Unknown': 'p-area'
+  }[result.category] || 'p-area';
+
+  sheetForm.innerHTML = `
+    <img src="${dataUrl}" style="width:100%;border-radius:14px;margin-bottom:14px">
+
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+      <span class="pill ${catClass}">${esc(result.category || 'Unknown')}</span>
+      <span style="font-size:12px;color:var(--muted);font-weight:600">
+        ${result.confidence || 0}% confident
+      </span>
+    </div>
+
+    <h2 style="margin:4px 0 2px;font-size:22px;color:var(--green)">${esc(result.name || 'Unknown')}</h2>
+    <div style="font-style:italic;color:var(--muted);font-size:13.5px;margin-bottom:14px">
+      ${esc(result.botanicalName || 'Unknown')}
+    </div>
+
+    <div class="card" style="box-shadow:none;border:1px solid var(--line);margin-bottom:10px">
+      <h3 style="margin-bottom:6px">Description</h3>
+      <div style="font-size:13.5px;line-height:1.55">${esc(result.description || '')}</div>
+    </div>
+
+    <div class="card" style="box-shadow:none;border:1px solid var(--line);margin-bottom:10px">
+      <h3 style="margin-bottom:6px">Recommended Action</h3>
+      <div style="font-size:13.5px;line-height:1.55">${esc(result.action || '')}</div>
+    </div>
+
+    ${result.products && result.products !== 'None' ? `
+      <div class="card" style="box-shadow:none;border:1px solid var(--line);margin-bottom:10px">
+        <h3 style="margin-bottom:6px">Products / Treatments</h3>
+        <div style="font-size:13.5px;line-height:1.55">${esc(result.products)}</div>
+      </div>` : ''}
+
+    ${result.safety && result.safety !== 'None' ? `
+      <div class="card" style="box-shadow:none;border:1px solid #ffe0b2;background:#fff8e1;margin-bottom:10px">
+        <h3 style="margin-bottom:6px;color:var(--amber)">⚠ Safety</h3>
+        <div style="font-size:13.5px;line-height:1.55">${esc(result.safety)}</div>
+      </div>` : ''}
+
+    <div class="row2" style="margin-top:14px">
+      <button type="button" class="submit" data-action="close-sheet"
+        style="background:#eef3ee;color:var(--text);padding:12px;font-size:14px">
+        Discard
+      </button>
+      <button type="button" class="submit"
+        data-action="save-plant" id="savePlantBtn"
+        style="padding:12px;font-size:14px">
+        💾 Save
+      </button>
+    </div>
+
+    <div id="plantSaveData" style="display:none">${esc(JSON.stringify(result))}</div>
+  `;
+
+  overlay.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  _plantPhotoData = dataUrl;
 }
 
 /* =========================================================
@@ -1258,7 +1552,7 @@ function viewLearn(){
     <div class="card">
       <h3>Journal Entries</h3>
       ${entries.length ? entries.map(learnItem).join('')
-        : `<div class="empty"><span class="big">🎓</span>
+        : `<div class="empty"><span class="big">📚</span>
              Log what you learned today — tasks, machinery, diseases, calculations, anything.</div>`}
     </div>`;
 }
@@ -1475,7 +1769,7 @@ function formData(){
       <h3 style="margin-bottom:8px">Reminders</h3>
       <p style="font-size:12.5px;color:var(--muted);margin:0 0 10px">
         Get a notification when you open TurfTrack with items due today,
-        tomorrow or this week. Works right in your browser — no server needed.
+        tomorrow or this week.
       </p>
       <button type="button" class="submit" style="background:var(--green2);padding:11px;font-size:14px"
         data-action="enable-notifications">
@@ -1589,6 +1883,86 @@ document.addEventListener('click', async (e) => {
       break;
     }
 
+    /* ---- Plant ID ---- */
+    case 'plant-camera':
+      $('#plantInputCamera').click();
+      break;
+
+    case 'plant-gallery':
+      $('#plantInputGallery').click();
+      break;
+
+    case 'close-sheet':
+      closeSheet();
+      break;
+
+    case 'view-plant': {
+      const p = state.plantIds.find(x => x.id === id);
+      if(!p) return;
+      openPlantSheet(p.thumb, {
+        name: p.name,
+        botanicalName: p.botanicalName,
+        category: p.category,
+        confidence: p.confidence,
+        description: p.description,
+        action: p.action,
+        products: p.products,
+        safety: p.safety
+      }, false);
+      break;
+    }
+
+    case 'save-plant': {
+      const dataEl = $('#plantSaveData');
+      if(!dataEl) return;
+      const result = JSON.parse(dataEl.textContent);
+      const photo = _plantPhotoData;
+
+      const plantRec = {
+        id: uid('pl'),
+        name: result.name || 'Unknown',
+        botanicalName: result.botanicalName || 'Unknown',
+        category: result.category || 'Unknown',
+        confidence: result.confidence || 0,
+        description: result.description || '',
+        action: result.action || '',
+        products: result.products || '',
+        safety: result.safety || '',
+        thumb: photo,
+        created: new Date().toISOString()
+      };
+
+      state.plantIds.push(plantRec);
+      await fsSave('plantIds', plantRec);
+
+      const learnRec = {
+        id: uid('l'),
+        topic: `${plantRec.name} (${plantRec.category})`,
+        date: todayISO(),
+        category: 'Agronomy',
+        hours: '',
+        supervisor: '',
+        notes: `${plantRec.botanicalName}\n\n${plantRec.description}\n\nAction: ${plantRec.action}`
+      };
+      state.learn.push(learnRec);
+      await fsSave('learn', learnRec);
+
+      closeSheet();
+      activeTab = 'plant';
+      render();
+      toast('Saved to Plant ID & Journal');
+      break;
+    }
+
+    case 'del-plant':
+      if(e.stopPropagation) e.stopPropagation();
+      state.plantIds = state.plantIds.filter(x => x.id !== id);
+      render();
+      await fsDelete('plantIds', id);
+      toast('Deleted');
+      break;
+
+    /* ---- Learn ---- */
     case 'add-learn': formLearn(); break;
 
     case 'del-learn':
@@ -1598,6 +1972,7 @@ document.addEventListener('click', async (e) => {
       toast('Entry deleted');
       break;
 
+    /* ---- Calculators ---- */
     case 'calc-spray': {
       const area = parseFloat($('#cArea').value) || 0;
       const rate = parseFloat($('#cRate').value) || 0;
@@ -1685,14 +2060,15 @@ document.addEventListener('click', async (e) => {
       closeSheet();
       setSyncStatus('⏳ Deleting');
       const u = userPath();
-      const subs = ['jobs','reports','events','learn','program'];
+      const subs = ['jobs','reports','events','learn','program','plantIds'];
       for(const sub of subs){
         const snap = await getDocs(collection(db, 'users', u, sub));
         for(const d of snap.docs){
           try{ await deleteDoc(d.ref); }catch(e){ console.warn(e); }
         }
       }
-      state = { jobs:[], reports:[], events:[], learn:[], program:[], weather:'', courseStatus:'Open' };
+      state = { jobs:[], reports:[], events:[], learn:[], program:[], plantIds:[],
+                weather:'', courseStatus:'Open' };
       setSyncStatus('☁️ Synced');
       render();
       toast('All data deleted');
@@ -1702,7 +2078,16 @@ document.addEventListener('click', async (e) => {
 });
 
 /* =========================================================
-   Auto-notify on visibility change
+   File input handlers
+   ========================================================= */
+document.addEventListener('change', (e) => {
+  if(e.target.id === 'plantInputCamera' || e.target.id === 'plantInputGallery'){
+    handlePlantPhoto(e.target);
+  }
+});
+
+/* =========================================================
+   Visibility — check reminders on return
    ========================================================= */
 document.addEventListener('visibilitychange', () => {
   if(document.visibilityState === 'visible' && currentUser){
