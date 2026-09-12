@@ -146,6 +146,51 @@
   .auth-switch a{color:var(--green);font-weight:600;cursor:pointer;text-decoration:none}
 
   .sync-badge{font-size:10.5px;background:rgba(255,255,255,.15);padding:3px 8px;border-radius:20px;font-weight:600}
+
+  .filter-bar {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 2px 0 12px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .filter-bar::-webkit-scrollbar { display: none; }
+  .filter-chip {
+    flex: 0 0 auto;
+    background: #fff;
+    border: 1.5px solid var(--line);
+    color: var(--muted);
+    padding: 7px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+  }
+  .filter-chip.active {
+    background: var(--green);
+    color: #fff;
+    border-color: var(--green);
+  }
+
+  #photoViewer {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.95);
+    z-index: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    cursor: zoom-out;
+  }
+  #photoViewer img {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 12px;
+  }
 </style>
 </head>
 <body>
@@ -223,6 +268,10 @@
   </div>
 </div>
 
+<div id="photoViewer" class="hidden" data-action="close-photo-viewer">
+  <img id="photoViewerImg" src="">
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script type="module">
@@ -262,7 +311,7 @@ enableIndexedDbPersistence(db).catch(err => {
 });
 
 /* =========================================================
-   Constants — EDIT THIS to your Vercel URL
+   Constants
    ========================================================= */
 const PROXY_URL = 'https://rbgcgk.vercel.app/api/proxy';
 
@@ -302,6 +351,63 @@ If you are unsure, use category "Unknown" and confidence below 50.
 Never invent botanical names — say "Unknown" instead.
 Respond with JSON only. No markdown, no commentary.`;
 
+const REIDENTIFY_PROMPT = `You will be given one or more photos of the same plant, weed, disease or pest on an Australian golf course.
+Provide up to 3 possible identifications, ordered from most likely to least likely.
+
+Respond ONLY with valid JSON in this exact format:
+{
+  "results": [
+    {
+      "name": "Common name",
+      "botanicalName": "Botanical name or 'Unknown'",
+      "category": "Weed" | "Disease" | "Pest" | "Desirable Turf" | "Unknown",
+      "confidence": 0-100,
+      "description": "2-3 sentences",
+      "action": "Recommended action",
+      "products": "Products or 'None'",
+      "safety": "Safety notes or 'None'"
+    }
+  ]
+}
+
+Rules:
+- 1 to 3 results. If highly confident, 1 result is fine. If unsure, give multiple possibilities.
+- If you cannot identify anything, return a single result with category "Unknown" and confidence below 30.
+- Never invent botanical names — say "Unknown".
+- Respond with JSON only. No markdown, no commentary.`;
+
+function getDocExtractPrompt(){
+  const y = new Date().getFullYear();
+  return `You are a turf management assistant for Australian golf courses.
+The user has provided a photo of a document — a yearly maintenance program,
+renovation schedule, tournament calendar, chemical program, or similar.
+
+Extract ALL events you can find. Respond ONLY with valid JSON:
+
+{
+  "events": [
+    {
+      "date": "YYYY-MM-DD",
+      "title": "Short clear title",
+      "type": "agronomy" | "club" | "staff" | "equipment" | "chemical",
+      "notes": "Any extra detail from the document, or empty string"
+    }
+  ]
+}
+
+Rules:
+- Current year is ${y}. If only month/day shown, use ${y}. If that date has already passed this year, use ${y+1}.
+- Category mapping:
+  * agronomy = aeration, coring, topdressing, overseeding, verticutting, scarifying, renovation, drainage, irrigation work, tree work
+  * club = tournaments, championships, member events, charity days, social events, functions
+  * staff = training, reviews, meetings, holidays, rosters
+  * equipment = mower servicing, reel grinding, machinery maintenance, repairs
+  * chemical = fertiliser, herbicide, fungicide, insecticide, growth regulators, sprays
+- If a date is unclear, use your best guess and mention it in notes.
+- If you cannot read the document, return {"events": []}.
+- Respond with JSON only. No markdown. No commentary.`;
+}
+
 /* =========================================================
    State
    ========================================================= */
@@ -315,6 +421,7 @@ let selectedDay = null;
 let currentUser = null;
 let notifyInterval = null;
 let _plantPhotoData = null;
+let plantFilter = 'All';
 
 /* =========================================================
    Helpers
@@ -392,7 +499,14 @@ async function fsLoadAll(){
     state.events = events;
     state.learn = learn;
     state.program = program;
-    state.plantIds = plantIds;
+    // Migrate legacy plants (thumb → photos array)
+    state.plantIds = plantIds.map(p => {
+      if(!p.photos || !p.photos.length){
+        p.photos = p.thumb ? [p.thumb] : [];
+      }
+      if(!p.thumb && p.photos.length) p.thumb = p.photos[0];
+      return p;
+    });
     state.plantChats = plantChats;
 
     try{
@@ -1072,8 +1186,14 @@ function viewCalendar(){
   return `
     <div class="sec-head">
       <h2>Calendar</h2>
-      <button class="add-btn" data-action="add-event" data-date="${t}">+</button>
+      <div style="display:flex;gap:6px">
+        <button class="add-btn" style="background:var(--blue)" data-action="import-doc" title="Import from photo">📄</button>
+        <button class="add-btn" data-action="add-event" data-date="${t}">+</button>
+      </div>
     </div>
+
+    <input type="file" id="importDocCamera" accept="image/*" capture="environment" style="display:none">
+    <input type="file" id="importDocGallery" accept="image/*" style="display:none">
 
     <div class="card">
       <div class="cal-head">
@@ -1220,6 +1340,12 @@ function viewPlant(){
   const todayCount = history.filter(p =>
     (p.created||'').slice(0,10) === todayISO()).length;
 
+  const filtered = history.filter(p => {
+    if(plantFilter === 'All') return true;
+    if(plantFilter === 'Plant') return p.category === 'Desirable Turf';
+    return p.category === plantFilter;
+  });
+
   return `
     <div class="sec-head">
       <h2>Plant ID</h2>
@@ -1252,11 +1378,26 @@ function viewPlant(){
       <input type="file" id="plantInputGallery" accept="image/*" style="display:none">
     </div>
 
-    <div class="sec-head"><h2>Recent IDs</h2></div>
+    <div class="sec-head">
+      <h2>Plant Records</h2>
+      <span style="font-size:11px;color:var(--muted);font-weight:600">
+        ${filtered.length}${plantFilter !== 'All' ? ` of ${history.length}` : ''}
+      </span>
+    </div>
+
+    <div class="filter-bar">
+      ${['All','Plant','Weed','Pest','Disease'].map(f => `
+        <button class="filter-chip ${plantFilter===f?'active':''}"
+          data-action="plant-filter" data-filter="${f}">${f}</button>
+      `).join('')}
+    </div>
+
     <div class="card">
-      ${history.length ? history.slice(0,30).map(plantItem).join('')
+      ${filtered.length ? filtered.slice(0,50).map(plantItem).join('')
         : `<div class="empty"><span class="big">📸</span>
-             No identifications yet. Tap Take Photo to start.</div>`}
+             ${history.length
+               ? `No ${plantFilter.toLowerCase()} records yet.`
+               : 'No identifications yet. Tap Take Photo to start.'}</div>`}
     </div>`;
 }
 
@@ -1272,6 +1413,8 @@ function plantItem(p){
   const chat = state.plantChats.find(c => c.plantId === p.id);
   const hasChat = chat && chat.messages && chat.messages.length > 0;
 
+  const photoCount = (p.photos && p.photos.length) || (p.thumb ? 1 : 0);
+
   return `
     <div class="item" data-action="view-plant" data-id="${p.id}" style="cursor:pointer">
       ${p.thumb ? `<img src="${p.thumb}" style="width:52px;height:52px;border-radius:10px;object-fit:cover;flex:0 0 52px">` : ''}
@@ -1281,16 +1424,16 @@ function plantItem(p){
           <span class="pill ${catClass}">${esc(p.category || 'Unknown')}</span>
           <span>${p.confidence ? p.confidence + '%' : ''}</span>
           <span>${prettyDate((p.created||'').slice(0,10))}</span>
+          ${photoCount > 1 ? `<span>📷 ${photoCount}</span>` : ''}
           ${hasChat ? `<span style="color:var(--green2);font-weight:700">💬 ${chat.messages.length}</span>` : ''}
         </div>
       </div>
-      <button class="del" data-action="del-plant" data-id="${p.id}" title="Delete"
-        onclick="event.stopPropagation()">✕</button>
+      <span style="color:#b9c7bb;font-size:20px;line-height:1;flex:0 0 auto">›</span>
     </div>`;
 }
 
 /* =========================================================
-   Plant ID — photo + AI
+   Image compression
    ========================================================= */
 async function compressImage(file, maxSize = 900, quality = 0.75){
   return new Promise((resolve, reject) => {
@@ -1320,6 +1463,9 @@ async function compressImage(file, maxSize = 900, quality = 0.75){
   });
 }
 
+/* =========================================================
+   Plant ID — photo + AI
+   ========================================================= */
 async function handlePlantPhoto(inputEl){
   const file = inputEl.files?.[0];
   if(!file) return;
@@ -1349,10 +1495,6 @@ async function handlePlantPhoto(inputEl){
 }
 
 async function identifyPlant(dataUrl){
-  if(PROXY_URL.includes('YOUR-PROJECT')){
-    throw new Error('Set your Vercel PROXY_URL in the code first.');
-  }
-
   const base64 = dataUrl.split(',')[1];
 
   const res = await fetch(PROXY_URL, {
@@ -1391,11 +1533,15 @@ async function identifyPlant(dataUrl){
   return parsed;
 }
 
+/* =========================================================
+   Plant Detail Sheet (view + fresh result)
+   ========================================================= */
 function openPlantSheet(dataUrl, result, loading, errorMsg, plantId){
   const overlay = $('#overlay');
   const sheetForm = $('#sheetForm');
 
   $('#sheetTitle').textContent = loading ? 'Identifying…' : 'Identification';
+  sheetForm.onsubmit = (ev) => ev.preventDefault();
 
   if(loading){
     sheetForm.innerHTML = `
@@ -1410,7 +1556,9 @@ function openPlantSheet(dataUrl, result, loading, errorMsg, plantId){
     return;
   }
 
-  if(!result){
+  const plant = plantId ? state.plantIds.find(p => p.id === plantId) : null;
+
+  if(!result && !plant){
     sheetForm.innerHTML = `
       ${dataUrl ? `<img src="${dataUrl}" style="width:100%;border-radius:14px;margin-bottom:16px">` : ''}
       <div class="result" style="border-left-color:var(--red);background:#fdecea">
@@ -1422,65 +1570,129 @@ function openPlantSheet(dataUrl, result, loading, errorMsg, plantId){
     return;
   }
 
+  // Resolve display data
+  const d = plant ? {
+    name: plant.name,
+    botanicalName: plant.botanicalName,
+    category: plant.category,
+    confidence: plant.confidence,
+    description: plant.description,
+    action: plant.action,
+    products: plant.products,
+    safety: plant.safety
+  } : result;
+
+  // Resolve photos
+  let photos = [];
+  if(plant){
+    photos = (plant.photos && plant.photos.length) ? plant.photos
+           : (plant.thumb ? [plant.thumb] : []);
+  } else if(dataUrl){
+    photos = [dataUrl];
+  }
+
   const catClass = {
     'Weed': 'p-high', 'Disease': 'p-high', 'Pest': 'p-med',
     'Desirable Turf': 'p-low', 'Unknown': 'p-area'
-  }[result.category] || 'p-area';
+  }[d.category] || 'p-area';
+
+  // Photo gallery
+  let photosHtml = '';
+  if(photos.length === 1){
+    photosHtml = `<img src="${photos[0]}" style="width:100%;border-radius:14px;margin-bottom:14px;cursor:zoom-in" data-action="view-photo" data-src="${photos[0]}">`;
+  } else if(photos.length > 1){
+    photosHtml = `
+      <div style="font-size:11.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">
+        Photos (${photos.length})
+      </div>
+      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;margin-bottom:8px;-webkit-overflow-scrolling:touch">
+        ${photos.map(p => `
+          <img src="${p}" style="flex:0 0 auto;height:150px;border-radius:12px;object-fit:cover;cursor:zoom-in"
+            data-action="view-photo" data-src="${p}">
+        `).join('')}
+      </div>`;
+  }
 
   sheetForm.innerHTML = `
-    <img src="${dataUrl}" style="width:100%;border-radius:14px;margin-bottom:14px">
+    ${photosHtml}
 
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
-      <span class="pill ${catClass}">${esc(result.category || 'Unknown')}</span>
+      <span class="pill ${catClass}">${esc(d.category || 'Unknown')}</span>
       <span style="font-size:12px;color:var(--muted);font-weight:600">
-        ${result.confidence || 0}% confident
+        ${d.confidence || 0}% confident
       </span>
     </div>
 
-    <h2 style="margin:4px 0 2px;font-size:22px;color:var(--green)">${esc(result.name || 'Unknown')}</h2>
+    <h2 style="margin:4px 0 2px;font-size:22px;color:var(--green)">${esc(d.name || 'Unknown')}</h2>
     <div style="font-style:italic;color:var(--muted);font-size:13.5px;margin-bottom:14px">
-      ${esc(result.botanicalName || 'Unknown')}
+      ${esc(d.botanicalName || 'Unknown')}
     </div>
 
     <div class="card" style="box-shadow:none;border:1px solid var(--line);margin-bottom:10px">
       <h3 style="margin-bottom:6px">Description</h3>
-      <div style="font-size:13.5px;line-height:1.55">${esc(result.description || '')}</div>
+      <div style="font-size:13.5px;line-height:1.55">${esc(d.description || '')}</div>
     </div>
 
     <div class="card" style="box-shadow:none;border:1px solid var(--line);margin-bottom:10px">
       <h3 style="margin-bottom:6px">Recommended Action</h3>
-      <div style="font-size:13.5px;line-height:1.55">${esc(result.action || '')}</div>
+      <div style="font-size:13.5px;line-height:1.55">${esc(d.action || '')}</div>
     </div>
 
-    ${result.products && result.products !== 'None' ? `
+    ${d.products && d.products !== 'None' ? `
       <div class="card" style="box-shadow:none;border:1px solid var(--line);margin-bottom:10px">
         <h3 style="margin-bottom:6px">Products / Treatments</h3>
-        <div style="font-size:13.5px;line-height:1.55">${esc(result.products)}</div>
+        <div style="font-size:13.5px;line-height:1.55">${esc(d.products)}</div>
       </div>` : ''}
 
-    ${result.safety && result.safety !== 'None' ? `
+    ${d.safety && d.safety !== 'None' ? `
       <div class="card" style="box-shadow:none;border:1px solid #ffe0b2;background:#fff8e1;margin-bottom:10px">
         <h3 style="margin-bottom:6px;color:var(--amber)">⚠ Safety</h3>
-        <div style="font-size:13.5px;line-height:1.55">${esc(result.safety)}</div>
+        <div style="font-size:13.5px;line-height:1.55">${esc(d.safety)}</div>
       </div>` : ''}
 
-    <div class="row2" style="margin-top:14px">
-      <button type="button" class="submit" data-action="close-sheet"
-        style="background:#eef3ee;color:var(--text);padding:12px;font-size:14px">
-        ${plantId ? 'Close' : 'Discard'}
-      </button>
-      ${plantId
-        ? `<button type="button" class="submit" data-action="ask-plant" data-id="${plantId}"
-             style="padding:12px;font-size:14px">
-             💬 Ask AI
-           </button>`
-        : `<button type="button" class="submit" data-action="save-plant" id="savePlantBtn"
-             style="padding:12px;font-size:14px">
-             💾 Save
-           </button>`}
-    </div>
+    ${plantId ? `
+      <div class="row2" style="margin-top:14px">
+        <button type="button" class="submit" data-action="close-sheet"
+          style="background:#eef3ee;color:var(--text);padding:12px;font-size:14px">
+          Close
+        </button>
+        <button type="button" class="submit" data-action="ask-plant" data-id="${plantId}"
+          style="padding:12px;font-size:14px">
+          💬 Ask AI
+        </button>
+      </div>
 
-    <div id="plantSaveData" style="display:none">${esc(JSON.stringify(result))}</div>
+      <div class="row2" style="margin-top:8px">
+        <button type="button" class="submit" data-action="edit-plant" data-id="${plantId}"
+          style="background:#fff;color:var(--blue);border:1.5px solid var(--blue);padding:12px;font-size:14px">
+          ✏️ Edit
+        </button>
+        <button type="button" class="submit" data-action="reidentify-plant" data-id="${plantId}"
+          style="background:#fff;color:var(--green);border:1.5px solid var(--green);padding:12px;font-size:14px">
+          🔍 Re-identify
+        </button>
+      </div>
+
+      <button type="button" class="submit"
+        data-action="delete-plant-detail" data-id="${plantId}"
+        style="background:#fff;color:var(--red);border:1.5px solid var(--red);
+               padding:12px;font-size:14px;margin-top:8px">
+        🗑 Delete this plant
+      </button>
+    ` : `
+      <div class="row2" style="margin-top:14px">
+        <button type="button" class="submit" data-action="close-sheet"
+          style="background:#eef3ee;color:var(--text);padding:12px;font-size:14px">
+          Discard
+        </button>
+        <button type="button" class="submit" data-action="save-plant" id="savePlantBtn"
+          style="padding:12px;font-size:14px">
+          💾 Save
+        </button>
+      </div>
+    `}
+
+    <div id="plantSaveData" style="display:none">${esc(JSON.stringify(d))}</div>
   `;
 
   overlay.classList.remove('hidden');
@@ -1489,7 +1701,271 @@ function openPlantSheet(dataUrl, result, loading, errorMsg, plantId){
 }
 
 /* =========================================================
-   Plant Chat — ask follow-up questions about a plant
+   Plant Edit Form
+   ========================================================= */
+function openPlantEditForm(plantId){
+  const plant = state.plantIds.find(p => p.id === plantId);
+  if(!plant) return;
+
+  const overlay = $('#overlay');
+  const sheetForm = $('#sheetForm');
+  $('#sheetTitle').textContent = 'Edit plant';
+  sheetForm.onsubmit = (ev) => ev.preventDefault();
+
+  window._editPhotos = (plant.photos && plant.photos.length)
+    ? [...plant.photos]
+    : (plant.thumb ? [plant.thumb] : []);
+
+  const photoStrip = () => window._editPhotos.map((p, i) => `
+    <div style="position:relative;flex:0 0 auto">
+      <img src="${p}" style="width:80px;height:80px;border-radius:10px;object-fit:cover;display:block">
+      <button type="button" data-action="edit-remove-photo" data-idx="${i}"
+        style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:var(--red);color:#fff;border:2px solid #fff;font-size:12px;line-height:1;cursor:pointer;padding:0">✕</button>
+    </div>
+  `).join('');
+
+  sheetForm.innerHTML = `
+    <div class="field">
+      <label>Photos (${window._editPhotos.length})</label>
+      <div id="editPhotoStrip" style="display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;-webkit-overflow-scrolling:touch">
+        ${photoStrip()}
+      </div>
+      <div class="row2" style="margin-top:4px">
+        <button type="button" data-action="edit-add-camera"
+          style="padding:11px;border-radius:11px;border:1.5px solid var(--line);background:#fff;font-weight:600;cursor:pointer;font-family:inherit;font-size:13.5px">
+          📷 Add Photo
+        </button>
+        <button type="button" data-action="edit-add-gallery"
+          style="padding:11px;border-radius:11px;border:1.5px solid var(--line);background:#fff;font-weight:600;cursor:pointer;font-family:inherit;font-size:13.5px">
+          🖼 From Gallery
+        </button>
+      </div>
+      <input type="file" id="editPhotoCamera" accept="image/*" capture="environment" style="display:none">
+      <input type="file" id="editPhotoGallery" accept="image/*" style="display:none">
+    </div>
+
+    <div class="field"><label>Common name</label>
+      <input name="name" value="${esc(plant.name || '')}" required></div>
+
+    <div class="field"><label>Botanical name</label>
+      <input name="botanicalName" value="${esc(plant.botanicalName || '')}"></div>
+
+    <div class="row2">
+      <div class="field"><label>Category</label>
+        <select name="category">
+          ${['Weed','Disease','Pest','Desirable Turf','Unknown'].map(c =>
+            `<option ${plant.category===c?'selected':''}>${c}</option>`
+          ).join('')}
+        </select></div>
+      <div class="field"><label>Confidence %</label>
+        <input name="confidence" type="number" min="0" max="100" value="${plant.confidence || 0}"></div>
+    </div>
+
+    <div class="field"><label>Description</label>
+      <textarea name="description">${esc(plant.description || '')}</textarea></div>
+
+    <div class="field"><label>Recommended action</label>
+      <textarea name="action">${esc(plant.action || '')}</textarea></div>
+
+    <div class="field"><label>Products / treatments</label>
+      <textarea name="products">${esc(plant.products || '')}</textarea></div>
+
+    <div class="field"><label>Safety</label>
+      <textarea name="safety">${esc(plant.safety || '')}</textarea></div>
+
+    <div class="row2" style="margin-top:14px">
+      <button type="button" class="submit" data-action="view-plant" data-id="${plantId}"
+        style="background:#eef3ee;color:var(--text)">Cancel</button>
+      <button type="button" class="submit" data-action="edit-save-plant" data-id="${plantId}">💾 Save</button>
+    </div>
+  `;
+
+  overlay.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function refreshEditPhotoStrip(){
+  const strip = $('#editPhotoStrip');
+  if(!strip) return;
+  strip.innerHTML = (window._editPhotos || []).map((p, i) => `
+    <div style="position:relative;flex:0 0 auto">
+      <img src="${p}" style="width:80px;height:80px;border-radius:10px;object-fit:cover;display:block">
+      <button type="button" data-action="edit-remove-photo" data-idx="${i}"
+        style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:var(--red);color:#fff;border:2px solid #fff;font-size:12px;line-height:1;cursor:pointer;padding:0">✕</button>
+    </div>
+  `).join('');
+}
+
+async function handleEditPhoto(inputEl){
+  const file = inputEl.files?.[0];
+  if(!file) return;
+  try{
+    toast('Compressing…');
+    const dataUrl = await compressImage(file);
+    window._editPhotos = window._editPhotos || [];
+    window._editPhotos.push(dataUrl);
+    inputEl.value = '';
+    refreshEditPhotoStrip();
+    toast('Photo added');
+  }catch(e){
+    console.error(e);
+    toast('Photo failed');
+    inputEl.value = '';
+  }
+}
+
+/* =========================================================
+   Re-identify
+   ========================================================= */
+async function reidentifyPlant(plantId){
+  const plant = state.plantIds.find(p => p.id === plantId);
+  if(!plant) return;
+
+  const photos = (plant.photos && plant.photos.length)
+    ? plant.photos
+    : (plant.thumb ? [plant.thumb] : []);
+  if(!photos.length){
+    toast('No photo to re-identify');
+    return;
+  }
+
+  const overlay = $('#overlay');
+  const sheetForm = $('#sheetForm');
+  $('#sheetTitle').textContent = 'Re-identifying…';
+  sheetForm.onsubmit = (ev) => ev.preventDefault();
+
+  sheetForm.innerHTML = `
+    <div style="text-align:center;padding:20px 0">
+      <img src="${photos[0]}" style="width:100%;max-width:240px;border-radius:14px;margin-bottom:16px;opacity:.85">
+      <div style="font-size:38px;margin:8px 0">🔍</div>
+      <div style="font-size:14px;color:var(--muted)">Analysing with multiple possibilities…</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:10px">Usually 5–12 seconds</div>
+    </div>`;
+
+  overlay.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+
+  try{
+    const results = await reidentifyPlantAI(photos);
+    showReidentifyResults(plant, results);
+  }catch(e){
+    console.error(e);
+    sheetForm.innerHTML = `
+      <div class="result" style="border-left-color:var(--red);background:#fdecea">
+        <b>Re-identify failed.</b><br>${esc(e.message || 'Unknown error')}
+      </div>
+      <button type="button" class="submit" data-action="view-plant" data-id="${plantId}"
+        style="margin-top:12px;background:#eef3ee;color:var(--text)">Close</button>`;
+  }
+}
+
+async function reidentifyPlantAI(photos){
+  const content = [
+    { type: 'text', text: photos.length > 1
+      ? 'Identify this. Multiple photos of the same specimen are attached.'
+      : 'Identify this.' },
+    ...photos.map(p => ({ type: 'image_url', image_url: { url: p } }))
+  ];
+
+  const res = await fetch(PROXY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      messages: [
+        { role: 'system', content: REIDENTIFY_PROMPT },
+        { role: 'user', content }
+      ]
+    })
+  });
+
+  if(!res.ok){
+    const err = await res.text().catch(() => '');
+    throw new Error(`Proxy ${res.status}: ${err.slice(0,120)}`);
+  }
+
+  const data = await res.json();
+  const raw = data?.choices?.[0]?.message?.content || '';
+  const clean = raw.replace(/^```json\s*|\s*```$/g, '').trim();
+
+  let parsed;
+  try{ parsed = JSON.parse(clean); }
+  catch(e){
+    console.warn('Re-identify non-JSON:', raw);
+    throw new Error('AI returned unexpected format');
+  }
+
+  return Array.isArray(parsed.results) ? parsed.results : [];
+}
+
+function showReidentifyResults(plant, results){
+  const overlay = $('#overlay');
+  const sheetForm = $('#sheetForm');
+  sheetForm.onsubmit = (ev) => ev.preventDefault();
+
+  $('#sheetTitle').textContent = results.length
+    ? `${results.length} possible match${results.length>1?'es':''}`
+    : 'No suggestions';
+
+  if(!results.length){
+    sheetForm.innerHTML = `
+      <div class="result" style="border-left-color:var(--amber);background:#fff8e1">
+        No suggestions came back. Try a clearer photo or add another angle, then Re-identify again.
+      </div>
+      <button type="button" class="submit" data-action="view-plant" data-id="${plant.id}"
+        style="margin-top:12px;background:#eef3ee;color:var(--text)">Close</button>`;
+    return;
+  }
+
+  const photos = (plant.photos && plant.photos.length)
+    ? plant.photos
+    : (plant.thumb ? [plant.thumb] : []);
+
+  sheetForm.innerHTML = `
+    <div style="font-size:13px;color:var(--muted);margin-bottom:12px">
+      Tap a result to apply it. Current name: <b>${esc(plant.name)}</b>
+    </div>
+
+    ${photos.length ? `
+      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;margin-bottom:8px;-webkit-overflow-scrolling:touch">
+        ${photos.map(p => `<img src="${p}" style="flex:0 0 auto;height:90px;border-radius:10px;object-fit:cover;opacity:.7">`).join('')}
+      </div>
+    ` : ''}
+
+    ${results.map((r, i) => {
+      const catClass = {
+        'Weed': 'p-high', 'Disease': 'p-high', 'Pest': 'p-med',
+        'Desirable Turf': 'p-low', 'Unknown': 'p-area'
+      }[r.category] || 'p-area';
+      return `
+        <div class="card" style="border:1.5px solid var(--line);cursor:pointer;margin-bottom:10px"
+          data-action="apply-reidentify" data-id="${plant.id}" data-idx="${i}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px">
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:600;font-size:15px">${esc(r.name || 'Unknown')}</div>
+              <div style="font-style:italic;color:var(--muted);font-size:12.5px">${esc(r.botanicalName || 'Unknown')}</div>
+            </div>
+            <span class="pill ${catClass}" style="flex:0 0 auto">${esc(r.category || 'Unknown')}</span>
+          </div>
+          <div style="font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px">
+            ${r.confidence || 0}% confident
+          </div>
+          <div style="font-size:13px;line-height:1.5;color:#40513f">${esc(r.description || '')}</div>
+          ${r.action ? `<div style="font-size:12.5px;color:#40513f;margin-top:6px"><b style="color:var(--green2)">Action:</b> ${esc(r.action)}</div>` : ''}
+        </div>
+      `;
+    }).join('')}
+
+    <button type="button" class="submit" data-action="view-plant" data-id="${plant.id}"
+      style="background:#eef3ee;color:var(--text);margin-top:6px">
+      Cancel
+    </button>
+
+    <div id="reidentifyData" style="display:none">${esc(JSON.stringify(results))}</div>
+  `;
+}
+
+/* =========================================================
+   Plant Chat
    ========================================================= */
 async function openPlantChat(plantId){
   const plant = state.plantIds.find(p => p.id === plantId);
@@ -1618,6 +2094,164 @@ If you don't know something, say so honestly. Keep answers under 4 sentences unl
 }
 
 /* =========================================================
+   Document Import
+   ========================================================= */
+async function handleDocPhoto(inputEl){
+  const file = inputEl.files?.[0];
+  if(!file) return;
+
+  try{
+    toast('Reading document…');
+    const dataUrl = await compressImage(file, 1400, 0.8);
+
+    openSheet('Reading document…', `
+      <div style="text-align:center;padding:16px 0 24px">
+        <img src="${dataUrl}" style="width:100%;max-width:280px;border-radius:14px;margin-bottom:16px;opacity:.85">
+        <div style="font-size:38px;margin:8px 0">📄</div>
+        <div style="font-size:14px;color:var(--muted)">Extracting events from your document…</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:10px">Usually 5–15 seconds</div>
+      </div>
+    `, () => {});
+
+    const events = await extractEventsFromDoc(dataUrl);
+    inputEl.value = '';
+
+    if(!events || !events.length){
+      openImportSheet([], dataUrl);
+      return;
+    }
+    openImportSheet(events, dataUrl);
+  }catch(e){
+    console.error(e);
+    inputEl.value = '';
+    closeSheet();
+    toast('Import failed: ' + (e.message || 'unknown'));
+  }
+}
+
+async function extractEventsFromDoc(dataUrl){
+  const base64 = dataUrl.split(',')[1];
+
+  const res = await fetch(PROXY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      messages: [
+        { role: 'system', content: getDocExtractPrompt() },
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: 'Extract all events from this document.' },
+            { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${base64}` } }
+          ]
+        }
+      ]
+    })
+  });
+
+  if(!res.ok){
+    const err = await res.text().catch(() => '');
+    throw new Error(`Proxy ${res.status}: ${err.slice(0,120)}`);
+  }
+
+  const data = await res.json();
+  const raw = data?.choices?.[0]?.message?.content || '';
+
+  const clean = raw.replace(/^```json\s*|\s*```$/g, '').trim();
+  let parsed;
+  try{ parsed = JSON.parse(clean); }
+  catch(e){
+    console.warn('Doc AI returned non-JSON:', raw);
+    throw new Error('AI could not read the document');
+  }
+
+  const events = Array.isArray(parsed.events) ? parsed.events : [];
+  return events.filter(e => e && e.date && e.title);
+}
+
+function openImportSheet(events, dataUrl){
+  const overlay = $('#overlay');
+  const sheetForm = $('#sheetForm');
+
+  $('#sheetTitle').textContent = events.length
+    ? `${events.length} event${events.length > 1 ? 's' : ''} found`
+    : 'Nothing found';
+
+  sheetForm.onsubmit = (ev) => ev.preventDefault();
+
+  if(!events.length){
+    sheetForm.innerHTML = `
+      ${dataUrl ? `<img src="${dataUrl}" style="width:100%;border-radius:14px;margin-bottom:16px;opacity:.7">` : ''}
+      <div class="result" style="border-left-color:var(--amber);background:#fff8e1">
+        <b>Could not find any events.</b><br>
+        Try a clearer photo with better lighting, or crop to just the
+        schedule section and try again.
+      </div>
+      <button type="button" class="submit" data-action="close-sheet" style="margin-top:12px">Close</button>`;
+    overlay.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    return;
+  }
+
+  window._pendingImport = events.map(e => ({ ...e, _checked: true }));
+
+  sheetForm.innerHTML = `
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px">
+      Uncheck any events you don't want. Tap <b>Add</b> to save the rest to your calendar.
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span style="font-size:12px;color:var(--muted);font-weight:600">
+        <span id="importCount">${events.length}</span> selected
+      </span>
+      <a style="font-size:12px;color:var(--green);font-weight:700;cursor:pointer;text-decoration:none"
+         data-action="import-toggle-all">Toggle all</a>
+    </div>
+
+    <div id="importList" style="max-height:50vh;overflow-y:auto;margin-bottom:14px">
+      ${events.map((e, i) => importRow(e, i)).join('')}
+    </div>
+
+    <button type="button" class="submit" data-action="import-confirm">
+      ✅ Add to Calendar
+    </button>
+    <button type="button" class="submit"
+      style="background:#eef3ee;color:var(--text);margin-top:8px"
+      data-action="close-sheet">
+      Cancel
+    </button>
+  `;
+
+  overlay.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function importRow(e, idx){
+  const typeKey = EVENT_TYPES.includes(e.type) ? e.type : 'agronomy';
+  return `
+    <label class="item" style="padding:9px 0;cursor:pointer;align-items:flex-start">
+      <input type="checkbox" data-import-idx="${idx}" checked
+        style="width:auto;margin-top:5px;flex:0 0 auto"
+        onchange="window._onImportToggle(${idx}, this.checked)">
+      <div class="item-body">
+        <div class="item-title" style="font-size:13.5px">${esc(e.title)}</div>
+        <div class="item-meta">
+          <span class="pill p-type">${EVENT_LABEL[typeKey]}</span>
+          <span>${prettyDate(e.date)}</span>
+        </div>
+        ${e.notes ? `<div class="item-note" style="font-size:12px">${esc(e.notes)}</div>` : ''}
+      </div>
+    </label>`;
+}
+
+window._onImportToggle = function(idx, checked){
+  if(!window._pendingImport || !window._pendingImport[idx]) return;
+  window._pendingImport[idx]._checked = checked;
+  const c = $('#importCount');
+  if(c) c.textContent = window._pendingImport.filter(e => e._checked).length;
+};
+
+/* =========================================================
    VIEW: Learn
    ========================================================= */
 function viewLearn(){
@@ -1713,7 +2347,7 @@ function learnItem(e){
 }
 
 /* =========================================================
-   Sheet
+   Sheet base
    ========================================================= */
 const overlay = $('#overlay');
 const sheetForm = $('#sheetForm');
@@ -2005,6 +2639,75 @@ document.addEventListener('click', async (e) => {
       toast('Event deleted');
       break;
 
+    /* ---- Document Import ---- */
+    case 'import-doc':
+      openSheet('Import from document', `
+        <p style="font-size:13.5px;color:var(--muted);margin:0 0 14px">
+          Take a photo of a yearly program, tournament list, renovation schedule
+          or chemical plan. AI will read it and extract the events.
+        </p>
+        <button type="button" class="submit" data-action="import-camera"
+          style="padding:14px;font-size:15px;margin-bottom:8px">
+          📷 Take Photo
+        </button>
+        <button type="button" class="submit"
+          style="background:#fff;color:var(--green);border:1.5px solid var(--green);padding:13px;font-size:14px"
+          data-action="import-gallery">
+          🖼 Choose from Gallery
+        </button>
+      `, () => {});
+      break;
+
+    case 'import-camera':
+      closeSheet();
+      setTimeout(() => $('#importDocCamera')?.click(), 150);
+      break;
+
+    case 'import-gallery':
+      closeSheet();
+      setTimeout(() => $('#importDocGallery')?.click(), 150);
+      break;
+
+    case 'import-toggle-all': {
+      const all = window._pendingImport || [];
+      const anyChecked = all.some(e => e._checked);
+      all.forEach(e => e._checked = !anyChecked);
+      const list = $('#importList');
+      if(list) list.innerHTML = all.map((e, i) => importRow(e, i)).join('');
+      const c = $('#importCount');
+      if(c) c.textContent = all.filter(e => e._checked).length;
+      break;
+    }
+
+    case 'import-confirm': {
+      const all = window._pendingImport || [];
+      const toAdd = all.filter(e => e._checked);
+      if(!toAdd.length){
+        toast('Nothing selected');
+        break;
+      }
+      closeSheet();
+      setSyncStatus('⏳ Saving');
+      for(const e of toAdd){
+        const ev = {
+          id: uid('e'),
+          title: e.title.trim(),
+          date: e.date,
+          type: EVENT_TYPES.includes(e.type) ? e.type : 'agronomy',
+          notes: (e.notes || '').trim(),
+          done: false
+        };
+        state.events.push(ev);
+        await fsSave('events', ev);
+      }
+      setSyncStatus('☁️ Synced');
+      window._pendingImport = null;
+      activeTab = 'calendar';
+      render();
+      toast(`Added ${toAdd.length} event${toAdd.length>1?'s':''}`);
+      break;
+    }
+
     case 'toggle-program': {
       const mId = el.dataset.month;
       const wkNum = parseInt(el.dataset.week);
@@ -2037,18 +2740,24 @@ document.addEventListener('click', async (e) => {
     case 'view-plant': {
       const p = state.plantIds.find(x => x.id === id);
       if(!p) return;
-      openPlantSheet(p.thumb, {
-        name: p.name,
-        botanicalName: p.botanicalName,
-        category: p.category,
-        confidence: p.confidence,
-        description: p.description,
-        action: p.action,
-        products: p.products,
-        safety: p.safety
-      }, false, null, p.id);
+      openPlantSheet(null, null, false, null, p.id);
       break;
     }
+
+    case 'plant-filter':
+      plantFilter = el.dataset.filter;
+      render();
+      break;
+
+    case 'view-photo':
+      e.stopPropagation();
+      $('#photoViewerImg').src = el.dataset.src;
+      $('#photoViewer').classList.remove('hidden');
+      break;
+
+    case 'close-photo-viewer':
+      $('#photoViewer').classList.add('hidden');
+      break;
 
     case 'save-plant': {
       const dataEl = $('#plantSaveData');
@@ -2066,7 +2775,8 @@ document.addEventListener('click', async (e) => {
         action: result.action || '',
         products: result.products || '',
         safety: result.safety || '',
-        thumb: photo,
+        photos: photo ? [photo] : [],
+        thumb: photo || null,
         created: new Date().toISOString()
       };
 
@@ -2092,14 +2802,90 @@ document.addEventListener('click', async (e) => {
       break;
     }
 
-    case 'del-plant':
-      if(e.stopPropagation) e.stopPropagation();
+    case 'delete-plant-detail':
+      if(!confirm('Delete this plant? This also deletes its chat history.')) break;
       state.plantIds = state.plantIds.filter(x => x.id !== id);
       state.plantChats = state.plantChats.filter(c => c.plantId !== id);
+      closeSheet();
       render();
       await fsDelete('plantIds', id);
-      toast('Deleted');
+      toast('Plant deleted');
       break;
+
+    /* ---- Plant Edit ---- */
+    case 'edit-plant':
+      openPlantEditForm(id);
+      break;
+
+    case 'edit-add-camera':
+      $('#editPhotoCamera')?.click();
+      break;
+
+    case 'edit-add-gallery':
+      $('#editPhotoGallery')?.click();
+      break;
+
+    case 'edit-remove-photo':
+      window._editPhotos = window._editPhotos || [];
+      window._editPhotos.splice(parseInt(el.dataset.idx), 1);
+      refreshEditPhotoStrip();
+      break;
+
+    case 'edit-save-plant': {
+      const plant = state.plantIds.find(p => p.id === id);
+      if(!plant) break;
+
+      const form = $('#sheetForm');
+      const fd = new FormData(form);
+      const d = {};
+      fd.forEach((v, k) => d[k] = v);
+
+      plant.name = (d.name || '').trim() || 'Unknown';
+      plant.botanicalName = (d.botanicalName || '').trim() || 'Unknown';
+      plant.category = d.category || 'Unknown';
+      plant.confidence = parseInt(d.confidence) || 0;
+      plant.description = (d.description || '').trim();
+      plant.action = (d.action || '').trim();
+      plant.products = (d.products || '').trim();
+      plant.safety = (d.safety || '').trim();
+      plant.photos = window._editPhotos || [];
+      plant.thumb = plant.photos[0] || null;
+
+      await fsSave('plantIds', plant);
+      window._editPhotos = null;
+      openPlantSheet(null, null, false, null, plant.id);
+      toast('Saved');
+      break;
+    }
+
+    /* ---- Re-identify ---- */
+    case 'reidentify-plant':
+      await reidentifyPlant(id);
+      break;
+
+    case 'apply-reidentify': {
+      const plant = state.plantIds.find(p => p.id === id);
+      const idx = parseInt(el.dataset.idx);
+      const dataEl = $('#reidentifyData');
+      if(!plant || !dataEl) break;
+      const results = JSON.parse(dataEl.textContent);
+      const r = results[idx];
+      if(!r) break;
+
+      plant.name = r.name || 'Unknown';
+      plant.botanicalName = r.botanicalName || 'Unknown';
+      plant.category = r.category || 'Unknown';
+      plant.confidence = r.confidence || 0;
+      plant.description = r.description || '';
+      plant.action = r.action || '';
+      plant.products = r.products || '';
+      plant.safety = r.safety || '';
+
+      await fsSave('plantIds', plant);
+      openPlantSheet(null, null, false, null, plant.id);
+      toast('Applied');
+      break;
+    }
 
     /* ---- Plant Chat ---- */
     case 'ask-plant':
@@ -2275,6 +3061,12 @@ document.addEventListener('click', async (e) => {
 document.addEventListener('change', (e) => {
   if(e.target.id === 'plantInputCamera' || e.target.id === 'plantInputGallery'){
     handlePlantPhoto(e.target);
+  }
+  if(e.target.id === 'importDocCamera' || e.target.id === 'importDocGallery'){
+    handleDocPhoto(e.target);
+  }
+  if(e.target.id === 'editPhotoCamera' || e.target.id === 'editPhotoGallery'){
+    handleEditPhoto(e.target);
   }
 });
 
