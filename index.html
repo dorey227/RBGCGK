@@ -351,10 +351,13 @@ If you are unsure, use category "Unknown" and confidence below 50.
 Never invent botanical names — say "Unknown" instead.
 Respond with JSON only. No markdown, no commentary.`;
 
-const REIDENTIFY_PROMPT = `You will be given one or more photos of the same plant, weed, disease or pest on an Australian golf course.
-Provide up to 3 possible identifications, ordered from most likely to least likely.
+const REIDENTIFY_PROMPT = `You are a turf management expert for Australian golf courses.
+You will be given one or more photos of the same plant, weed, disease or pest.
 
-Respond ONLY with valid JSON in this exact format:
+IMPORTANT: You MUST always return 2-3 possible identifications, even if you're confident about the top one.
+Rank them from most likely to least likely. Each should be a genuinely different species/possibility.
+
+Respond ONLY with valid JSON:
 {
   "results": [
     {
@@ -371,9 +374,9 @@ Respond ONLY with valid JSON in this exact format:
 }
 
 Rules:
-- 1 to 3 results. If highly confident, 1 result is fine. If unsure, give multiple possibilities.
-- If you cannot identify anything, return a single result with category "Unknown" and confidence below 30.
-- Never invent botanical names — say "Unknown".
+- Always return between 2 and 3 results. Never fewer than 2.
+- If you truly can't guess, return 3 results with category "Unknown" and low confidence, but at least describe observable features in the description.
+- Never invent botanical names — use "Unknown" if unsure.
 - Respond with JSON only. No markdown, no commentary.`;
 
 function getDocExtractPrompt(){
@@ -406,6 +409,31 @@ Rules:
 - If a date is unclear, use your best guess and mention it in notes.
 - If you cannot read the document, return {"events": []}.
 - Respond with JSON only. No markdown. No commentary.`;
+}
+
+function getNameFillPrompt(commonName, botanicalName){
+  return `You are a turf management assistant for Australian golf courses.
+The user has identified this plant/issue by name and needs the rest of the details filled in.
+
+User provided:
+Common name: ${commonName || '(not provided)'}
+Botanical name: ${botanicalName || '(not provided)'}
+
+Respond ONLY with valid JSON in this exact format:
+
+{
+  "name": "Common name (use the user's if provided, else the standard common name)",
+  "botanicalName": "Botanical name (use the user's if provided, else the standard one)",
+  "category": "Weed" | "Disease" | "Pest" | "Desirable Turf" | "Unknown",
+  "confidence": 0-100,
+  "description": "2-3 sentences describing the plant and how to identify it",
+  "action": "Recommended action on an Australian golf course",
+  "products": "Relevant products, rates or treatments — or 'None'",
+  "safety": "Any handling or safety notes — or 'None'"
+}
+
+If you don't recognise the name, use category "Unknown" and confidence below 40, but still fill in anything you can.
+Never invent botanical names. Respond with JSON only. No markdown, no commentary.`;
 }
 
 /* =========================================================
@@ -499,7 +527,6 @@ async function fsLoadAll(){
     state.events = events;
     state.learn = learn;
     state.program = program;
-    // Migrate legacy plants (thumb → photos array)
     state.plantIds = plantIds.map(p => {
       if(!p.photos || !p.photos.length){
         p.photos = p.thumb ? [p.thumb] : [];
@@ -1570,7 +1597,6 @@ function openPlantSheet(dataUrl, result, loading, errorMsg, plantId){
     return;
   }
 
-  // Resolve display data
   const d = plant ? {
     name: plant.name,
     botanicalName: plant.botanicalName,
@@ -1582,7 +1608,6 @@ function openPlantSheet(dataUrl, result, loading, errorMsg, plantId){
     safety: plant.safety
   } : result;
 
-  // Resolve photos
   let photos = [];
   if(plant){
     photos = (plant.photos && plant.photos.length) ? plant.photos
@@ -1596,7 +1621,6 @@ function openPlantSheet(dataUrl, result, loading, errorMsg, plantId){
     'Desirable Turf': 'p-low', 'Unknown': 'p-area'
   }[d.category] || 'p-area';
 
-  // Photo gallery
   let photosHtml = '';
   if(photos.length === 1){
     photosHtml = `<img src="${photos[0]}" style="width:100%;border-radius:14px;margin-bottom:14px;cursor:zoom-in" data-action="view-photo" data-src="${photos[0]}">`;
@@ -1673,6 +1697,11 @@ function openPlantSheet(dataUrl, result, loading, errorMsg, plantId){
         </button>
       </div>
 
+      <button type="button" class="submit" data-action="manual-name" data-id="${plantId}"
+        style="background:#fff;color:var(--amber);border:1.5px solid var(--amber);padding:12px;font-size:14px;margin-top:8px">
+        🏷 I know the name — fill in the rest
+      </button>
+
       <button type="button" class="submit"
         data-action="delete-plant-detail" data-id="${plantId}"
         style="background:#fff;color:var(--red);border:1.5px solid var(--red);
@@ -1698,6 +1727,162 @@ function openPlantSheet(dataUrl, result, loading, errorMsg, plantId){
   overlay.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
   _plantPhotoData = dataUrl;
+}
+
+/* =========================================================
+   Manual name fill-in
+   ========================================================= */
+function openManualNameForm(plantId){
+  const plant = state.plantIds.find(p => p.id === plantId);
+  if(!plant) return;
+
+  const overlay = $('#overlay');
+  const sheetForm = $('#sheetForm');
+  $('#sheetTitle').textContent = 'I know the name';
+  sheetForm.onsubmit = (ev) => ev.preventDefault();
+
+  sheetForm.innerHTML = `
+    <p style="font-size:13px;color:var(--muted);margin:0 0 16px;line-height:1.5">
+      Type the name you know and the AI will fill in the description, category, treatment and safety notes.
+      Give it as much as you can — either name works.
+    </p>
+
+    <div class="field">
+      <label>Common name</label>
+      <input id="manualCommonName" placeholder="e.g. Fiddle-leaf Fig, Couch Grass, Dollar Spot"
+        value="${esc(plant.name && plant.name !== 'Unknown' ? plant.name : '')}">
+    </div>
+
+    <div class="field">
+      <label>Botanical name (optional)</label>
+      <input id="manualBotanicalName" placeholder="e.g. Ficus lyrata, Cynodon dactylon"
+        value="${esc(plant.botanicalName && plant.botanicalName !== 'Unknown' ? plant.botanicalName : '')}">
+    </div>
+
+    <div class="row2" style="margin-top:14px">
+      <button type="button" class="submit" data-action="view-plant" data-id="${plant.id}"
+        style="background:#eef3ee;color:var(--text)">Cancel</button>
+      <button type="button" class="submit" data-action="manual-name-submit" data-id="${plant.id}">
+        🤖 Fill in the rest
+      </button>
+    </div>
+  `;
+
+  overlay.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+async function fillInByName(plantId, commonName, botanicalName){
+  const overlay = $('#overlay');
+  const sheetForm = $('#sheetForm');
+  $('#sheetTitle').textContent = 'Looking up…';
+
+  sheetForm.innerHTML = `
+    <div style="text-align:center;padding:24px 0">
+      <div style="font-size:42px;margin-bottom:12px">🤖</div>
+      <div style="font-size:14px;color:var(--muted)">Filling in the details…</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:10px">3–6 seconds</div>
+    </div>`;
+
+  try{
+    const res = await fetch(PROXY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [
+          { role: 'system', content: getNameFillPrompt(commonName, botanicalName) },
+          { role: 'user', content: `Common name: ${commonName}\nBotanical name: ${botanicalName}` }
+        ]
+      })
+    });
+
+    if(!res.ok){
+      const err = await res.text().catch(() => '');
+      throw new Error(`Proxy ${res.status}: ${err.slice(0,120)}`);
+    }
+
+    const data = await res.json();
+    const raw = data?.choices?.[0]?.message?.content || '';
+    const clean = raw.replace(/^```json\s*|```$/g, '').trim();
+    let parsed;
+    try{ parsed = JSON.parse(clean); }
+    catch(e){ throw new Error('AI returned unexpected format'); }
+
+    showManualNamePreview(plantId, parsed);
+  }catch(e){
+    console.error(e);
+    sheetForm.innerHTML = `
+      <div class="result" style="border-left-color:var(--red);background:#fdecea">
+        <b>Lookup failed.</b><br>${esc(e.message || 'Unknown error')}
+      </div>
+      <button type="button" class="submit" data-action="manual-name" data-id="${plantId}"
+        style="margin-top:12px;background:#eef3ee;color:var(--text)">Try again</button>`;
+  }
+}
+
+function showManualNamePreview(plantId, result){
+  const plant = state.plantIds.find(p => p.id === plantId);
+  if(!plant) return;
+
+  const overlay = $('#overlay');
+  const sheetForm = $('#sheetForm');
+  $('#sheetTitle').textContent = 'Preview';
+  sheetForm.onsubmit = (ev) => ev.preventDefault();
+
+  const catClass = {
+    'Weed': 'p-high', 'Disease': 'p-high', 'Pest': 'p-med',
+    'Desirable Turf': 'p-low', 'Unknown': 'p-area'
+  }[result.category] || 'p-area';
+
+  sheetForm.innerHTML = `
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px">
+      Review the details below. Tap <b>Apply</b> to save them to this plant.
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+      <span class="pill ${catClass}">${esc(result.category || 'Unknown')}</span>
+      <span style="font-size:12px;color:var(--muted);font-weight:600">
+        ${result.confidence || 0}% confident
+      </span>
+    </div>
+
+    <h2 style="margin:4px 0 2px;font-size:20px;color:var(--green)">${esc(result.name || 'Unknown')}</h2>
+    <div style="font-style:italic;color:var(--muted);font-size:13px;margin-bottom:14px">
+      ${esc(result.botanicalName || 'Unknown')}
+    </div>
+
+    <div class="card" style="box-shadow:none;border:1px solid var(--line);margin-bottom:10px">
+      <h3 style="margin-bottom:6px">Description</h3>
+      <div style="font-size:13.5px;line-height:1.55">${esc(result.description || '')}</div>
+    </div>
+
+    <div class="card" style="box-shadow:none;border:1px solid var(--line);margin-bottom:10px">
+      <h3 style="margin-bottom:6px">Recommended Action</h3>
+      <div style="font-size:13.5px;line-height:1.55">${esc(result.action || '')}</div>
+    </div>
+
+    ${result.products && result.products !== 'None' ? `
+      <div class="card" style="box-shadow:none;border:1px solid var(--line);margin-bottom:10px">
+        <h3 style="margin-bottom:6px">Products / Treatments</h3>
+        <div style="font-size:13.5px;line-height:1.55">${esc(result.products)}</div>
+      </div>` : ''}
+
+    ${result.safety && result.safety !== 'None' ? `
+      <div class="card" style="box-shadow:none;border:1px solid #ffe0b2;background:#fff8e1;margin-bottom:10px">
+        <h3 style="margin-bottom:6px;color:var(--amber)">⚠ Safety</h3>
+        <div style="font-size:13.5px;line-height:1.55">${esc(result.safety)}</div>
+      </div>` : ''}
+
+    <div class="row2" style="margin-top:14px">
+      <button type="button" class="submit" data-action="manual-name" data-id="${plantId}"
+        style="background:#eef3ee;color:var(--text)">Back</button>
+      <button type="button" class="submit" data-action="manual-name-apply" data-id="${plantId}">
+        ✅ Apply
+      </button>
+    </div>
+
+    <div id="manualNameData" style="display:none">${esc(JSON.stringify(result))}</div>
+  `;
 }
 
 /* =========================================================
@@ -1862,8 +2047,8 @@ async function reidentifyPlant(plantId){
 async function reidentifyPlantAI(photos){
   const content = [
     { type: 'text', text: photos.length > 1
-      ? 'Identify this. Multiple photos of the same specimen are attached.'
-      : 'Identify this.' },
+      ? 'Identify this. Multiple photos of the same specimen are attached. Give me 2-3 possibilities.'
+      : 'Identify this. Give me 2-3 possibilities.' },
     ...photos.map(p => ({ type: 'image_url', image_url: { url: p } }))
   ];
 
@@ -1885,7 +2070,7 @@ async function reidentifyPlantAI(photos){
 
   const data = await res.json();
   const raw = data?.choices?.[0]?.message?.content || '';
-  const clean = raw.replace(/^```json\s*|\s*```$/g, '').trim();
+  const clean = raw.replace(/^```json\s*|```$/g, '').trim();
 
   let parsed;
   try{ parsed = JSON.parse(clean); }
@@ -1920,9 +2105,43 @@ function showReidentifyResults(plant, results){
     ? plant.photos
     : (plant.thumb ? [plant.thumb] : []);
 
+  // Build results with data stored for apply
+  window._reidentifyResults = results;
+
+  const cardsHtml = results.map((r, i) => {
+    const catClass = {
+      'Weed': 'p-high', 'Disease': 'p-high', 'Pest': 'p-med',
+      'Desirable Turf': 'p-low', 'Unknown': 'p-area'
+    }[r.category] || 'p-area';
+
+    return `
+      <div class="card" style="border:1.5px solid var(--line);margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px">
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;font-size:15px">${esc(r.name || 'Unknown')}</div>
+            <div style="font-style:italic;color:var(--muted);font-size:12.5px">${esc(r.botanicalName || 'Unknown')}</div>
+          </div>
+          <span class="pill ${catClass}" style="flex:0 0 auto">${esc(r.category || 'Unknown')}</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px">
+          ${r.confidence || 0}% confident
+        </div>
+        <div style="font-size:13px;line-height:1.5;color:#40513f">${esc(r.description || '')}</div>
+        ${r.action ? `<div style="font-size:12.5px;color:#40513f;margin-top:6px"><b style="color:var(--green2)">Action:</b> ${esc(r.action)}</div>` : ''}
+        <button type="button"
+          data-action="apply-reidentify"
+          data-plant-id="${plant.id}"
+          data-idx="${i}"
+          style="width:100%;background:var(--green);color:#fff;border:0;padding:11px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-top:12px;font-family:inherit">
+          ✅ Use this result
+        </button>
+      </div>
+    `;
+  }).join('');
+
   sheetForm.innerHTML = `
     <div style="font-size:13px;color:var(--muted);margin-bottom:12px">
-      Tap a result to apply it. Current name: <b>${esc(plant.name)}</b>
+      Tap <b>Use this result</b> to apply it. Current name: <b>${esc(plant.name)}</b>
     </div>
 
     ${photos.length ? `
@@ -1931,36 +2150,12 @@ function showReidentifyResults(plant, results){
       </div>
     ` : ''}
 
-    ${results.map((r, i) => {
-      const catClass = {
-        'Weed': 'p-high', 'Disease': 'p-high', 'Pest': 'p-med',
-        'Desirable Turf': 'p-low', 'Unknown': 'p-area'
-      }[r.category] || 'p-area';
-      return `
-        <div class="card" style="border:1.5px solid var(--line);cursor:pointer;margin-bottom:10px"
-          data-action="apply-reidentify" data-id="${plant.id}" data-idx="${i}">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px">
-            <div style="flex:1;min-width:0">
-              <div style="font-weight:600;font-size:15px">${esc(r.name || 'Unknown')}</div>
-              <div style="font-style:italic;color:var(--muted);font-size:12.5px">${esc(r.botanicalName || 'Unknown')}</div>
-            </div>
-            <span class="pill ${catClass}" style="flex:0 0 auto">${esc(r.category || 'Unknown')}</span>
-          </div>
-          <div style="font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px">
-            ${r.confidence || 0}% confident
-          </div>
-          <div style="font-size:13px;line-height:1.5;color:#40513f">${esc(r.description || '')}</div>
-          ${r.action ? `<div style="font-size:12.5px;color:#40513f;margin-top:6px"><b style="color:var(--green2)">Action:</b> ${esc(r.action)}</div>` : ''}
-        </div>
-      `;
-    }).join('')}
+    ${cardsHtml}
 
     <button type="button" class="submit" data-action="view-plant" data-id="${plant.id}"
       style="background:#eef3ee;color:var(--text);margin-top:6px">
       Cancel
     </button>
-
-    <div id="reidentifyData" style="display:none">${esc(JSON.stringify(results))}</div>
   `;
 }
 
@@ -2157,7 +2352,7 @@ async function extractEventsFromDoc(dataUrl){
   const data = await res.json();
   const raw = data?.choices?.[0]?.message?.content || '';
 
-  const clean = raw.replace(/^```json\s*|\s*```$/g, '').trim();
+  const clean = raw.replace(/^```json\s*|```$/g, '').trim();
   let parsed;
   try{ parsed = JSON.parse(clean); }
   catch(e){
@@ -2568,6 +2763,7 @@ document.addEventListener('click', async (e) => {
   if(!el) return;
   const a = el.dataset.action;
   const id = el.dataset.id;
+  const plantId = el.dataset.plantId;
 
   switch(a){
 
@@ -2738,7 +2934,8 @@ document.addEventListener('click', async (e) => {
       break;
 
     case 'view-plant': {
-      const p = state.plantIds.find(x => x.id === id);
+      const pid = id || plantId;
+      const p = state.plantIds.find(x => x.id === pid);
       if(!p) return;
       openPlantSheet(null, null, false, null, p.id);
       break;
@@ -2858,19 +3055,27 @@ document.addEventListener('click', async (e) => {
       break;
     }
 
-    /* ---- Re-identify ---- */
-    case 'reidentify-plant':
-      await reidentifyPlant(id);
+    /* ---- Manual Name ---- */
+    case 'manual-name':
+      openManualNameForm(id);
       break;
 
-    case 'apply-reidentify': {
+    case 'manual-name-submit': {
+      const c = $('#manualCommonName')?.value.trim() || '';
+      const b = $('#manualBotanicalName')?.value.trim() || '';
+      if(!c && !b){
+        toast('Enter at least one name');
+        break;
+      }
+      await fillInByName(id, c, b);
+      break;
+    }
+
+    case 'manual-name-apply': {
       const plant = state.plantIds.find(p => p.id === id);
-      const idx = parseInt(el.dataset.idx);
-      const dataEl = $('#reidentifyData');
+      const dataEl = $('#manualNameData');
       if(!plant || !dataEl) break;
-      const results = JSON.parse(dataEl.textContent);
-      const r = results[idx];
-      if(!r) break;
+      const r = JSON.parse(dataEl.textContent);
 
       plant.name = r.name || 'Unknown';
       plant.botanicalName = r.botanicalName || 'Unknown';
@@ -2887,20 +3092,56 @@ document.addEventListener('click', async (e) => {
       break;
     }
 
+    /* ---- Re-identify ---- */
+    case 'reidentify-plant':
+      await reidentifyPlant(id);
+      break;
+
+    case 'apply-reidentify': {
+      const pid = el.dataset.plantId;
+      const idx = parseInt(el.dataset.idx);
+      const plant = state.plantIds.find(p => p.id === pid);
+      if(!plant){
+        toast('Plant not found');
+        break;
+      }
+      const results = window._reidentifyResults || [];
+      const r = results[idx];
+      if(!r){
+        toast('Result not found');
+        break;
+      }
+
+      plant.name = r.name || 'Unknown';
+      plant.botanicalName = r.botanicalName || 'Unknown';
+      plant.category = r.category || 'Unknown';
+      plant.confidence = r.confidence || 0;
+      plant.description = r.description || '';
+      plant.action = r.action || '';
+      plant.products = r.products || '';
+      plant.safety = r.safety || '';
+
+      await fsSave('plantIds', plant);
+      window._reidentifyResults = null;
+      openPlantSheet(null, null, false, null, plant.id);
+      toast('Applied');
+      break;
+    }
+
     /* ---- Plant Chat ---- */
     case 'ask-plant':
       await openPlantChat(id);
       break;
 
     case 'chat-send': {
-      const plantId = el.dataset.plant;
+      const pid = el.dataset.plant;
       const input = $('#chatInput');
       if(!input) break;
       const text = input.value.trim();
       if(!text) break;
 
-      const plant = state.plantIds.find(p => p.id === plantId);
-      const chat  = state.plantChats.find(c => c.plantId === plantId);
+      const plant = state.plantIds.find(p => p.id === pid);
+      const chat  = state.plantChats.find(c => c.plantId === pid);
       if(!plant || !chat) break;
 
       input.disabled = true;
