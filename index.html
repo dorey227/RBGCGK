@@ -196,7 +196,6 @@
 </head>
 <body>
 
-<!-- ================= AUTH SCREEN ================= -->
 <div id="authScreen">
   <div class="auth-card">
     <div class="auth-logo">⛳</div>
@@ -231,7 +230,6 @@
   </div>
 </div>
 
-<!-- ================= MAIN APP ================= -->
 <div id="app" class="hidden">
   <header>
     <div class="head-row">
@@ -275,9 +273,6 @@
 <div class="toast" id="toast"></div>
 
 <script type="module">
-/* =========================================================
-   Firebase
-   ========================================================= */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
   getFirestore, collection, doc, getDocs, setDoc, deleteDoc,
@@ -310,9 +305,6 @@ enableIndexedDbPersistence(db).catch(err => {
   else if(err.code === 'unimplemented')  console.warn('Offline cache: not supported');
 });
 
-/* =========================================================
-   Constants
-   ========================================================= */
 const PROXY_URL = 'https://rbgcgk.vercel.app/api/proxy';
 
 const AREAS = ['Greens','Tees','Fairways','Rough','Bunkers','Practice Area',
@@ -466,9 +458,6 @@ If you don't recognise the name, use category "Unknown" and confidence below 40,
 Never invent botanical names. Respond with JSON only. No markdown, no commentary.`;
 }
 
-/* =========================================================
-   State
-   ========================================================= */
 let state = {
   jobs:[], events:[], learn:[], program:[], plantIds:[], plantChats:[],
   weather:'', courseStatus:'Open'
@@ -481,9 +470,6 @@ let notifyInterval = null;
 let _plantPhotoData = null;
 let plantFilter = 'All';
 
-/* =========================================================
-   Helpers
-   ========================================================= */
 const $  = (s, r=document) => r.querySelector(s);
 const $$ = (s, r=document) => [...r.querySelectorAll(s)];
 
@@ -534,9 +520,6 @@ function setSyncStatus(txt, isErr){
   b.style.background = isErr ? 'rgba(198,40,40,.35)' : 'rgba(255,255,255,.15)';
 }
 
-/* =========================================================
-   Firestore
-   ========================================================= */
 function userPath(){ return currentUser ? currentUser.uid : null; }
 
 async function fsLoadAll(){
@@ -625,9 +608,6 @@ async function fsSaveSettings(){
   }catch(e){ console.warn(e); }
 }
 
-/* =========================================================
-   Auth UI
-   ========================================================= */
 const authScreen = $('#authScreen');
 const appRoot    = $('#app');
 let authMode = 'signin';
@@ -694,9 +674,6 @@ $('#emailForm').addEventListener('submit', async (ev) => {
   }
 });
 
-/* =========================================================
-   Auth state
-   ========================================================= */
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
   if(user){
@@ -725,9 +702,6 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-/* =========================================================
-   Seed data
-   ========================================================= */
 function seedEvents(){
   const y = new Date().getFullYear();
   const tpl = [
@@ -854,9 +828,6 @@ function seedProgram(){
   ];
 }
 
-/* =========================================================
-   Router
-   ========================================================= */
 function render(){
   const v = $('#view');
   if(activeTab === 'dash')      v.innerHTML = viewDash();
@@ -874,9 +845,6 @@ function render(){
     new Date().toLocaleDateString(undefined,{weekday:'long', day:'numeric', month:'long'});
 }
 
-/* =========================================================
-   Program helpers
-   ========================================================= */
 function findProgramItem(monthId, weekNum, itemId){
   const month = state.program.find(m => m.id === monthId);
   if(!month) return null;
@@ -948,9 +916,6 @@ function getThisWeekProgram(){
   return out;
 }
 
-/* =========================================================
-   Reminders builder
-   ========================================================= */
 function buildReminders(){
   const today = new Date();
   const todayStr    = iso(today);
@@ -1004,9 +969,6 @@ function buildReminders(){
   return { today: todayList, tomorrow: tomorrowList, week: weekList };
 }
 
-/* =========================================================
-   Local notifications
-   ========================================================= */
 function notificationsSupported(){
   return typeof Notification !== 'undefined';
 }
@@ -1074,9 +1036,6 @@ function startNotifyLoop(){
   notifyInterval = setInterval(checkAndNotify, 30 * 60 * 1000);
 }
 
-/* =========================================================
-   VIEW: Dashboard
-   ========================================================= */
 function viewDash(){
   const t = todayISO();
   const todays = state.jobs.filter(j => j.due === t);
@@ -1202,9 +1161,6 @@ function reminderRow(r, cls){
     </div>`;
 }
 
-/* =========================================================
-   VIEW: Jobs
-   ========================================================= */
 function viewJobs(){
   const groups = [
     { key:'todo',  label:'To Do' },
@@ -1254,9 +1210,6 @@ function jobItem(j){
     </div>`;
 }
 
-/* =========================================================
-   VIEW: Calendar
-   ========================================================= */
 function viewCalendar(){
   const y = calCursor.getFullYear();
   const m = calCursor.getMonth();
@@ -1383,9 +1336,6 @@ function evItem(e){
     </div>`;
 }
 
-/* =========================================================
-   VIEW: Program
-   ========================================================= */
 function viewProgram(){
   let html = `
     <div class="sec-head">
@@ -1471,22 +1421,22 @@ function viewProgram(){
         </div>`;
     });
 
+    html += `</div>`;
+  });
+
+  if(sorted.length){
     html += `
       <button type="button" class="submit"
-        data-action="add-program-week" data-id="${month.id}"
-        style="background:#fff;color:var(--green);border:1.5px solid var(--line);
-               padding:10px;font-size:13.5px;margin-top:12px">
-        + Add Week to ${esc(month.month)}
-      </button>
-      </div>`;
-  });
+        data-action="delete-all-program"
+        style="background:#fff;color:var(--red);border:1.5px solid var(--red);
+               padding:13px;font-size:14px;margin-top:8px;margin-bottom:20px">
+        🗑 Delete entire program
+      </button>`;
+  }
 
   return html;
 }
 
-/* =========================================================
-   VIEW: Plant ID
-   ========================================================= */
 function viewPlant(){
   const history = [...(state.plantIds || [])]
     .sort((a,b) => (b.created||'').localeCompare(a.created||''));
@@ -1586,9 +1536,6 @@ function plantItem(p){
     </div>`;
 }
 
-/* =========================================================
-   Image compression
-   ========================================================= */
 async function compressImage(file, maxSize = 900, quality = 0.75){
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -1617,9 +1564,6 @@ async function compressImage(file, maxSize = 900, quality = 0.75){
   });
 }
 
-/* =========================================================
-   Plant ID — photo + AI
-   ========================================================= */
 async function handlePlantPhoto(inputEl){
   const file = inputEl.files?.[0];
   if(!file) return;
@@ -1687,9 +1631,6 @@ async function identifyPlant(dataUrl){
   return parsed;
 }
 
-/* =========================================================
-   Plant Detail Sheet
-   ========================================================= */
 function openPlantSheet(dataUrl, result, loading, errorMsg, plantId){
   const overlay = $('#overlay');
   const sheetForm = $('#sheetForm');
@@ -1856,9 +1797,6 @@ function openPlantSheet(dataUrl, result, loading, errorMsg, plantId){
   _plantPhotoData = dataUrl;
 }
 
-/* =========================================================
-   Manual name fill-in
-   ========================================================= */
 function openManualNameForm(plantId){
   const plant = state.plantIds.find(p => p.id === plantId);
   if(!plant) return;
@@ -2009,9 +1947,6 @@ function showManualNamePreview(plantId, result){
   `;
 }
 
-/* =========================================================
-   Plant Edit Form
-   ========================================================= */
 function openPlantEditForm(plantId){
   const plant = state.plantIds.find(p => p.id === plantId);
   if(!plant) return;
@@ -2123,9 +2058,6 @@ async function handleEditPhoto(inputEl){
   }
 }
 
-/* =========================================================
-   Re-identify
-   ========================================================= */
 async function reidentifyPlant(plantId){
   const plant = state.plantIds.find(p => p.id === plantId);
   if(!plant) return;
@@ -2282,9 +2214,6 @@ function showReidentifyResults(plant, results){
   `;
 }
 
-/* =========================================================
-   Plant Chat
-   ========================================================= */
 async function openPlantChat(plantId){
   const plant = state.plantIds.find(p => p.id === plantId);
   if(!plant) return;
@@ -2411,9 +2340,6 @@ If you don't know something, say so honestly. Keep answers under 4 sentences unl
   return data?.choices?.[0]?.message?.content || '(No response)';
 }
 
-/* =========================================================
-   Program Edit Forms
-   ========================================================= */
 function formEditProgramItem(monthId, weekNum, itemId){
   const f = findProgramItem(monthId, weekNum, itemId);
   if(!f) return;
@@ -2528,45 +2454,6 @@ function formEditProgramWeek(monthId, weekNum){
   });
 }
 
-function formAddProgramWeek(monthId){
-  const month = state.program.find(m => m.id === monthId);
-  if(!month) return;
-
-  const existing = (month.weeks || []).map(w => w.week);
-  const nextWeek = existing.length ? Math.max(...existing) + 1 : 1;
-
-  openSheet('Add Week', `
-    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
-      ${esc(month.month)}
-    </div>
-
-    <div class="row2">
-      <div class="field">
-        <label>Week number</label>
-        <input type="number" name="week" min="1" max="10" value="${nextWeek}">
-      </div>
-      <div class="field">
-        <label>Start date (Monday)</label>
-        <input type="date" name="weekStart" value="${todayISO()}">
-      </div>
-    </div>
-
-    <p style="font-size:12px;color:var(--muted);margin:0">
-      You can add applications to this week after saving.
-    </p>
-  `, async d => {
-    month.weeks = month.weeks || [];
-    month.weeks.push({
-      week: parseInt(d.week) || nextWeek,
-      weekStart: d.weekStart || todayISO(),
-      items: []
-    });
-    month.weeks.sort((a,b) => a.week - b.week);
-    await fsSave('program', month);
-    toast('Week added');
-  });
-}
-
 function formAddProgramMonth(){
   openSheet('Add Month', `
     <div class="field">
@@ -2612,9 +2499,6 @@ function formEditProgramMonth(monthId){
   });
 }
 
-/* =========================================================
-   Program Import
-   ========================================================= */
 async function handleProgramPhoto(inputEl){
   const file = inputEl.files?.[0];
   if(!file) return;
@@ -2763,9 +2647,6 @@ function openProgramImportSheet(months, dataUrl){
   document.body.style.overflow = 'hidden';
 }
 
-/* =========================================================
-   Document Import (Calendar)
-   ========================================================= */
 async function handleDocPhoto(inputEl){
   const file = inputEl.files?.[0];
   if(!file) return;
@@ -2921,9 +2802,6 @@ window._onImportToggle = function(idx, checked){
   if(c) c.textContent = window._pendingImport.filter(e => e._checked).length;
 };
 
-/* =========================================================
-   VIEW: Learn
-   ========================================================= */
 function viewLearn(){
   const entries = [...state.learn].sort((a,b) => (b.date||'').localeCompare(a.date||''));
   const totalHours = entries.reduce((s,e) => s + (parseFloat(e.hours) || 0), 0);
@@ -3016,9 +2894,6 @@ function learnItem(e){
     </div>`;
 }
 
-/* =========================================================
-   Sheet base
-   ========================================================= */
 const overlay = $('#overlay');
 const sheetForm = $('#sheetForm');
 
@@ -3049,9 +2924,6 @@ function optList(arr, sel){
   return arr.map(o => `<option ${o===sel?'selected':''}>${esc(o)}</option>`).join('');
 }
 
-/* =========================================================
-   Forms
-   ========================================================= */
 function formJob(){
   const t = todayISO();
   openSheet('New Job', `
@@ -3187,9 +3059,6 @@ function formData(){
   `, () => {});
 }
 
-/* =========================================================
-   Actions
-   ========================================================= */
 document.addEventListener('click', async (e) => {
   const el = e.target.closest('[data-action]');
   if(!el) return;
@@ -3258,7 +3127,6 @@ document.addEventListener('click', async (e) => {
       toast('Event deleted');
       break;
 
-    /* ---- Document Import (Calendar) ---- */
     case 'import-doc':
       openSheet('Import from document', `
         <p style="font-size:13.5px;color:var(--muted);margin:0 0 14px">
@@ -3327,7 +3195,6 @@ document.addEventListener('click', async (e) => {
       break;
     }
 
-    /* ---- Program Editing ---- */
     case 'add-program-month':
       formAddProgramMonth();
       break;
@@ -3348,9 +3215,20 @@ document.addEventListener('click', async (e) => {
       break;
     }
 
-    case 'add-program-week':
-      formAddProgramWeek(id);
+    case 'delete-all-program': {
+      if(!confirm('Delete the ENTIRE program? All months, weeks and applications will be removed. This cannot be undone.')) break;
+      if(!confirm('Are you absolutely sure? This wipes everything in the Program tab.')) break;
+      closeSheet();
+      setSyncStatus('⏳ Deleting');
+      for(const m of [...state.program]){
+        try{ await fsDelete('program', m.id); }catch(e){ console.warn(e); }
+      }
+      state.program = [];
+      setSyncStatus('☁️ Synced');
+      render();
+      toast('Program deleted');
       break;
+    }
 
     case 'edit-program-week':
       formEditProgramWeek(el.dataset.month, parseInt(el.dataset.week));
@@ -3413,7 +3291,6 @@ document.addEventListener('click', async (e) => {
       break;
     }
 
-    /* ---- Program Import ---- */
     case 'import-program':
       openSheet('Import Program', `
         <p style="font-size:13.5px;color:var(--muted);margin:0 0 14px">
@@ -3476,7 +3353,6 @@ document.addEventListener('click', async (e) => {
       break;
     }
 
-    /* ---- Plant ID ---- */
     case 'plant-camera':
       $('#plantInputCamera').click();
       break;
@@ -3565,7 +3441,6 @@ document.addEventListener('click', async (e) => {
       toast('Plant deleted');
       break;
 
-    /* ---- Plant Edit ---- */
     case 'edit-plant':
       openPlantEditForm(id);
       break;
@@ -3611,7 +3486,6 @@ document.addEventListener('click', async (e) => {
       break;
     }
 
-    /* ---- Manual Name ---- */
     case 'manual-name':
       openManualNameForm(id);
       break;
@@ -3648,7 +3522,6 @@ document.addEventListener('click', async (e) => {
       break;
     }
 
-    /* ---- Re-identify ---- */
     case 'reidentify-plant':
       await reidentifyPlant(id);
       break;
@@ -3684,7 +3557,6 @@ document.addEventListener('click', async (e) => {
       break;
     }
 
-    /* ---- Plant Chat ---- */
     case 'ask-plant':
       await openPlantChat(id);
       break;
@@ -3737,7 +3609,6 @@ document.addEventListener('click', async (e) => {
       break;
     }
 
-    /* ---- Learn ---- */
     case 'add-learn': formLearn(); break;
 
     case 'del-learn':
@@ -3747,7 +3618,6 @@ document.addEventListener('click', async (e) => {
       toast('Entry deleted');
       break;
 
-    /* ---- Calculators ---- */
     case 'calc-spray': {
       const area = parseFloat($('#cArea').value) || 0;
       const rate = parseFloat($('#cRate').value) || 0;
@@ -3852,9 +3722,6 @@ document.addEventListener('click', async (e) => {
   }
 });
 
-/* =========================================================
-   File input handlers
-   ========================================================= */
 document.addEventListener('change', (e) => {
   if(e.target.id === 'plantInputCamera' || e.target.id === 'plantInputGallery'){
     handlePlantPhoto(e.target);
@@ -3870,9 +3737,6 @@ document.addEventListener('change', (e) => {
   }
 });
 
-/* =========================================================
-   Visibility — check reminders on return
-   ========================================================= */
 document.addEventListener('visibilitychange', () => {
   if(document.visibilityState === 'visible' && currentUser){
     checkAndNotify();
