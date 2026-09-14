@@ -119,9 +119,9 @@
   .result{background:#e8f5e9;border-radius:11px;padding:12px;margin-top:12px;font-size:14px;line-height:1.7;border-left:4px solid var(--green2)}
   .result b{color:var(--green)}
 
-  nav{position:fixed;bottom:0;left:0;right:0;background:#fff;z-index:100;display:grid;grid-template-columns:repeat(6,1fr);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -2px 14px rgba(0,0,0,.06)}
-  nav button{background:none;border:0;padding:9px 1px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;color:#96a698;font-size:9.5px;font-weight:600;font-family:inherit}
-  nav button .ni{font-size:18px;line-height:1}
+  nav{position:fixed;bottom:0;left:0;right:0;background:#fff;z-index:100;display:grid;grid-template-columns:repeat(7,1fr);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -2px 14px rgba(0,0,0,.06)}
+  nav button{background:none;border:0;padding:9px 1px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;color:#96a698;font-size:9px;font-weight:600;font-family:inherit}
+  nav button .ni{font-size:17px;line-height:1}
   nav button.active{color:var(--green)}
 
   .toast{position:fixed;bottom:92px;left:50%;transform:translateX(-50%);background:#263a29;color:#fff;padding:10px 18px;border-radius:22px;font-size:13.5px;z-index:300;opacity:0;pointer-events:none;transition:.25s;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis}
@@ -192,10 +192,91 @@
     max-height: 100%;
     border-radius: 12px;
   }
+
+  /* ---- Role selector & pending ---- */
+  #roleScreen, #pendingScreen {
+    position: fixed;
+    inset: 0;
+    z-index: 410;
+    background: linear-gradient(160deg,#1b5e20 0%,#2e7d32 55%,#43a047 100%);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 22px;
+    overflow-y: auto;
+  }
+  .role-card {
+    background: #fff;
+    color: var(--text);
+    border-radius: 20px;
+    padding: 26px 22px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3);
+  }
+  .role-card h1 {
+    margin: 0 0 8px;
+    font-size: 22px;
+    text-align: center;
+    color: var(--green);
+  }
+  .role-card p.sub {
+    margin: 0 0 22px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+  .role-option {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 14px;
+    border: 1.5px solid var(--line);
+    border-radius: 14px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    background: #fff;
+    transition: .15s;
+  }
+  .role-option:active { background: #f0f4f0; }
+  .role-option .ico {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    background: #eef3ee;
+    display: grid;
+    place-items: center;
+    font-size: 22px;
+    flex: 0 0 42px;
+  }
+  .role-option .txt { flex: 1; min-width: 0; }
+  .role-option .txt b { display: block; font-size: 14.5px; color: var(--text); }
+  .role-option .txt span { font-size: 12px; color: var(--muted); }
+
+  .pending-icon { font-size: 56px; text-align: center; display: block; margin-bottom: 16px; }
+  .pending-title { font-size: 22px; font-weight: 700; text-align: center; margin: 0 0 12px; color: var(--green); }
+  .pending-text { font-size: 14px; color: var(--muted); text-align: center; line-height: 1.55; margin: 0 0 20px; }
+
+  .role-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+  }
+  .role-staff { background: #e8f5e9; color: var(--green2); }
+  .role-committee { background: #e3f2fd; color: var(--blue); }
+  .role-volunteer { background: #fff3e0; color: var(--amber); }
+  .role-pending { background: #fdecea; color: var(--red); }
 </style>
 </head>
 <body>
 
+<!-- ================= AUTH SCREEN ================= -->
 <div id="authScreen">
   <div class="auth-card">
     <div class="auth-logo">⛳</div>
@@ -230,6 +311,62 @@
   </div>
 </div>
 
+<!-- ================= ROLE SELECTOR ================= -->
+<div id="roleScreen" class="hidden">
+  <div class="role-card">
+    <h1>Welcome to RBGC GK</h1>
+    <p class="sub">How will you be using the app?</p>
+
+    <div class="role-option" data-action="pick-role" data-role="staff">
+      <div class="ico">🏌️</div>
+      <div class="txt">
+        <b>Greenkeeper / Superintendent</b>
+        <span>Full access to jobs, program, plant ID, learn & team</span>
+      </div>
+    </div>
+
+    <div class="role-option" data-action="pick-role" data-role="committee">
+      <div class="ico">📋</div>
+      <div class="txt">
+        <b>Ground Committee</b>
+        <span>View club info, approve volunteers, post jobs</span>
+      </div>
+    </div>
+
+    <div class="role-option" data-action="pick-role" data-role="volunteer">
+      <div class="ico">🙋</div>
+      <div class="txt">
+        <b>Volunteer</b>
+        <span>Sign up to help — approval required from staff</span>
+      </div>
+    </div>
+
+    <button type="button" class="submit" style="background:#eef3ee;color:var(--text);margin-top:10px"
+      data-action="signout">Cancel</button>
+  </div>
+</div>
+
+<!-- ================= PENDING APPROVAL ================= -->
+<div id="pendingScreen" class="hidden">
+  <div class="role-card">
+    <div class="pending-icon">⏳</div>
+    <h2 class="pending-title">Waiting on approval</h2>
+    <p class="pending-text">
+      Your account has been created. A greenkeeper or committee member
+      needs to approve you before you can access the app.
+    </p>
+    <p class="pending-text" style="font-size:13px">
+      Signed in as <b id="pendingEmail">—</b><br>
+      Role requested: <b id="pendingRole">—</b>
+    </p>
+    <button type="button" class="submit" style="background:var(--green2)"
+      data-action="refresh-approval">Check again</button>
+    <button type="button" class="submit" style="background:#eef3ee;color:var(--text);margin-top:8px"
+      data-action="signout">Sign out</button>
+  </div>
+</div>
+
+<!-- ================= MAIN APP ================= -->
 <div id="app" class="hidden">
   <header>
     <div class="head-row">
@@ -252,6 +389,7 @@
     <button data-action="nav" data-tab="calendar"><span class="ni">📅</span>Calendar</button>
     <button data-action="nav" data-tab="program"><span class="ni">🧪</span>Program</button>
     <button data-action="nav" data-tab="plant"><span class="ni">🌿</span>Plant</button>
+    <button data-action="nav" data-tab="team"><span class="ni">👥</span>Team</button>
     <button data-action="nav" data-tab="learn"><span class="ni">📚</span>Learn</button>
   </nav>
 </div>
@@ -469,6 +607,10 @@ let currentUser = null;
 let notifyInterval = null;
 let _plantPhotoData = null;
 let plantFilter = 'All';
+let userRole = null;
+let userApproved = false;
+let userName = '';
+let userPhone = '';
 
 const $  = (s, r=document) => r.querySelector(s);
 const $$ = (s, r=document) => [...r.querySelectorAll(s)];
@@ -521,6 +663,93 @@ function setSyncStatus(txt, isErr){
 }
 
 function userPath(){ return currentUser ? currentUser.uid : null; }
+
+async function loadUserRole(){
+  const u = userPath();
+  if(!u) return false;
+  try{
+    const snap = await getDocs(collection(db, 'users', u, 'settings'));
+    let main = null;
+    snap.forEach(d => { if(d.id === 'main') main = d.data(); });
+
+    if(!main || !main.role){
+      userRole = null;
+      userApproved = false;
+      return false;
+    }
+
+    userRole = main.role || null;
+    userApproved = main.approved === true;
+    userName = main.name || '';
+    userPhone = main.phone || '';
+    return true;
+  }catch(e){
+    console.error('loadUserRole failed', e);
+    return false;
+  }
+}
+
+async function saveUserRole(role, name, phone){
+  const u = userPath();
+  if(!u) return false;
+
+  let isFirstUser = false;
+  try{
+    const snap = await getDocs(collection(db, 'users'));
+    isFirstUser = snap.size <= 1;
+  }catch(e){ isFirstUser = false; }
+
+  const autoApprove = (role === 'staff' && isFirstUser);
+
+  await setDoc(doc(db, 'users', u, 'settings', 'main'), {
+    role: role,
+    approved: autoApprove,
+    name: name || '',
+    phone: phone || '',
+    email: currentUser?.email || '',
+    requestedAt: serverTimestamp(),
+    ...(autoApprove ? { approvedAt: serverTimestamp(), autoApproved: true } : {})
+  }, { merge: true });
+
+  userRole = role;
+  userApproved = autoApprove;
+  userName = name || '';
+  userPhone = phone || '';
+  return true;
+}
+
+async function approveUser(uid_, role, name, phone){
+  await setDoc(doc(db, 'users', uid_, 'settings', 'main'), {
+    role: role || 'volunteer',
+    approved: true,
+    name: name || '',
+    phone: phone || '',
+    approvedAt: serverTimestamp(),
+    approvedBy: currentUser?.uid || '',
+    approvedByName: userName || currentUser?.email || ''
+  }, { merge: true });
+}
+
+async function rejectUser(uid_){
+  await deleteDoc(doc(db, 'users', uid_, 'settings', 'main'));
+}
+
+async function publishMembershipIndex(role, approved, name){
+  const u = userPath();
+  if(!u) return;
+  try{
+    await setDoc(doc(db, 'clubs', 'rbgc', 'members', u), {
+      uid: u,
+      email: currentUser?.email || '',
+      role: role,
+      approved: approved === true,
+      name: name || '',
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+  }catch(e){
+    console.warn('publishMembershipIndex failed', e);
+  }
+}
 
 async function fsLoadAll(){
   const u = userPath();
@@ -678,26 +907,60 @@ onAuthStateChanged(auth, async (user) => {
   currentUser = user;
   if(user){
     authScreen.classList.add('hidden');
-    appRoot.classList.remove('hidden');
-    await fsLoadAll();
-    if(!state.events.length && !state.jobs.length){
-      state.events  = seedEvents();
-      state.jobs    = seedJobs();
-      state.program = seedProgram();
-      await Promise.all([
-        ...state.jobs.map(j => fsSave('jobs', j)),
-        ...state.events.map(e => fsSave('events', e)),
-        ...state.program.map(p => fsSave('program', p))
-      ]);
+
+    const hasRole = await loadUserRole();
+
+    if(!hasRole){
+      appRoot.classList.add('hidden');
+      $('#roleScreen').classList.remove('hidden');
+      $('#pendingScreen').classList.add('hidden');
+      return;
     }
+
+    if(!userApproved){
+      appRoot.classList.add('hidden');
+      $('#roleScreen').classList.add('hidden');
+      $('#pendingScreen').classList.remove('hidden');
+      const pe = $('#pendingEmail');
+      const pr = $('#pendingRole');
+      if(pe) pe.textContent = user.email || '';
+      if(pr) pr.textContent = userRole || '—';
+      return;
+    }
+
+    $('#roleScreen').classList.add('hidden');
+    $('#pendingScreen').classList.add('hidden');
+    appRoot.classList.remove('hidden');
+
+    await fsLoadAll();
+
+    if(userRole === 'staff'){
+      if(!state.events.length && !state.jobs.length){
+        state.events  = seedEvents();
+        state.jobs    = seedJobs();
+        state.program = seedProgram();
+        await Promise.all([
+          ...state.jobs.map(j => fsSave('jobs', j)),
+          ...state.events.map(e => fsSave('events', e)),
+          ...state.program.map(p => fsSave('program', p))
+        ]);
+      }
+    }
+
     selectedDay = todayISO();
     render();
     startNotifyLoop();
   }else{
     appRoot.classList.add('hidden');
     authScreen.classList.remove('hidden');
+    $('#roleScreen').classList.add('hidden');
+    $('#pendingScreen').classList.add('hidden');
     state = { jobs:[], events:[], learn:[], program:[], plantIds:[], plantChats:[],
               weather:'', courseStatus:'Open' };
+    userRole = null;
+    userApproved = false;
+    userName = '';
+    userPhone = '';
     if(notifyInterval){ clearInterval(notifyInterval); notifyInterval = null; }
   }
 });
@@ -830,6 +1093,16 @@ function seedProgram(){
 
 function render(){
   const v = $('#view');
+  if(!v) return;
+
+  const tabsForRole = {
+    staff:     ['dash','jobs','calendar','program','plant','team','learn'],
+    committee: ['dash','calendar','team'],
+    volunteer: ['dash']
+  }[userRole] || ['dash'];
+
+  if(!tabsForRole.includes(activeTab)) activeTab = 'dash';
+
   if(activeTab === 'dash')      v.innerHTML = viewDash();
   if(activeTab === 'jobs')      v.innerHTML = viewJobs();
   if(activeTab === 'calendar')  v.innerHTML = viewCalendar();
@@ -837,8 +1110,24 @@ function render(){
   if(activeTab === 'plant')     v.innerHTML = viewPlant();
   if(activeTab === 'learn')     v.innerHTML = viewLearn();
 
-  $$('nav button').forEach(b =>
-    b.classList.toggle('active', b.dataset.tab === activeTab));
+  if(activeTab === 'team'){
+    v.innerHTML = '<div class="empty" style="padding:40px"><span class="big">👥</span>Loading team…</div>';
+    viewTeam().then(html => {
+      v.innerHTML = html;
+    }).catch(e => {
+      console.error(e);
+      v.innerHTML = '<div class="empty">Could not load team</div>';
+    });
+  }
+
+  $$('nav button').forEach(b => {
+    const t = b.dataset.tab;
+    b.style.display = tabsForRole.includes(t) ? '' : 'none';
+    b.classList.toggle('active', t === activeTab);
+  });
+
+  const nav = document.querySelector('nav');
+  if(nav) nav.style.gridTemplateColumns = `repeat(${tabsForRole.length},1fr)`;
 
   const sub = $('#headSub');
   if(sub) sub.textContent =
@@ -1038,6 +1327,65 @@ function startNotifyLoop(){
 
 function viewDash(){
   const t = todayISO();
+
+  // Volunteer dashboard
+  if(userRole === 'volunteer'){
+    return `
+      <div class="card" style="border-left:4px solid var(--green)">
+        <h3 style="color:var(--green)">👋 Welcome, ${esc(userName || 'Volunteer')}</h3>
+        <p style="font-size:13.5px;color:var(--muted);margin:0 0 6px">
+          You're in the volunteer group for Redland Bay Golf Club.
+        </p>
+        <p style="font-size:12.5px;color:var(--muted);margin:0">
+          Chat, jobs and working bees are coming in the next update.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Coming soon</h3>
+        <div class="item" style="padding:8px 0">
+          <div class="item-body">
+            <div class="item-title" style="font-size:13.5px">💬 Group Chat</div>
+            <div class="item-meta"><span>Talk with the crew</span></div>
+          </div>
+        </div>
+        <div class="item" style="padding:8px 0">
+          <div class="item-body">
+            <div class="item-title" style="font-size:13.5px">✅ Jobs to be done</div>
+            <div class="item-meta"><span>See what needs a hand</span></div>
+          </div>
+        </div>
+        <div class="item" style="padding:8px 0">
+          <div class="item-body">
+            <div class="item-title" style="font-size:13.5px">📅 Working bees</div>
+            <div class="item-meta"><span>RSVP to upcoming events</span></div>
+          </div>
+        </div>
+        <div class="item" style="padding:8px 0">
+          <div class="item-body">
+            <div class="item-title" style="font-size:13.5px">🕐 Sign in / out</div>
+            <div class="item-meta"><span>Scan the QR at the shed</span></div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // Committee dashboard
+  if(userRole === 'committee'){
+    return `
+      <div class="stats" style="grid-template-columns:1fr 1fr">
+        <div class="stat"><b>${state.events.length}</b><span>Events</span></div>
+        <div class="stat"><b>${state.events.filter(e => !e.done && e.date >= t).length}</b><span>Upcoming</span></div>
+      </div>
+
+      <div class="sec-head"><h2>Upcoming Events</h2></div>
+      <div class="card">
+        ${state.events.filter(e => e.date >= t).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,10).map(evItem).join('')
+          || '<div class="empty"><span class="big">📅</span>Nothing scheduled.</div>'}
+      </div>`;
+  }
+
+  // Staff dashboard (original)
   const todays = state.jobs.filter(j => j.due === t);
   const open = state.jobs.filter(j => j.status !== 'done').length;
   const overdue = state.jobs.filter(j => j.status !== 'done' && j.due && j.due < t).length;
@@ -1534,6 +1882,79 @@ function plantItem(p){
       </div>
       <span style="color:#b9c7bb;font-size:20px;line-height:1;flex:0 0 auto">›</span>
     </div>`;
+}
+
+async function viewTeam(){
+  let members = [];
+  try{
+    const snap = await getDocs(collection(db, 'clubs', 'rbgc', 'members'));
+    members = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  }catch(e){
+    console.error(e);
+  }
+
+  const pending = members.filter(m => !m.approved);
+  const approved = members.filter(m => m.approved);
+
+  const catClass = r => ({
+    'staff': 'role-staff',
+    'committee': 'role-committee',
+    'volunteer': 'role-volunteer'
+  }[r] || 'role-pending');
+
+  const catLabel = r => ({
+    'staff': 'Staff',
+    'committee': 'Committee',
+    'volunteer': 'Volunteer'
+  }[r] || 'Unknown');
+
+  return `
+    <div class="sec-head">
+      <h2>Team</h2>
+    </div>
+
+    <div class="card">
+      <h3>Pending Approval <span style="color:#b9c7bb">· ${pending.length}</span></h3>
+      ${pending.length ? pending.map(m => `
+        <div class="item" style="align-items:center">
+          <div class="item-body">
+            <div class="item-title">${esc(m.name || m.email || m.uid.slice(0,8))}</div>
+            <div class="item-meta">
+              <span class="pill role-pending">${esc(catLabel(m.role))}</span>
+              <span>${esc(m.email || '')}</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;flex:0 0 auto">
+            <button type="button"
+              data-action="team-approve" data-uid="${m.uid}" data-role="${m.role || 'volunteer'}"
+              style="background:var(--green);color:#fff;border:0;padding:8px 12px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
+              ✓ Approve
+            </button>
+            <button type="button"
+              data-action="team-reject" data-uid="${m.uid}"
+              style="background:#fff;color:var(--red);border:1.5px solid var(--red);padding:8px 12px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
+              ✕
+            </button>
+          </div>
+        </div>
+      `).join('') : `<div class="empty" style="padding:12px">No pending requests.</div>`}
+    </div>
+
+    <div class="card">
+      <h3>Members <span style="color:#b9c7bb">· ${approved.length}</span></h3>
+      ${approved.length ? approved.map(m => `
+        <div class="item">
+          <div class="item-body">
+            <div class="item-title">${esc(m.name || m.email || m.uid.slice(0,8))}</div>
+            <div class="item-meta">
+              <span class="pill ${catClass(m.role)}">${esc(catLabel(m.role))}</span>
+              <span>${esc(m.email || '')}</span>
+            </div>
+          </div>
+        </div>
+      `).join('') : `<div class="empty" style="padding:12px">No members yet.</div>`}
+    </div>
+  `;
 }
 
 async function compressImage(file, maxSize = 900, quality = 0.75){
@@ -3031,9 +3452,12 @@ function formLearn(){
 
 function formData(){
   const hasPerm = notificationsSupported() && Notification.permission === 'granted';
+  const roleLabel = { staff: 'Staff', committee: 'Committee', volunteer: 'Volunteer' }[userRole] || userRole;
   openSheet('Account & Data', `
     <p style="font-size:13.5px;color:var(--muted);margin:0 0 14px">
-      Signed in as <b>${esc(currentUser?.email || '')}</b>
+      Signed in as <b>${esc(currentUser?.email || '')}</b><br>
+      <span class="role-badge role-${userRole}">${esc(roleLabel)}</span>
+      ${userName ? `<span style="margin-left:6px">${esc(userName)}</span>` : ''}
     </p>
 
     <div class="card" style="background:#f7faf7;box-shadow:none;margin-bottom:14px">
@@ -3053,9 +3477,6 @@ function formData(){
     </div>
 
     <button type="button" class="submit" style="background:#1565c0" data-action="signout">Sign out</button>
-    <button type="button" class="submit" style="background:#c62828;margin-top:10px" data-action="wipe">
-      Delete all my data
-    </button>
   `, () => {});
 }
 
@@ -3073,6 +3494,96 @@ document.addEventListener('click', async (e) => {
       closeSheet();
       render();
       break;
+
+    /* ---- Role selection ---- */
+    case 'pick-role': {
+      const role = el.dataset.role;
+      const label = { staff: 'greenkeeper', committee: 'ground committee member', volunteer: 'volunteer' }[role] || role;
+
+      let name = '';
+      while(!name){
+        const input = prompt(`What's your name? (You can change this later)\n\nSigning in as: ${label}`);
+        if(input === null){
+          await signOut(auth);
+          return;
+        }
+        name = input.trim();
+      }
+
+      await saveUserRole(role, name, '');
+      await publishMembershipIndex(role, userApproved, name);
+
+      if(userApproved){
+        $('#roleScreen').classList.add('hidden');
+        appRoot.classList.remove('hidden');
+        await fsLoadAll();
+        selectedDay = todayISO();
+        render();
+        startNotifyLoop();
+        toast('Welcome!');
+      } else {
+        $('#roleScreen').classList.add('hidden');
+        $('#pendingScreen').classList.remove('hidden');
+        $('#pendingEmail').textContent = currentUser?.email || '';
+        $('#pendingRole').textContent = userRole || '—';
+        toast('Waiting for approval');
+      }
+      break;
+    }
+
+    case 'refresh-approval': {
+      const hasRole = await loadUserRole();
+      if(hasRole && userApproved){
+        toast('You\'re approved! 🎉');
+        $('#pendingScreen').classList.add('hidden');
+        appRoot.classList.remove('hidden');
+        await fsLoadAll();
+        selectedDay = todayISO();
+        render();
+        startNotifyLoop();
+      } else {
+        toast('Still waiting on approval');
+      }
+      break;
+    }
+
+    /* ---- Team actions ---- */
+    case 'team-approve': {
+      const uid_ = el.dataset.uid;
+      const role = el.dataset.role || 'volunteer';
+      if(!uid_) break;
+      if(!confirm(`Approve this ${role}?`)) break;
+      try{
+        await approveUser(uid_, role, '', '');
+        await setDoc(doc(db, 'clubs', 'rbgc', 'members', uid_), {
+          approved: true,
+          approvedAt: serverTimestamp(),
+          approvedByName: userName || currentUser?.email || ''
+        }, { merge: true });
+        toast('Approved');
+        render();
+      }catch(err){
+        console.error(err);
+        toast('Could not approve');
+      }
+      break;
+    }
+
+    case 'team-reject': {
+      const uid_ = el.dataset.uid;
+      if(!uid_) break;
+      if(!confirm('Reject and remove this user?')) break;
+      try{
+        await rejectUser(uid_);
+        await deleteDoc(doc(db, 'clubs', 'rbgc', 'members', uid_));
+        toast('Rejected');
+        render();
+      }catch(err){
+        console.error(err);
+        toast('Could not reject');
+      }
+      break;
+    }
 
     case 'save-conditions':
       state.courseStatus = $('#dashStatus').value;
@@ -3175,13 +3686,13 @@ document.addEventListener('click', async (e) => {
       }
       closeSheet();
       setSyncStatus('⏳ Saving');
-      for(const e of toAdd){
+      for(const ev_ of toAdd){
         const ev = {
           id: uid('e'),
-          title: e.title.trim(),
-          date: e.date,
-          type: EVENT_TYPES.includes(e.type) ? e.type : 'agronomy',
-          notes: (e.notes || '').trim(),
+          title: ev_.title.trim(),
+          date: ev_.date,
+          type: EVENT_TYPES.includes(ev_.type) ? ev_.type : 'agronomy',
+          notes: (ev_.notes || '').trim(),
           done: false
         };
         state.events.push(ev);
@@ -3697,28 +4208,6 @@ document.addEventListener('click', async (e) => {
       closeSheet();
       await signOut(auth);
       break;
-
-    case 'wipe': {
-      if(!confirm('Delete ALL your data from the cloud and this device? This cannot be undone.')){
-        break;
-      }
-      closeSheet();
-      setSyncStatus('⏳ Deleting');
-      const u = userPath();
-      const subs = ['jobs','events','learn','program','plantIds','plantChats'];
-      for(const sub of subs){
-        const snap = await getDocs(collection(db, 'users', u, sub));
-        for(const d of snap.docs){
-          try{ await deleteDoc(d.ref); }catch(e){ console.warn(e); }
-        }
-      }
-      state = { jobs:[], events:[], learn:[], program:[], plantIds:[], plantChats:[],
-                weather:'', courseStatus:'Open' };
-      setSyncStatus('☁️ Synced');
-      render();
-      toast('All data deleted');
-      break;
-    }
   }
 });
 
