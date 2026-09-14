@@ -90,6 +90,7 @@
   .d-staff{background:var(--blue)}
   .d-equipment{background:var(--amber)}
   .d-chemical{background:#00838f}
+  .d-program{background:var(--lime)}
   .legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;font-size:11px;color:var(--muted)}
   .legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
 
@@ -118,9 +119,9 @@
   .result{background:#e8f5e9;border-radius:11px;padding:12px;margin-top:12px;font-size:14px;line-height:1.7;border-left:4px solid var(--green2)}
   .result b{color:var(--green)}
 
-  nav{position:fixed;bottom:0;left:0;right:0;background:#fff;z-index:100;display:grid;grid-template-columns:repeat(7,1fr);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -2px 14px rgba(0,0,0,.06)}
-  nav button{background:none;border:0;padding:9px 1px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;color:#96a698;font-size:9px;font-weight:600;font-family:inherit}
-  nav button .ni{font-size:17px;line-height:1}
+  nav{position:fixed;bottom:0;left:0;right:0;background:#fff;z-index:100;display:grid;grid-template-columns:repeat(6,1fr);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -2px 14px rgba(0,0,0,.06)}
+  nav button{background:none;border:0;padding:9px 1px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;color:#96a698;font-size:9.5px;font-weight:600;font-family:inherit}
+  nav button .ni{font-size:18px;line-height:1}
   nav button.active{color:var(--green)}
 
   .toast{position:fixed;bottom:92px;left:50%;transform:translateX(-50%);background:#263a29;color:#fff;padding:10px 18px;border-radius:22px;font-size:13.5px;z-index:300;opacity:0;pointer-events:none;transition:.25s;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis}
@@ -250,7 +251,6 @@
   <nav>
     <button data-action="nav" data-tab="dash"     class="active"><span class="ni">🏠</span>Home</button>
     <button data-action="nav" data-tab="jobs"><span class="ni">✅</span>Jobs</button>
-    <button data-action="nav" data-tab="reports"><span class="ni">📋</span>Reports</button>
     <button data-action="nav" data-tab="calendar"><span class="ni">📅</span>Calendar</button>
     <button data-action="nav" data-tab="program"><span class="ni">🧪</span>Program</button>
     <button data-action="nav" data-tab="plant"><span class="ni">🌿</span>Plant</button>
@@ -320,10 +320,6 @@ const AREAS = ['Greens','Tees','Fairways','Rough','Bunkers','Practice Area',
 
 const JOB_TYPES = ['Mowing','Aeration','Topdressing','Fertiliser','Spraying',
                    'Irrigation','Bunker Work','Landscaping','Project','Other'];
-
-const REPORT_TYPES = ['Daily Course Report','Chemical / Fertiliser Log',
-                      'Equipment Fault','Irrigation Issue','Disease / Pest Scout',
-                      'Incident / Near Miss','Tournament Prep','Weekly Summary'];
 
 const EVENT_TYPES = ['agronomy','club','staff','equipment','chemical'];
 
@@ -411,6 +407,40 @@ Rules:
 - Respond with JSON only. No markdown. No commentary.`;
 }
 
+function getProgramImportPrompt(){
+  const y = new Date().getFullYear();
+  return `You are a turf management assistant for Australian golf courses.
+The user has provided a photo of a NUTRITION / FERTILISER / SPRAY PROGRAM document.
+
+Extract the full program structure. Respond ONLY with valid JSON:
+
+{
+  "months": [
+    {
+      "month": "July 2026",
+      "weeks": [
+        {
+          "week": 1,
+          "weekStart": "2026-07-06",
+          "items": [
+            { "product": "Gypsum", "rate": "500kg" },
+            { "product": "LiquiMaxx K 12-0-20", "rate": "20L" }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
+Rules:
+- Current year is ${y}. If the document shows a year, use it. If only month names, use ${y} for the current year going forward, and ${y+1} for months already past.
+- weekStart should be the Monday of each week. If the doc shows weeks as "Week 1, Week 2" with a starting month, estimate dates.
+- Include ALL products you can read, with their rates (e.g. "500kg", "20L", "3.4L", "12.5kg").
+- If a rate is unclear, use "Unknown".
+- If you cannot read the document, return {"months": []}.
+- Respond with JSON only. No markdown. No commentary.`;
+}
+
 function getNameFillPrompt(commonName, botanicalName){
   return `You are a turf management assistant for Australian golf courses.
 The user has identified this plant/issue by name and needs the rest of the details filled in.
@@ -440,7 +470,7 @@ Never invent botanical names. Respond with JSON only. No markdown, no commentary
    State
    ========================================================= */
 let state = {
-  jobs:[], reports:[], events:[], learn:[], program:[], plantIds:[], plantChats:[],
+  jobs:[], events:[], learn:[], program:[], plantIds:[], plantChats:[],
   weather:'', courseStatus:'Open'
 };
 let activeTab = 'dash';
@@ -518,12 +548,11 @@ async function fsLoadAll(){
   };
   try{
     setSyncStatus('⏳ Loading');
-    const [jobs, reports, events, learn, program, plantIds, plantChats] = await Promise.all([
-      load('jobs'), load('reports'), load('events'),
+    const [jobs, events, learn, program, plantIds, plantChats] = await Promise.all([
+      load('jobs'), load('events'),
       load('learn'), load('program'), load('plantIds'), load('plantChats')
     ]);
     state.jobs = jobs;
-    state.reports = reports;
     state.events = events;
     state.learn = learn;
     state.program = program;
@@ -690,7 +719,7 @@ onAuthStateChanged(auth, async (user) => {
   }else{
     appRoot.classList.add('hidden');
     authScreen.classList.remove('hidden');
-    state = { jobs:[], reports:[], events:[], learn:[], program:[], plantIds:[], plantChats:[],
+    state = { jobs:[], events:[], learn:[], program:[], plantIds:[], plantChats:[],
               weather:'', courseStatus:'Open' };
     if(notifyInterval){ clearInterval(notifyInterval); notifyInterval = null; }
   }
@@ -832,7 +861,6 @@ function render(){
   const v = $('#view');
   if(activeTab === 'dash')      v.innerHTML = viewDash();
   if(activeTab === 'jobs')      v.innerHTML = viewJobs();
-  if(activeTab === 'reports')   v.innerHTML = viewReports();
   if(activeTab === 'calendar')  v.innerHTML = viewCalendar();
   if(activeTab === 'program')   v.innerHTML = viewProgram();
   if(activeTab === 'plant')     v.innerHTML = viewPlant();
@@ -844,6 +872,80 @@ function render(){
   const sub = $('#headSub');
   if(sub) sub.textContent =
     new Date().toLocaleDateString(undefined,{weekday:'long', day:'numeric', month:'long'});
+}
+
+/* =========================================================
+   Program helpers
+   ========================================================= */
+function findProgramItem(monthId, weekNum, itemId){
+  const month = state.program.find(m => m.id === monthId);
+  if(!month) return null;
+  const week = (month.weeks || []).find(w => w.week === weekNum);
+  if(!week) return null;
+  const item = (week.items || []).find(i => i.id === itemId);
+  if(!item) return null;
+  return { month, week, item };
+}
+
+function getAllProgramProducts(){
+  const set = new Set();
+  (state.program || []).forEach(m => (m.weeks || []).forEach(w =>
+    (w.items || []).forEach(i => i.product && set.add(i.product))));
+  return [...set].sort();
+}
+
+function getProgramItemsForDate(dateStr){
+  const out = [];
+  (state.program || []).forEach(month => {
+    (month.weeks || []).forEach(wk => {
+      if(wk.weekStart === dateStr){
+        (wk.items || []).forEach(item => {
+          out.push({
+            monthId: month.id,
+            monthName: month.month,
+            week: wk.week,
+            product: item.product,
+            rate: item.rate,
+            done: !!item.done,
+            itemId: item.id
+          });
+        });
+      }
+    });
+  });
+  return out;
+}
+
+function getThisWeekProgram(){
+  const today = new Date();
+  const day = (today.getDay() + 6) % 7;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - day);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  const startStr = iso(monday);
+  const endStr = iso(sunday);
+
+  const out = [];
+  (state.program || []).forEach(month => {
+    (month.weeks || []).forEach(wk => {
+      if(wk.weekStart >= startStr && wk.weekStart <= endStr){
+        (wk.items || []).forEach(item => {
+          out.push({
+            monthId: month.id,
+            monthName: month.month,
+            week: wk.week,
+            weekStart: wk.weekStart,
+            product: item.product,
+            rate: item.rate,
+            done: !!item.done,
+            itemId: item.id
+          });
+        });
+      }
+    });
+  });
+  return out;
 }
 
 /* =========================================================
@@ -980,17 +1082,15 @@ function viewDash(){
   const todays = state.jobs.filter(j => j.due === t);
   const open = state.jobs.filter(j => j.status !== 'done').length;
   const overdue = state.jobs.filter(j => j.status !== 'done' && j.due && j.due < t).length;
-  const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7);
-  const repWeek = state.reports.filter(r => r.date >= iso(weekAgo)).length;
   const upcoming = state.events.filter(e => e.date >= t)
     .sort((a,b) => a.date.localeCompare(b.date)).slice(0,6);
   const reminders = buildReminders();
+  const weekProgram = getThisWeekProgram();
 
   let html = `
-    <div class="stats">
+    <div class="stats" style="grid-template-columns:1fr 1fr">
       <div class="stat"><b>${todays.filter(j=>j.status!=='done').length}</b><span>Today</span></div>
-      <div class="stat"><b>${open}</b><span>Open</span></div>
-      <div class="stat"><b>${repWeek}</b><span>Reports 7d</span></div>
+      <div class="stat"><b>${open}</b><span>Open Jobs</span></div>
     </div>`;
 
   if(overdue > 0){
@@ -1015,6 +1115,40 @@ function viewDash(){
       html += `<div style="font-size:12px;font-weight:700;color:var(--green2);text-transform:uppercase;letter-spacing:.5px;margin:10px 0 4px">This Week</div>`;
       html += reminders.week.map(r => reminderRow(r, 'p-low')).join('');
     }
+    html += `</div>`;
+  }
+
+  if(weekProgram.length){
+    const doneCount = weekProgram.filter(p => p.done).length;
+    html += `<div class="card" style="border-left:4px solid var(--green)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <h3 style="margin:0;color:var(--green)">🧪 This Week's Applications</h3>
+        <span style="font-size:11px;color:var(--muted);font-weight:600">
+          ${doneCount}/${weekProgram.length} applied
+        </span>
+      </div>`;
+
+    weekProgram.forEach(p => {
+      html += `
+        <div class="item" style="padding:8px 0">
+          <div class="tick ${p.done?'on':''}"
+               data-action="toggle-program"
+               data-month="${p.monthId}"
+               data-week="${p.week}"
+               data-item="${p.itemId}">
+            ${p.done?'✓':''}
+          </div>
+          <div class="item-body">
+            <div class="item-title ${p.done?'done':''}" style="font-size:13.5px">${esc(p.product)}</div>
+            <div class="item-meta">
+              <span class="pill p-type">${esc(p.rate)}</span>
+              <span>${esc(p.monthName)} · Week ${p.week}</span>
+              <span>${prettyDate(p.weekStart)}</span>
+            </div>
+          </div>
+        </div>`;
+    });
+
     html += `</div>`;
   }
 
@@ -1121,49 +1255,6 @@ function jobItem(j){
 }
 
 /* =========================================================
-   VIEW: Reports
-   ========================================================= */
-function viewReports(){
-  const sorted = [...state.reports].sort((a,b) =>
-    (b.date||'').localeCompare(a.date||'') || (b.created||'').localeCompare(a.created||''));
-  return `
-    <div class="sec-head">
-      <h2>Reports &amp; Logs</h2>
-      <button class="add-btn" data-action="add-report">+</button>
-    </div>
-    <div class="card">
-      ${sorted.length ? sorted.map(repItem).join('')
-        : `<div class="empty"><span class="big">📋</span>
-             No reports yet. Tap <b>+</b> to log a daily report,
-             chemical application or equipment fault.</div>`}
-    </div>`;
-}
-
-function repItem(r){
-  const rows = [];
-  if(r.area)    rows.push(`<span class="pill p-area">${esc(r.area)}</span>`);
-  if(r.weather) rows.push(esc(r.weather));
-  if(r.temp)    rows.push(esc(r.temp) + '°C');
-  if(r.staff)   rows.push('👤 ' + esc(r.staff));
-  const detail = [];
-  if(r.products) detail.push('Product: ' + esc(r.products));
-  if(r.rate)     detail.push('Rate: ' + esc(r.rate));
-  return `
-    <div class="item">
-      <div class="item-body">
-        <div class="item-title">${esc(r.type)}</div>
-        <div class="item-meta">
-          <span>${prettyDate(r.date)}</span>
-          ${rows.join('')}
-        </div>
-        ${detail.length ? `<div class="item-note">${detail.join('\n')}</div>` : ''}
-        ${r.notes ? `<div class="item-note">${esc(r.notes)}</div>` : ''}
-      </div>
-      <button class="del" data-action="del-report" data-id="${r.id}" title="Delete">✕</button>
-    </div>`;
-}
-
-/* =========================================================
    VIEW: Calendar
    ========================================================= */
 function viewCalendar(){
@@ -1180,7 +1271,9 @@ function viewCalendar(){
   for(let d=1; d<=daysInMonth; d++){
     const ds = iso(new Date(y, m, d));
     const evs = state.events.filter(e => e.date === ds);
-    const dots = evs.slice(0,4).map(e => `<span class="dot d-${e.type}"></span>`).join('');
+    const prog = getProgramItemsForDate(ds);
+    const dots = evs.slice(0,3).map(e => `<span class="dot d-${e.type}"></span>`).join('')
+               + (prog.length ? `<span class="dot d-program"></span>` : '');
     cells += `
       <div class="cal-day ${ds===t?'today':''} ${ds===selectedDay?'sel':''}"
            data-action="cal-day" data-date="${ds}">
@@ -1193,6 +1286,7 @@ function viewCalendar(){
   if(selectedDay){
     const evs = state.events.filter(e => e.date === selectedDay)
       .sort((a,b) => a.title.localeCompare(b.title));
+    const progItems = getProgramItemsForDate(selectedDay);
     dayPanel = `
       <div class="card">
         <div class="sec-head" style="margin:0 0 8px">
@@ -1200,7 +1294,26 @@ function viewCalendar(){
           <button class="add-btn" style="width:32px;height:32px;font-size:18px"
             data-action="add-event" data-date="${selectedDay}">+</button>
         </div>
-        ${evs.length ? evs.map(evItem).join('')
+        ${(evs.length || progItems.length)
+          ? evs.map(evItem).join('') + progItems.map(p => `
+              <div class="item" style="padding:8px 0">
+                <div class="tick ${p.done?'on':''}"
+                     data-action="toggle-program"
+                     data-month="${p.monthId}"
+                     data-week="${p.week}"
+                     data-item="${p.itemId}">
+                  ${p.done?'✓':''}
+                </div>
+                <div class="item-body">
+                  <div class="item-title ${p.done?'done':''}" style="font-size:13.5px">${esc(p.product)}</div>
+                  <div class="item-meta">
+                    <span class="pill p-type">🧪 Program</span>
+                    <span>${esc(p.rate)}</span>
+                    <span>${esc(p.monthName)} · Week ${p.week}</span>
+                  </div>
+                </div>
+              </div>
+            `).join('')
           : `<div class="empty" style="padding:10px">Nothing on this day.</div>`}
       </div>`;
   }
@@ -1239,6 +1352,7 @@ function viewCalendar(){
         ${EVENT_TYPES.map(tp =>
           `<span><i class="dot d-${tp}" style="display:inline-block"></i>${EVENT_LABEL[tp]}</span>`
         ).join('')}
+        <span><i class="dot d-program" style="display:inline-block"></i>Program</span>
       </div>
     </div>
 
@@ -1276,32 +1390,21 @@ function viewProgram(){
   let html = `
     <div class="sec-head">
       <h2>Nutrition Program</h2>
-    </div>
-
-    <div class="card" style="border-left:4px solid var(--green)">
-      <h3>Redland Bay Golf Club — Budget 26/27</h3>
-      <div class="stats" style="grid-template-columns:1fr 1fr; margin-bottom:0">
-        <div class="stat"><b>$2,388</b><span>July</span></div>
-        <div class="stat"><b>$60,640</b><span>Total Year</span></div>
-      </div>
-      <div style="font-size:12px;color:var(--muted);margin-top:8px">
-        Prepared by Paul Spencer, Greenway Turf Solutions
+      <div style="display:flex;gap:6px">
+        <button class="add-btn" style="background:var(--blue)" data-action="import-program" title="Import program from photo">📄</button>
+        <button class="add-btn" data-action="add-program-month" title="Add month">+</button>
       </div>
     </div>
 
-    <div class="card">
-      <h3>Nutrient Summary (Total Year)</h3>
-      <div class="stats" style="margin-bottom:0">
-        <div class="stat"><b>282.9</b><span>Nitrogen</span></div>
-        <div class="stat"><b>80.6</b><span>Phosphorus</span></div>
-        <div class="stat"><b>226.1</b><span>Potassium</span></div>
-      </div>
-    </div>
+    <input type="file" id="programDocCamera" accept="image/*" capture="environment" style="display:none">
+    <input type="file" id="programDocGallery" accept="image/*" style="display:none">
   `;
 
   if(!state.program.length){
     html += `<div class="card"><div class="empty">
-      <span class="big">🧪</span>No program yet.
+      <span class="big">🧪</span>
+      No program yet. Tap <b>📄</b> to import a photo of the program,
+      or <b>+</b> to add a month manually.
     </div></div>`;
     return html;
   }
@@ -1322,16 +1425,30 @@ function viewProgram(){
       <div class="card">
         <div class="sec-head" style="margin-bottom:6px">
           <h2 style="font-size:16px">${esc(month.month)}</h2>
-          <span style="font-size:11px;color:var(--muted);font-weight:600">
-            ${done}/${total} applied
-          </span>
+          <div style="display:flex;gap:6px;align-items:center">
+            <span style="font-size:11px;color:var(--muted);font-weight:600">
+              ${done}/${total} applied
+            </span>
+            <button class="del" data-action="edit-program-month" data-id="${month.id}"
+              style="font-size:14px;color:var(--blue)">✏️</button>
+          </div>
         </div>`;
 
     (month.weeks || []).forEach(wk => {
       html += `
         <div style="margin-top:12px">
-          <div style="font-size:12px;font-weight:700;color:var(--green2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">
-            Week ${wk.week}${wk.weekStart ? ` · ${prettyDate(wk.weekStart)}` : ''}
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="font-size:12px;font-weight:700;color:var(--green2);text-transform:uppercase;letter-spacing:.5px">
+              Week ${wk.week}${wk.weekStart ? ` · ${prettyDate(wk.weekStart)}` : ''}
+            </div>
+            <div style="display:flex;gap:4px">
+              <button class="del" data-action="add-program-item"
+                data-month="${month.id}" data-week="${wk.week}"
+                style="font-size:14px;color:var(--green2)">＋</button>
+              <button class="del" data-action="edit-program-week"
+                data-month="${month.id}" data-week="${wk.week}"
+                style="font-size:14px;color:var(--blue)">✏️</button>
+            </div>
           </div>
           ${(wk.items||[]).map(item => `
             <div class="item" style="padding:8px 0">
@@ -1342,7 +1459,10 @@ function viewProgram(){
                    data-item="${item.id}">
                 ${item.done?'✓':''}
               </div>
-              <div class="item-body">
+              <div class="item-body"
+                   data-action="edit-program-item"
+                   data-month="${month.id}" data-week="${wk.week}" data-item="${item.id}"
+                   style="cursor:pointer">
                 <div class="item-title ${item.done?'done':''}" style="font-size:13.5px">${esc(item.product)}</div>
                 <div class="item-meta"><span>Rate: ${esc(item.rate)}</span></div>
               </div>
@@ -1351,7 +1471,14 @@ function viewProgram(){
         </div>`;
     });
 
-    html += `</div>`;
+    html += `
+      <button type="button" class="submit"
+        data-action="add-program-week" data-id="${month.id}"
+        style="background:#fff;color:var(--green);border:1.5px solid var(--line);
+               padding:10px;font-size:13.5px;margin-top:12px">
+        + Add Week to ${esc(month.month)}
+      </button>
+      </div>`;
   });
 
   return html;
@@ -1561,7 +1688,7 @@ async function identifyPlant(dataUrl){
 }
 
 /* =========================================================
-   Plant Detail Sheet (view + fresh result)
+   Plant Detail Sheet
    ========================================================= */
 function openPlantSheet(dataUrl, result, loading, errorMsg, plantId){
   const overlay = $('#overlay');
@@ -1821,9 +1948,6 @@ async function fillInByName(plantId, commonName, botanicalName){
 }
 
 function showManualNamePreview(plantId, result){
-  const plant = state.plantIds.find(p => p.id === plantId);
-  if(!plant) return;
-
   const overlay = $('#overlay');
   const sheetForm = $('#sheetForm');
   $('#sheetTitle').textContent = 'Preview';
@@ -2105,7 +2229,6 @@ function showReidentifyResults(plant, results){
     ? plant.photos
     : (plant.thumb ? [plant.thumb] : []);
 
-  // Build results with data stored for apply
   window._reidentifyResults = results;
 
   const cardsHtml = results.map((r, i) => {
@@ -2289,7 +2412,359 @@ If you don't know something, say so honestly. Keep answers under 4 sentences unl
 }
 
 /* =========================================================
-   Document Import
+   Program Edit Forms
+   ========================================================= */
+function formEditProgramItem(monthId, weekNum, itemId){
+  const f = findProgramItem(monthId, weekNum, itemId);
+  if(!f) return;
+  const { month, week, item } = f;
+
+  openSheet('Edit Application', `
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
+      ${esc(month.month)} · Week ${week.week}
+    </div>
+
+    <div class="field">
+      <label>Product</label>
+      <input name="product" value="${esc(item.product)}" required
+        list="programProducts">
+      <datalist id="programProducts">
+        ${getAllProgramProducts().map(p => `<option value="${esc(p)}">`).join('')}
+      </datalist>
+    </div>
+
+    <div class="field">
+      <label>Rate / amount</label>
+      <input name="rate" value="${esc(item.rate)}" placeholder="e.g. 20L, 500kg, 12.5kg">
+    </div>
+
+    <button type="submit" class="submit">💾 Save</button>
+
+    <button type="button" class="submit"
+      data-action="delete-program-item"
+      data-month="${monthId}" data-week="${weekNum}" data-item="${itemId}"
+      style="background:#fff;color:var(--red);border:1.5px solid var(--red);margin-top:8px">
+      🗑 Delete this application
+    </button>
+  `, async d => {
+    item.product = d.product.trim();
+    item.rate = d.rate.trim();
+    await fsSave('program', month);
+    toast('Updated');
+  });
+}
+
+function formAddProgramItem(monthId, weekNum){
+  const month = state.program.find(m => m.id === monthId);
+  if(!month) return;
+  const week = (month.weeks || []).find(w => w.week === weekNum);
+  if(!week) return;
+
+  openSheet('Add Application', `
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
+      ${esc(month.month)} · Week ${week.week}
+    </div>
+
+    <div class="field">
+      <label>Product *</label>
+      <input name="product" required placeholder="e.g. Gypsum" list="programProducts2">
+      <datalist id="programProducts2">
+        ${getAllProgramProducts().map(p => `<option value="${esc(p)}">`).join('')}
+      </datalist>
+    </div>
+
+    <div class="field">
+      <label>Rate / amount</label>
+      <input name="rate" placeholder="e.g. 20L, 500kg, 12.5kg">
+    </div>
+  `, async d => {
+    week.items = week.items || [];
+    week.items.push({
+      id: uid('pi'),
+      product: d.product.trim(),
+      rate: d.rate.trim() || '—',
+      done: false
+    });
+    await fsSave('program', month);
+    toast('Added');
+  });
+}
+
+function formEditProgramWeek(monthId, weekNum){
+  const month = state.program.find(m => m.id === monthId);
+  if(!month) return;
+  const week = (month.weeks || []).find(w => w.week === weekNum);
+  if(!week) return;
+
+  openSheet('Edit Week', `
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
+      ${esc(month.month)}
+    </div>
+
+    <div class="row2">
+      <div class="field">
+        <label>Week number</label>
+        <input type="number" name="week" min="1" max="10" value="${week.week}">
+      </div>
+      <div class="field">
+        <label>Start date (Monday)</label>
+        <input type="date" name="weekStart" value="${week.weekStart || ''}">
+      </div>
+    </div>
+
+    <button type="submit" class="submit">💾 Save</button>
+
+    <button type="button" class="submit"
+      data-action="delete-program-week"
+      data-month="${monthId}" data-week="${weekNum}"
+      style="background:#fff;color:var(--red);border:1.5px solid var(--red);margin-top:8px">
+      🗑 Delete this week
+    </button>
+  `, async d => {
+    week.week = parseInt(d.week) || week.week;
+    if(d.weekStart) week.weekStart = d.weekStart;
+    await fsSave('program', month);
+    toast('Week updated');
+  });
+}
+
+function formAddProgramWeek(monthId){
+  const month = state.program.find(m => m.id === monthId);
+  if(!month) return;
+
+  const existing = (month.weeks || []).map(w => w.week);
+  const nextWeek = existing.length ? Math.max(...existing) + 1 : 1;
+
+  openSheet('Add Week', `
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
+      ${esc(month.month)}
+    </div>
+
+    <div class="row2">
+      <div class="field">
+        <label>Week number</label>
+        <input type="number" name="week" min="1" max="10" value="${nextWeek}">
+      </div>
+      <div class="field">
+        <label>Start date (Monday)</label>
+        <input type="date" name="weekStart" value="${todayISO()}">
+      </div>
+    </div>
+
+    <p style="font-size:12px;color:var(--muted);margin:0">
+      You can add applications to this week after saving.
+    </p>
+  `, async d => {
+    month.weeks = month.weeks || [];
+    month.weeks.push({
+      week: parseInt(d.week) || nextWeek,
+      weekStart: d.weekStart || todayISO(),
+      items: []
+    });
+    month.weeks.sort((a,b) => a.week - b.week);
+    await fsSave('program', month);
+    toast('Week added');
+  });
+}
+
+function formAddProgramMonth(){
+  openSheet('Add Month', `
+    <div class="field">
+      <label>Month name *</label>
+      <input name="month" required placeholder="e.g. July 2026">
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin:0">
+      Add weeks and applications after saving.
+    </p>
+  `, async d => {
+    const month = {
+      id: uid('pm'),
+      month: d.month.trim(),
+      weeks: []
+    };
+    state.program.push(month);
+    await fsSave('program', month);
+    toast('Month added');
+  });
+}
+
+function formEditProgramMonth(monthId){
+  const month = state.program.find(m => m.id === monthId);
+  if(!month) return;
+
+  openSheet('Edit Month', `
+    <div class="field">
+      <label>Month name</label>
+      <input name="month" value="${esc(month.month)}" required>
+    </div>
+
+    <button type="submit" class="submit">💾 Save</button>
+
+    <button type="button" class="submit"
+      data-action="delete-program-month" data-id="${monthId}"
+      style="background:#fff;color:var(--red);border:1.5px solid var(--red);margin-top:8px">
+      🗑 Delete this month
+    </button>
+  `, async d => {
+    month.month = d.month.trim();
+    await fsSave('program', month);
+    toast('Updated');
+  });
+}
+
+/* =========================================================
+   Program Import
+   ========================================================= */
+async function handleProgramPhoto(inputEl){
+  const file = inputEl.files?.[0];
+  if(!file) return;
+
+  try{
+    toast('Reading program…');
+    const dataUrl = await compressImage(file, 1400, 0.8);
+
+    openSheet('Reading program…', `
+      <div style="text-align:center;padding:16px 0 24px">
+        <img src="${dataUrl}" style="width:100%;max-width:280px;border-radius:14px;margin-bottom:16px;opacity:.85">
+        <div style="font-size:38px;margin:8px 0">🧪</div>
+        <div style="font-size:14px;color:var(--muted)">Extracting program months, weeks and products…</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:10px">Usually 8–15 seconds</div>
+      </div>
+    `, () => {});
+
+    const months = await extractProgramFromDoc(dataUrl);
+    inputEl.value = '';
+
+    if(!months || !months.length){
+      openProgramImportSheet([], dataUrl);
+      return;
+    }
+    openProgramImportSheet(months, dataUrl);
+  }catch(e){
+    console.error(e);
+    inputEl.value = '';
+    closeSheet();
+    toast('Import failed: ' + (e.message || 'unknown'));
+  }
+}
+
+async function extractProgramFromDoc(dataUrl){
+  const base64 = dataUrl.split(',')[1];
+
+  const res = await fetch(PROXY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      messages: [
+        { role: 'system', content: getProgramImportPrompt() },
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: 'Extract the full program.' },
+            { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${base64}` } }
+          ]
+        }
+      ]
+    })
+  });
+
+  if(!res.ok){
+    const err = await res.text().catch(() => '');
+    throw new Error(`Proxy ${res.status}: ${err.slice(0,120)}`);
+  }
+
+  const data = await res.json();
+  const raw = data?.choices?.[0]?.message?.content || '';
+
+  const clean = raw.replace(/^```json\s*|```$/g, '').trim();
+  let parsed;
+  try{ parsed = JSON.parse(clean); }
+  catch(e){
+    console.warn('Program AI returned non-JSON:', raw);
+    throw new Error('AI could not read the program document');
+  }
+
+  return Array.isArray(parsed.months) ? parsed.months : [];
+}
+
+function openProgramImportSheet(months, dataUrl){
+  const overlay = $('#overlay');
+  const sheetForm = $('#sheetForm');
+
+  const totalItems = months.reduce((n,m) =>
+    n + (m.weeks||[]).reduce((k,w) => k + (w.items||[]).length, 0), 0);
+
+  $('#sheetTitle').textContent = months.length
+    ? `${months.length} month${months.length>1?'s':''}, ${totalItems} item${totalItems!==1?'s':''} found`
+    : 'Nothing found';
+
+  sheetForm.onsubmit = (ev) => ev.preventDefault();
+
+  if(!months.length){
+    sheetForm.innerHTML = `
+      ${dataUrl ? `<img src="${dataUrl}" style="width:100%;border-radius:14px;margin-bottom:16px;opacity:.7">` : ''}
+      <div class="result" style="border-left-color:var(--amber);background:#fff8e1">
+        <b>Could not read the program.</b><br>
+        Try a clearer photo, crop to just the schedule section, and try again.
+      </div>
+      <button type="button" class="submit" data-action="close-sheet" style="margin-top:12px">Close</button>`;
+    overlay.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    return;
+  }
+
+  window._pendingProgram = months;
+
+  let previewHtml = '';
+  months.forEach((m, mi) => {
+    previewHtml += `
+      <div style="margin-bottom:14px">
+        <div style="font-weight:700;font-size:14.5px;color:var(--green2);margin-bottom:6px">
+          ${esc(m.month || 'Untitled month')}
+        </div>`;
+    (m.weeks || []).forEach(w => {
+      previewHtml += `
+        <div style="padding-left:8px;border-left:2px solid var(--line);margin-bottom:8px">
+          <div style="font-size:12px;color:var(--muted);font-weight:600;margin-bottom:4px">
+            Week ${w.week}${w.weekStart ? ` · ${w.weekStart}` : ''}
+          </div>`;
+      (w.items || []).forEach(i => {
+        previewHtml += `
+          <div style="font-size:13px;padding:2px 0">
+            • ${esc(i.product)} <span style="color:var(--muted)">${esc(i.rate || '')}</span>
+          </div>`;
+      });
+      previewHtml += `</div>`;
+    });
+    previewHtml += `</div>`;
+  });
+
+  sheetForm.innerHTML = `
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px">
+      Review the extracted program below. Tap <b>Add to Program</b> to save it —
+      weeks with dates will automatically appear on your calendar and home page.
+    </div>
+
+    <div style="max-height:50vh;overflow-y:auto;background:#f7faf7;border-radius:12px;padding:14px;margin-bottom:14px">
+      ${previewHtml}
+    </div>
+
+    <button type="button" class="submit" data-action="import-program-confirm">
+      ✅ Add to Program
+    </button>
+    <button type="button" class="submit"
+      style="background:#eef3ee;color:var(--text);margin-top:8px"
+      data-action="close-sheet">
+      Cancel
+    </button>
+  `;
+
+  overlay.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+/* =========================================================
+   Document Import (Calendar)
    ========================================================= */
 async function handleDocPhoto(inputEl){
   const file = inputEl.files?.[0];
@@ -2612,49 +3087,6 @@ function formJob(){
   });
 }
 
-function formReport(){
-  const t = todayISO();
-  openSheet('New Report', `
-    <div class="field"><label>Report type</label>
-      <select name="type">${optList(REPORT_TYPES)}</select></div>
-    <div class="row2">
-      <div class="field"><label>Date</label>
-        <input type="date" name="date" value="${t}"></div>
-      <div class="field"><label>Area</label>
-        <select name="area">${optList(AREAS)}</select></div>
-    </div>
-    <div class="row2">
-      <div class="field"><label>Weather</label>
-        <input name="weather" placeholder="e.g. Overcast, light wind"></div>
-      <div class="field"><label>Temp (°C)</label>
-        <input name="temp" inputmode="decimal" placeholder="e.g. 16"></div>
-    </div>
-    <div class="field"><label>Staff involved</label>
-      <input name="staff" placeholder="Names"></div>
-    <div class="row2">
-      <div class="field"><label>Product used</label>
-        <input name="products" placeholder="e.g. Primo Maxx"></div>
-      <div class="field"><label>Rate / amount</label>
-        <input name="rate" placeholder="e.g. 0.4 L/ha"></div>
-    </div>
-    <div class="field"><label>Notes / observations</label>
-      <textarea name="notes" placeholder="What was done, what you saw, follow-up needed..."></textarea></div>
-  `, async d => {
-    const r = {
-      id: uid('r'),
-      type: d.type, date: d.date, area: d.area,
-      weather: d.weather.trim(), temp: d.temp.trim(),
-      staff: d.staff.trim(),
-      products: d.products.trim(), rate: d.rate.trim(),
-      notes: d.notes.trim(),
-      created: new Date().toISOString()
-    };
-    state.reports.push(r);
-    await fsSave('reports', r);
-    toast('Report saved');
-  });
-}
-
 function formEvent(dateStr){
   openSheet('New Calendar Event', `
     <div class="field"><label>Title *</label>
@@ -2800,15 +3232,6 @@ document.addEventListener('click', async (e) => {
       toast('Job deleted');
       break;
 
-    case 'add-report': formReport(); break;
-
-    case 'del-report':
-      state.reports = state.reports.filter(x => x.id !== id);
-      render();
-      await fsDelete('reports', id);
-      toast('Report deleted');
-      break;
-
     case 'cal-prev': calCursor.setMonth(calCursor.getMonth()-1); render(); break;
     case 'cal-next': calCursor.setMonth(calCursor.getMonth()+1); render(); break;
     case 'cal-today': calCursor = new Date(); selectedDay = todayISO(); render(); break;
@@ -2835,7 +3258,7 @@ document.addEventListener('click', async (e) => {
       toast('Event deleted');
       break;
 
-    /* ---- Document Import ---- */
+    /* ---- Document Import (Calendar) ---- */
     case 'import-doc':
       openSheet('Import from document', `
         <p style="font-size:13.5px;color:var(--muted);margin:0 0 14px">
@@ -2904,7 +3327,77 @@ document.addEventListener('click', async (e) => {
       break;
     }
 
+    /* ---- Program Editing ---- */
+    case 'add-program-month':
+      formAddProgramMonth();
+      break;
+
+    case 'edit-program-month':
+      formEditProgramMonth(id);
+      break;
+
+    case 'delete-program-month': {
+      const m = state.program.find(x => x.id === id);
+      if(!m) break;
+      if(!confirm(`Delete "${m.month}" and all its weeks?`)) break;
+      state.program = state.program.filter(x => x.id !== id);
+      closeSheet();
+      render();
+      await fsDelete('program', id);
+      toast('Month deleted');
+      break;
+    }
+
+    case 'add-program-week':
+      formAddProgramWeek(id);
+      break;
+
+    case 'edit-program-week':
+      formEditProgramWeek(el.dataset.month, parseInt(el.dataset.week));
+      break;
+
+    case 'delete-program-week': {
+      const monthId = el.dataset.month;
+      const wkNum = parseInt(el.dataset.week);
+      const month = state.program.find(m => m.id === monthId);
+      if(!month) break;
+      if(!confirm(`Delete Week ${wkNum}?`)) break;
+      month.weeks = (month.weeks || []).filter(w => w.week !== wkNum);
+      closeSheet();
+      render();
+      await fsSave('program', month);
+      toast('Week deleted');
+      break;
+    }
+
+    case 'add-program-item':
+      formAddProgramItem(el.dataset.month, parseInt(el.dataset.week));
+      break;
+
+    case 'edit-program-item':
+      e.stopPropagation();
+      formEditProgramItem(el.dataset.month, parseInt(el.dataset.week), el.dataset.item);
+      break;
+
+    case 'delete-program-item': {
+      const monthId = el.dataset.month;
+      const wkNum = parseInt(el.dataset.week);
+      const itemId = el.dataset.item;
+      const month = state.program.find(m => m.id === monthId);
+      if(!month) break;
+      const week = (month.weeks || []).find(w => w.week === wkNum);
+      if(!week) break;
+      if(!confirm('Delete this application?')) break;
+      week.items = (week.items || []).filter(i => i.id !== itemId);
+      closeSheet();
+      render();
+      await fsSave('program', month);
+      toast('Deleted');
+      break;
+    }
+
     case 'toggle-program': {
+      e.stopPropagation();
       const mId = el.dataset.month;
       const wkNum = parseInt(el.dataset.week);
       const itemId = el.dataset.item;
@@ -2917,6 +3410,69 @@ document.addEventListener('click', async (e) => {
       item.done = !item.done;
       render();
       await fsSave('program', month);
+      break;
+    }
+
+    /* ---- Program Import ---- */
+    case 'import-program':
+      openSheet('Import Program', `
+        <p style="font-size:13.5px;color:var(--muted);margin:0 0 14px">
+          Take a photo of your nutrition/fertiliser program document. AI will read
+          the months, weeks and products, then add them to your program.
+          Weeks with dates will automatically appear on your calendar.
+        </p>
+        <button type="button" class="submit" data-action="import-program-camera"
+          style="padding:14px;font-size:15px;margin-bottom:8px">
+          📷 Take Photo
+        </button>
+        <button type="button" class="submit"
+          style="background:#fff;color:var(--green);border:1.5px solid var(--green);padding:13px;font-size:14px"
+          data-action="import-program-gallery">
+          🖼 Choose from Gallery
+        </button>
+      `, () => {});
+      break;
+
+    case 'import-program-camera':
+      closeSheet();
+      setTimeout(() => $('#programDocCamera')?.click(), 150);
+      break;
+
+    case 'import-program-gallery':
+      closeSheet();
+      setTimeout(() => $('#programDocGallery')?.click(), 150);
+      break;
+
+    case 'import-program-confirm': {
+      const months = window._pendingProgram || [];
+      if(!months.length){
+        toast('Nothing to add');
+        break;
+      }
+      closeSheet();
+      setSyncStatus('⏳ Saving');
+      for(const m of months){
+        const month = {
+          id: uid('pm'),
+          month: m.month || 'Untitled',
+          weeks: (m.weeks || []).map(w => ({
+            week: w.week || 1,
+            weekStart: w.weekStart || todayISO(),
+            items: (w.items || []).map(i => ({
+              id: uid('pi'),
+              product: i.product || 'Unknown',
+              rate: i.rate || '—',
+              done: false
+            }))
+          }))
+        };
+        state.program.push(month);
+        await fsSave('program', month);
+      }
+      setSyncStatus('☁️ Synced');
+      window._pendingProgram = null;
+      render();
+      toast(`Added ${months.length} month${months.length>1?'s':''}`);
       break;
     }
 
@@ -3279,14 +3835,14 @@ document.addEventListener('click', async (e) => {
       closeSheet();
       setSyncStatus('⏳ Deleting');
       const u = userPath();
-      const subs = ['jobs','reports','events','learn','program','plantIds','plantChats'];
+      const subs = ['jobs','events','learn','program','plantIds','plantChats'];
       for(const sub of subs){
         const snap = await getDocs(collection(db, 'users', u, sub));
         for(const d of snap.docs){
           try{ await deleteDoc(d.ref); }catch(e){ console.warn(e); }
         }
       }
-      state = { jobs:[], reports:[], events:[], learn:[], program:[], plantIds:[], plantChats:[],
+      state = { jobs:[], events:[], learn:[], program:[], plantIds:[], plantChats:[],
                 weather:'', courseStatus:'Open' };
       setSyncStatus('☁️ Synced');
       render();
@@ -3308,6 +3864,9 @@ document.addEventListener('change', (e) => {
   }
   if(e.target.id === 'editPhotoCamera' || e.target.id === 'editPhotoGallery'){
     handleEditPhoto(e.target);
+  }
+  if(e.target.id === 'programDocCamera' || e.target.id === 'programDocGallery'){
+    handleProgramPhoto(e.target);
   }
 });
 
