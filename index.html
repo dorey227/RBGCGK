@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#1b5e20">
+<meta name="theme-color" content="#0d47a1">
 <title>TurfTrack — Greenkeeper's Companion</title>
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
@@ -223,7 +223,6 @@
   .qr-signin-btn{width:100%;background:#fff;color:var(--green);border:0;padding:14px;border-radius:12px;font-size:15.5px;font-weight:800;cursor:pointer;font-family:inherit}
   .qr-signin-btn.out{background:#fff;color:var(--red)}
 
-  /* ============ Weather screen ============ */
   #weatherScreen{position:fixed;inset:0;z-index:250;background:var(--bg);overflow-y:auto;padding-bottom:100px}
   #weatherScreen.hidden{display:none}
   .wx-header{
@@ -286,7 +285,6 @@
 
   .wx-legend{font-size:10px;color:var(--muted);text-align:center;margin-top:8px;padding:0 6px;line-height:1.5}
 
-  /* Areas */
   .area-card{background:#f7faf7;border-radius:12px;padding:12px;margin-bottom:8px}
   .area-card .area-name{font-weight:700;font-size:14px;display:flex;justify-content:space-between;align-items:center}
   .area-card .area-turf{font-size:12px;color:var(--muted);margin-top:2px}
@@ -294,7 +292,7 @@
   .area-card .area-need b{color:var(--green);font-size:14px}
 </style>
 </head>
-<body class="nav-gradient density-comfortable">
+<body class="theme-ocean nav-floating density-compact">
 
 <div id="authScreen">
   <div class="auth-card">
@@ -518,17 +516,13 @@ let chatMessages = [];
 let signInsUnsubscribe = null;
 let allSignIns = [];
 let mySignInToday = null;
-let appTheme = { preset:'forest', density:'comfortable', bgPhoto:null, navStyle:'gradient' };
+let appTheme = { preset:'ocean', density:'compact', bgPhoto:null, navStyle:'floating' };
 
-// Weather
 let weatherData = null;
 let weatherAdvice = null;
 let weatherLoading = false;
-// Rain log: {id, date, mm, recordedBy, notes}
 let rainLog = [];
-// Irrigation log: {id, date, areaId, mm, notes}
 let irrigationLog = [];
-// Turf areas: array of {id, name, turfType, kc, sun, soil, notes}
 let turfAreas = [];
 
 const _urlParams = new URLSearchParams(window.location.search);
@@ -575,9 +569,6 @@ function setSyncStatus(txt, isErr){
   b.style.background = isErr ? 'rgba(198,40,40,.35)' : 'rgba(255,255,255,.15)';
 }
 
-/* =========================================================
-   Weather
-   ========================================================= */
 function weatherCode(code){
   if(code === 0) return { label:'Clear', icon:'☀️' };
   if(code <= 3) return { label:'Partly cloudy', icon:'⛅' };
@@ -664,7 +655,6 @@ async function fetchWeather(force){
   }
 }
 
-// Get next N hours from now
 function nextHours(n){
   if(!weatherData || !weatherData.hourly) return [];
   const now = new Date();
@@ -682,31 +672,26 @@ function nextHours(n){
   }));
 }
 
-/* ---------- Disease risk (simple model for SE QLD) ---------- */
 function diseaseRisk(day){
   const maxT = day.tempMax, minT = day.tempMin;
   const rain = day.rainSum || 0;
   const avgT = (maxT + minT) / 2;
   const risks = [];
 
-  // Dollar spot: 15-30°C, high humidity, leaf wetness
   if(avgT >= 15 && avgT <= 30 && rain > 0.5){
     const level = rain > 5 ? 'High' : rain > 1 ? 'Medium' : 'Low';
     risks.push({ name:'Dollar Spot', level, cls: level === 'High' ? 'p-high' : level === 'Medium' ? 'p-med' : 'p-low' });
   }
-  // Brown patch: 25-32°C, humidity over 85%, wet
   if(avgT >= 25 && avgT <= 32 && rain > 2){
     const level = rain > 8 ? 'High' : 'Medium';
     risks.push({ name:'Brown Patch', level, cls: level === 'High' ? 'p-high' : 'p-med' });
   }
-  // Pythium: hot, heavy rain
   if(avgT > 25 && rain > 10){
     risks.push({ name:'Pythium', level:'High', cls:'p-high' });
   }
   return risks;
 }
 
-/* ---------- Spray window per time block (uses hourly data) ---------- */
 function sprayWindowForHours(dateStr, startHour, endHour){
   if(!weatherData || !weatherData.hourly) return null;
   const h = weatherData.hourly;
@@ -733,7 +718,6 @@ function sprayWindowForHours(dateStr, startHour, endHour){
   const avgTemp = hours.reduce((s,x) => s + x.temp, 0) / hours.length;
   const avgHumidity = hours.reduce((s,x) => s + x.humidity, 0) / hours.length;
 
-  // Poor: high wind or heavy rain in this window
   if(maxWind > 25 || totalRain > 5){
     return {
       level: 'Poor', cls: 'p-high',
@@ -742,14 +726,12 @@ function sprayWindowForHours(dateStr, startHour, endHour){
         : `Rain ${totalRain.toFixed(1)} mm expected`
     };
   }
-  // Good: calm, dry, comfortable temps
   if(maxWind < 15 && totalRain < 1 && avgTemp > 8 && avgTemp < 30){
     return {
       level: 'Good', cls: 'p-low',
       reason: `Wind ${Math.round(maxWind)} km/h · ${Math.round(avgTemp)}°C`
     };
   }
-  // Marginal
   let reason = 'Check details';
   if(maxWind >= 15 && maxWind <= 25) reason = `Wind ${Math.round(maxWind)} km/h`;
   else if(avgTemp <= 8) reason = 'Too cold';
@@ -758,7 +740,6 @@ function sprayWindowForHours(dateStr, startHour, endHour){
   return { level: 'Marginal', cls: 'p-med', reason };
 }
 
-/* ---------- Water balance calculations ---------- */
 function getWeekWaterBalance(){
   if(!weatherData || !weatherData.daily) return { rain: 0, et: 0, deficit: 0 };
   const rainTotal = weatherData.daily.rainSum.slice(0, 7).reduce((a,b) => a + (b || 0), 0);
@@ -784,9 +765,6 @@ function getRainLogThisYear(){
   return rainLog.filter(r => (r.date||'').startsWith(prefix)).reduce((sum, r) => sum + (r.mm || 0), 0);
 }
 
-/* =========================================================
-   Firestore for weather extras
-   ========================================================= */
 async function loadRainLog(){
   const u = userPath();
   if(!u) return;
@@ -855,9 +833,6 @@ async function saveTurfAreas(){
   }, { merge:true });
 }
 
-/* =========================================================
-   Weather card (dashboard)
-   ========================================================= */
 function renderWeatherCard(){
   if(!weatherData){
     return `
@@ -873,7 +848,6 @@ function renderWeatherCard(){
   const wx = weatherCode(c.code);
   const bal = getWeekWaterBalance();
   const rainLogged = getRainLogThisWeek();
-  const today = weatherData.daily;
 
   return `
     <div class="card" style="border-left:4px solid var(--blue);cursor:pointer" data-action="wx-open">
@@ -910,9 +884,6 @@ function renderWeatherCard(){
     </div>`;
 }
 
-/* =========================================================
-   Weather full screen
-   ========================================================= */
 async function openWeatherScreen(){
   const screen = $('#weatherScreen');
   const body = $('#wxBody');
@@ -945,10 +916,8 @@ function renderWeatherScreen(){
   const d = weatherData.daily;
   const bal = getWeekWaterBalance();
 
-  // Header sub
   $('#wxHeaderSub').textContent = `Updated ${new Date(weatherData.fetchedAt).toLocaleTimeString('en-AU',{hour:'2-digit', minute:'2-digit'})}`;
 
-  /* Current block */
   const currentHtml = `
     <div class="wx-current">
       <div style="display:flex;align-items:center;gap:18px">
@@ -967,7 +936,6 @@ function renderWeatherScreen(){
       </div>
     </div>`;
 
-  /* Hourly strip */
   const hours = nextHours(12);
   let hourlyHtml = '<div class="wx-hourly-strip">';
   hours.forEach((h, i) => {
@@ -984,7 +952,6 @@ function renderWeatherScreen(){
   });
   hourlyHtml += '</div>';
 
-  /* 7-day cards */
   let sevenHtml = '';
   for(let i = 0; i < Math.min(7, d.dates.length); i++){
     const date = new Date(d.dates[i]);
@@ -1019,7 +986,6 @@ function renderWeatherScreen(){
       </div>`;
   }
 
-  /* Rain log */
   const rainWeek = getRainLogThisWeek();
   const rainMonth = getRainLogThisMonth();
   const rainYear = getRainLogThisYear();
@@ -1056,7 +1022,6 @@ function renderWeatherScreen(){
         </div>`).join('') : '<div class="empty" style="padding:14px 0;font-size:13px">No readings logged yet</div>'}
     </div>`;
 
-  /* Turf areas */
   let areasHtml = `
     <div class="wx-section">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -1079,7 +1044,6 @@ function renderWeatherScreen(){
       <button type="button" class="submit" style="background:#fff;color:var(--green);border:1.5px solid var(--green);margin-top:6px" data-action="area-edit">✏️ Edit Areas</button>
     </div>`;
 
-  /* 14-day outlook */
   let fourteenHtml = '<div class="wx-14day">';
   for(let i = 0; i < d.dates.length; i++){
     const date = new Date(d.dates[i]);
@@ -1095,7 +1059,6 @@ function renderWeatherScreen(){
   }
   fourteenHtml += '</div>';
 
-  /* Water balance + AI */
   const balanceHtml = `
     <div class="wx-section">
       <h3>💧 7-Day Water Balance</h3>
@@ -1122,7 +1085,6 @@ function renderWeatherScreen(){
       ${weatherAdvice ? `<div class="result" style="border-left-color:var(--blue);background:#e3f2fd;margin-top:14px;font-size:13.5px;line-height:1.6;white-space:pre-wrap">${esc(weatherAdvice)}</div>` : ''}
     </div>`;
 
-  /* Assembled */
   body.innerHTML = `
     ${currentHtml}
     <div class="wx-section">
@@ -1244,9 +1206,6 @@ Be specific. Use Australian common names. Bullet points, no waffle. Around 220 w
   }
 }
 
-/* =========================================================
-   Theme + user role
-   ========================================================= */
 const THEMES = [
   {id:'forest',name:'Forest',green:'#1b5e20',green2:'#2e7d32',lime:'#7cb342'},
   {id:'ocean',name:'Ocean',green:'#0d47a1',green2:'#1565c0',lime:'#42a5f5'},
@@ -1261,17 +1220,17 @@ function applyTheme(){
   b.classList.remove('theme-ocean','theme-sunset','theme-plum','theme-charcoal','theme-sand','theme-forest');
   b.classList.remove('density-comfortable','density-compact','has-bg-photo');
   b.classList.remove('nav-gradient','nav-glass','nav-floating');
-  const t = appTheme || {preset:'forest',density:'comfortable',bgPhoto:null,navStyle:'gradient'};
+  const t = appTheme || {preset:'ocean',density:'compact',bgPhoto:null,navStyle:'floating'};
   if(t.preset && t.preset !== 'forest') b.classList.add('theme-' + t.preset);
-  b.classList.add('density-' + (t.density || 'comfortable'));
-  b.classList.add('nav-' + (t.navStyle || 'gradient'));
+  b.classList.add('density-' + (t.density || 'compact'));
+  b.classList.add('nav-' + (t.navStyle || 'floating'));
   if(t.bgPhoto){
     b.style.setProperty('--bg-photo', `url("${t.bgPhoto}")`);
     b.classList.add('has-bg-photo');
   } else {
     b.style.removeProperty('--bg-photo');
   }
-  const theme = THEMES.find(x => x.id === t.preset) || THEMES[0];
+  const theme = THEMES.find(x => x.id === t.preset) || THEMES[1];
   const meta = document.querySelector('meta[name="theme-color"]');
   if(meta) meta.setAttribute('content', theme.green);
 }
@@ -1286,7 +1245,7 @@ async function loadTheme(){
     snap.forEach(d => {
       if(d.id === 'appearance'){
         const data = d.data();
-        appTheme = {preset:data.preset||'forest',density:data.density||'comfortable',bgPhoto:data.bgPhoto||null,navStyle:data.navStyle||'gradient'};
+        appTheme = {preset:data.preset||'ocean',density:data.density||'compact',bgPhoto:data.bgPhoto||null,navStyle:data.navStyle||'floating'};
       }
     });
   }catch(e){ console.warn('loadTheme failed', e); }
@@ -1299,7 +1258,7 @@ async function saveTheme(){
   try{
     await setDoc(doc(db, 'users', u, 'settings', 'appearance'), {
       preset:appTheme.preset, density:appTheme.density, bgPhoto:appTheme.bgPhoto,
-      navStyle:appTheme.navStyle || 'gradient', updatedAt:serverTimestamp()
+      navStyle:appTheme.navStyle || 'floating', updatedAt:serverTimestamp()
     }, { merge:true });
   }catch(e){ console.warn('saveTheme failed', e); }
 }
@@ -1427,9 +1386,6 @@ async function fsSaveSettings(){
   }catch(e){ console.warn(e); }
 }
 
-/* =========================================================
-   Sign-in
-   ========================================================= */
 function signInDocId(uid_, dateStr){ return uid_ + '_' + dateStr; }
 
 async function loadMySignIn(){
@@ -1522,9 +1478,6 @@ async function handleQrAction(){
 
 const SIGN_IN_QR_URL = (() => window.location.origin + window.location.pathname + '?qr=signin')();
 
-/* =========================================================
-   Auth
-   ========================================================= */
 const authScreen = $('#authScreen');
 const appRoot = $('#app');
 let authMode = 'signin';
@@ -1646,9 +1599,6 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-/* =========================================================
-   Seed data
-   ========================================================= */
 function seedEvents(){
   const y = new Date().getFullYear();
   const tpl = [
@@ -1719,9 +1669,6 @@ function seedProgram(){
   ];
 }
 
-/* =========================================================
-   Router
-   ========================================================= */
 function render(){
   const v = $('#view');
   if(!v) return;
@@ -1752,9 +1699,6 @@ function render(){
   if(sub) sub.textContent = new Date().toLocaleDateString('en-AU',{weekday:'long', day:'numeric', month:'long'});
 }
 
-/* =========================================================
-   Helpers used by views
-   ========================================================= */
 function findProgramItem(monthId, weekNum, itemId){
   const month = state.program.find(m => m.id === monthId);
   if(!month) return null;
@@ -1837,9 +1781,6 @@ function buildReminders(){
   return {today:todayList, tomorrow:tomorrowList, week:weekList};
 }
 
-/* =========================================================
-   Notifications
-   ========================================================= */
 function notificationsSupported(){ return typeof Notification !== 'undefined'; }
 async function requestNotifyPermission(){
   if(!notificationsSupported()){ toast('Browser does not support notifications'); return false; }
@@ -1877,9 +1818,6 @@ function startNotifyLoop(){
   notifyInterval = setInterval(checkAndNotify, 30 * 60 * 1000);
 }
 
-/* =========================================================
-   Sign-in card (dashboard)
-   ========================================================= */
 function signInCardHtml(){
   const signedIn = mySignInToday && mySignInToday.inAt && !mySignInToday.outAt;
   const wasIn = mySignInToday && mySignInToday.inAt;
@@ -1895,9 +1833,6 @@ function signInCardHtml(){
   return `<div class="qr-signin-card"><h3>⚪ Not signed in</h3><div class="big">Ready to help?</div><div class="sub">Tap below or scan the QR code at the shed</div><button type="button" class="qr-signin-btn" data-action="signin-today">✅ Sign in now</button></div>`;
 }
 
-/* =========================================================
-   Views
-   ========================================================= */
 function viewDash(){
   const t = todayISO();
   if(userRole === 'volunteer'){
@@ -2234,9 +2169,6 @@ async function viewTeam(){
     </div>`;
 }
 
-/* =========================================================
-   Image compression
-   ========================================================= */
 async function compressImage(file, maxSize = 900, quality = 0.75){
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -2259,9 +2191,6 @@ async function compressImage(file, maxSize = 900, quality = 0.75){
   });
 }
 
-/* =========================================================
-   Plant ID
-   ========================================================= */
 async function handlePlantPhoto(inputEl){
   const file = inputEl.files?.[0]; if(!file) return;
   const todayCount = (state.plantIds||[]).filter(p => (p.created||'').slice(0,10) === todayISO()).length;
@@ -2608,9 +2537,6 @@ async function askAboutPlant(plant, history){
   return data?.choices?.[0]?.message?.content || '(No response)';
 }
 
-/* =========================================================
-   Program edit forms
-   ========================================================= */
 function formEditProgramItem(monthId, weekNum, itemId){
   const f = findProgramItem(monthId, weekNum, itemId); if(!f) return;
   const {month, week, item} = f;
@@ -2661,9 +2587,6 @@ function formEditProgramMonth(monthId){
   async d => { month.month = d.month.trim(); await fsSave('program', month); toast('Updated'); });
 }
 
-/* =========================================================
-   Program import
-   ========================================================= */
 async function handleProgramPhoto(inputEl){
   const file = inputEl.files?.[0]; if(!file) return;
   try{
@@ -2711,9 +2634,6 @@ function openProgramImportSheet(months, dataUrl){
   overlay.classList.remove('hidden'); document.body.style.overflow='hidden';
 }
 
-/* =========================================================
-   Event import
-   ========================================================= */
 async function handleDocPhoto(inputEl){
   const file = inputEl.files?.[0]; if(!file) return;
   try{
@@ -2761,9 +2681,6 @@ window._onImportToggle = function(idx, checked){
   const c = $('#importCount'); if(c) c.textContent = window._pendingImport.filter(e => e._checked).length;
 };
 
-/* =========================================================
-   Learn
-   ========================================================= */
 function viewLearn(){
   const entries = [...state.learn].sort((a,b) => (b.date||'').localeCompare(a.date||''));
   const hours = entries.reduce((s,e) => s + (parseFloat(e.hours) || 0), 0);
@@ -2810,9 +2727,6 @@ function learnItem(e){
   return `<div class="item"><div class="item-body"><div class="item-title">${esc(e.topic)}</div><div class="item-meta"><span>${prettyDate(e.date)}</span>${e.category?`<span class="pill p-area">${esc(e.category)}</span>`:''}${e.hours?`<span>${esc(e.hours)} h</span>`:''}${e.supervisor?`<span>· 👤 ${esc(e.supervisor)}</span>`:''}</div>${e.notes?`<div class="item-note">${esc(e.notes)}</div>`:''}</div><button class="del" data-action="del-learn" data-id="${e.id}">✕</button></div>`;
 }
 
-/* =========================================================
-   Sheet base
-   ========================================================= */
 const overlay = $('#overlay');
 const sheetForm = $('#sheetForm');
 
@@ -2837,9 +2751,6 @@ document.addEventListener('keydown', e => { if(e.key === 'Escape') closeSheet();
 
 function optList(arr, sel){ return arr.map(o => `<option ${o===sel?'selected':''}>${esc(o)}</option>`).join(''); }
 
-/* =========================================================
-   Forms
-   ========================================================= */
 function formJob(){
   const t = todayISO();
   openSheet('New Job', `
@@ -3020,9 +2931,6 @@ function formData(){
     <button type="button" class="submit" style="background:#1565c0" data-action="signout">Sign out</button>`, () => {});
 }
 
-/* =========================================================
-   Click handlers
-   ========================================================= */
 document.addEventListener('click', async (e) => {
   const el = e.target.closest('[data-action]');
   if(!el) return;
@@ -3039,7 +2947,6 @@ document.addEventListener('click', async (e) => {
       render();
       break;
 
-    /* Weather */
     case 'wx-open': await openWeatherScreen(); break;
     case 'wx-close': closeWeatherScreen(); break;
     case 'wx-refresh': {
@@ -3064,7 +2971,6 @@ document.addEventListener('click', async (e) => {
     case 'irrig-add': formIrrigation(); break;
     case 'area-edit': formEditAreas(); break;
 
-    /* Theme */
     case 'pick-theme': appTheme.preset = el.dataset.theme; applyTheme(); await saveTheme(); formData(); break;
     case 'pick-density': appTheme.density = el.dataset.density; applyTheme(); await saveTheme(); formData(); break;
     case 'pick-nav': appTheme.navStyle = el.dataset.nav; applyTheme(); await saveTheme(); formData(); break;
@@ -3075,7 +2981,6 @@ document.addEventListener('click', async (e) => {
     case 'signin-today': try{ await signInNow(); toast(`Signed in at ${fmtTime(mySignInToday.inAt)}`); render(); }catch(e){ toast('Failed'); } break;
     case 'signout-today': if(!confirm('Sign out?')) break; try{ await signOutNow(); toast(`Signed out`); render(); }catch(e){ toast('Failed'); } break;
 
-    /* Chat */
     case 'chat-send': {
       const i = $('#chatInput'); if(!i) break;
       const t = i.value.trim(); if(!t) break;
