@@ -29,27 +29,9 @@
   body.density-compact .item-meta{font-size:11px}
   body.density-compact .sec-head h2{font-size:17px}
 
-  body.has-bg-photo{
-    background-image: var(--bg-photo);
-    background-size: cover;
-    background-position: center center;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
-    position: relative;
-    z-index: 0;
-  }
-  body.has-bg-photo::before{
-    content:"";
-    position: fixed;
-    inset: 0;
-    background: var(--bg);
-    opacity: 0.82;
-    z-index: -1;
-    pointer-events: none;
-  }
-  body.has-bg-photo .card{background: rgba(255,255,255,.94)}
-  body.has-bg-photo header{opacity:.97}
-  body.has-bg-photo nav{background: rgba(255,255,255,.97)}
+  body.has-bg-photo{background-image:var(--bg-photo);background-size:cover;background-position:center;background-attachment:fixed;background-repeat:no-repeat;position:relative;z-index:0}
+  body.has-bg-photo::before{content:"";position:fixed;inset:0;background:var(--bg);opacity:.82;z-index:-1;pointer-events:none}
+  body.has-bg-photo .card{background:rgba(255,255,255,.94)}
 
   .theme-row{display:flex;gap:8px;overflow-x:auto;padding:2px 0 6px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
   .theme-row::-webkit-scrollbar{display:none}
@@ -59,11 +41,27 @@
   .density-row{display:flex;gap:8px;margin-top:4px}
   .density-chip{flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--line);background:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--text)}
   .density-chip.active{background:var(--green);color:#fff;border-color:var(--green)}
+  .nav-style-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
+  .nav-style-chip{background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:10px 6px;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:8px;transition:.15s}
+  .nav-style-chip.active{border-color:var(--green);background:rgba(46,125,50,.06);box-shadow:0 0 0 3px rgba(46,125,50,.08)}
+  .nav-style-chip span{font-size:11px;font-weight:600;color:var(--text)}
+  .nav-style-preview{width:100%;height:34px;border-radius:6px;position:relative;overflow:hidden;display:flex;align-items:flex-end}
+  .nav-style-preview-bar{width:100%;height:15px;border-radius:4px 4px 0 0;position:relative;display:flex;align-items:center;justify-content:center}
+  .nav-style-preview-bar::after{content:"";width:24%;height:6px;border-radius:3px}
+  .nav-style-preview.gradient .nav-style-preview-bar{background:linear-gradient(180deg,var(--green) 0%,var(--green2) 100%)}
+  .nav-style-preview.gradient .nav-style-preview-bar::after{background:rgba(255,255,255,.35)}
+  .nav-style-preview.glass{background:linear-gradient(135deg,#c8d8c8 0%,#8a9e8a 100%)}
+  .nav-style-preview.glass .nav-style-preview-bar{background:rgba(255,255,255,.72)}
+  .nav-style-preview.glass .nav-style-preview-bar::after{background:rgba(0,0,0,.15)}
+  .nav-style-preview.floating{background:#e2e8e2;padding:0 6px}
+  .nav-style-preview.floating .nav-style-preview-bar{background:#fff;border-radius:5px;height:13px;margin-bottom:3px;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+  .nav-style-preview.floating .nav-style-preview-bar::after{background:rgba(0,0,0,.1)}
+
   .bg-thumb{width:100%;max-width:200px;border-radius:12px;margin-top:10px;display:block;border:1px solid var(--line)}
 
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;min-width:0}
   html,body{margin:0;padding:0;overflow-x:hidden;max-width:100vw}
-  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);padding-bottom:78px;font-size:15px;line-height:1.45;overflow-x:hidden}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.45;overflow-x:hidden;transition:padding .2s}
   img,video,canvas{max-width:100%;height:auto}
 
   header{background:linear-gradient(135deg,var(--green) 0%,var(--green2) 100%);color:#fff;padding:14px 16px 16px;position:sticky;top:0;z-index:50;box-shadow:0 2px 12px rgba(0,0,0,.15)}
@@ -160,13 +158,31 @@
   .result{background:#e8f5e9;border-radius:11px;padding:12px;margin-top:12px;font-size:14px;line-height:1.7;border-left:4px solid var(--green2)}
   .result b{color:var(--green)}
 
-  nav{position:fixed;bottom:0;left:0;right:0;background:#fff;z-index:100;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -2px 14px rgba(0,0,0,.06);overflow-x:hidden}
-  nav button{background:none;border:0;padding:8px 0 9px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;color:#96a698;font-size:9px;font-weight:600;font-family:inherit;min-width:0;overflow:hidden}
-  nav button .ni{font-size:17px;line-height:1}
-  nav button.active{color:var(--green)}
+  nav{position:fixed;bottom:0;left:0;right:0;z-index:100;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;overflow-x:hidden;transition:background .2s}
+  nav button{background:none;border:0;padding:8px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:9.5px;font-weight:700;font-family:inherit;min-width:0;overflow:hidden;border-radius:11px;transition:background .18s, color .18s}
+  nav button .ni{font-size:18px;line-height:1;transition:transform .18s}
   nav button span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 
-  .toast{position:fixed;bottom:92px;left:50%;transform:translateX(-50%);background:#263a29;color:#fff;padding:10px 18px;border-radius:22px;font-size:13.5px;z-index:300;opacity:0;pointer-events:none;transition:.25s;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis}
+  body.nav-gradient nav{background:linear-gradient(180deg,var(--green) 0%,var(--green2) 100%);padding:6px 4px calc(6px + env(safe-area-inset-bottom)) 4px;box-shadow:0 -6px 24px rgba(0,0,0,.18);gap:3px}
+  body.nav-gradient nav button{color:rgba(255,255,255,.6)}
+  body.nav-gradient nav button .ni{filter:grayscale(.2)}
+  body.nav-gradient nav button.active{color:#fff;background:rgba(255,255,255,.18);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+  body.nav-gradient nav button.active .ni{filter:none;transform:translateY(-1px) scale(1.1)}
+
+  body.nav-glass nav{background:rgba(255,255,255,.72);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-top:1px solid rgba(0,0,0,.06);padding:8px 6px calc(8px + env(safe-area-inset-bottom)) 6px;box-shadow:0 -2px 20px rgba(0,0,0,.06)}
+  body.nav-glass nav button{color:var(--muted)}
+  body.nav-glass nav button.active{color:var(--green);background:rgba(0,0,0,.045)}
+  body.nav-glass nav button.active .ni{transform:translateY(-2px) scale(1.15)}
+
+  body.nav-floating nav{left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));background:#fff;border-radius:22px;box-shadow:0 12px 36px rgba(0,0,0,.18), 0 2px 6px rgba(0,0,0,.08);border:1px solid rgba(0,0,0,.05);padding:8px 6px;gap:2px}
+  body.nav-floating nav button{color:var(--muted)}
+  body.nav-floating nav button.active{color:var(--green);background:rgba(0,0,0,.045);border-radius:14px}
+  body.nav-floating nav button.active .ni{transform:translateY(-2px) scale(1.12)}
+
+  body.nav-gradient, body.nav-glass{padding-bottom:96px}
+  body.nav-floating{padding-bottom:118px}
+
+  .toast{position:fixed;bottom:110px;left:50%;transform:translateX(-50%);background:#263a29;color:#fff;padding:10px 18px;border-radius:22px;font-size:13.5px;z-index:300;opacity:0;pointer-events:none;transition:.25s;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
 
   #authScreen{position:fixed;inset:0;z-index:400;background:linear-gradient(160deg,#1b5e20 0%,#2e7d32 55%,#43a047 100%);color:#fff;display:flex;align-items:center;justify-content:center;padding:22px}
@@ -221,7 +237,7 @@
   .qr-signin-btn.out{background:#fff;color:var(--red)}
 </style>
 </head>
-<body>
+<body class="nav-gradient density-comfortable">
 
 <div id="authScreen">
   <div class="auth-card">
@@ -362,6 +378,12 @@ enableIndexedDbPersistence(db).catch(err => {
 });
 
 const PROXY_URL = 'https://rbgcgk.vercel.app/api/proxy';
+
+// Weather config — Redland Bay Golf Club
+const WEATHER_LAT = -27.6105;
+const WEATHER_LON = 153.2986;
+const WEATHER_LOCATION = 'Redland Bay, QLD';
+const WEATHER_CACHE_MS = 30 * 60 * 1000;
 
 const AREAS = ['Greens','Tees','Fairways','Rough','Bunkers','Practice Area','Clubhouse Grounds','Irrigation','Equipment','Whole Course'];
 const JOB_TYPES = ['Mowing','Aeration','Topdressing','Fertiliser','Spraying','Irrigation','Bunker Work','Landscaping','Project','Other'];
@@ -563,7 +585,13 @@ let chatMessages = [];
 let signInsUnsubscribe = null;
 let allSignIns = [];
 let mySignInToday = null;
-let appTheme = { preset:'forest', density:'comfortable', bgPhoto:null };
+let appTheme = { preset:'forest', density:'comfortable', bgPhoto:null, navStyle:'gradient' };
+
+// Weather state
+let weatherData = null;
+let weatherAdvice = null;
+let weatherLoading = false;
+
 const _urlParams = new URLSearchParams(window.location.search);
 let qrMode = _urlParams.get('qr');
 
@@ -611,6 +639,239 @@ function setSyncStatus(txt, isErr){
   b.style.background = isErr ? 'rgba(198,40,40,.35)' : 'rgba(255,255,255,.15)';
 }
 
+/* =========================================================
+   Weather (Open-Meteo, no API key)
+   ========================================================= */
+function weatherCodeLabel(code){
+  if(code === 0) return { label: 'Clear', icon: '☀️' };
+  if(code <= 3) return { label: 'Partly cloudy', icon: '⛅' };
+  if(code <= 48) return { label: 'Fog', icon: '🌫️' };
+  if(code <= 57) return { label: 'Drizzle', icon: '🌦️' };
+  if(code <= 67) return { label: 'Rain', icon: '🌧️' };
+  if(code <= 77) return { label: 'Snow', icon: '❄️' };
+  if(code <= 82) return { label: 'Showers', icon: '🌧️' };
+  if(code <= 86) return { label: 'Snow showers', icon: '🌨️' };
+  if(code >= 95) return { label: 'Thunderstorm', icon: '⛈️' };
+  return { label: '—', icon: '🌤️' };
+}
+
+function windDirLabel(deg){
+  const dirs = ['N','NE','E','SE','S','SW','W','NW'];
+  return dirs[Math.round(deg / 45) % 8];
+}
+
+async function fetchWeather(force){
+  if(!force){
+    try{
+      const cached = localStorage.getItem('tt_weather');
+      if(cached){
+        const parsed = JSON.parse(cached);
+        if(Date.now() - parsed.cachedAt < WEATHER_CACHE_MS){
+          weatherData = parsed.data;
+          return weatherData;
+        }
+      }
+    }catch(e){}
+  }
+  weatherLoading = true;
+  try{
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LAT}&longitude=${WEATHER_LON}` +
+      `&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,wind_direction_10m,weather_code` +
+      `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,et0_fao_evapotranspiration` +
+      `&timezone=Australia%2FBrisbane&forecast_days=7`;
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('Weather API error');
+    const data = await res.json();
+    weatherData = {
+      fetchedAt: new Date().toISOString(),
+      current: {
+        temp: data.current.temperature_2m,
+        humidity: data.current.relative_humidity_2m,
+        rain: data.current.precipitation,
+        wind: data.current.wind_speed_10m,
+        windDir: data.current.wind_direction_10m,
+        code: data.current.weather_code
+      },
+      daily: {
+        dates: data.daily.time,
+        codes: data.daily.weather_code,
+        tempMax: data.daily.temperature_2m_max,
+        tempMin: data.daily.temperature_2m_min,
+        rainSum: data.daily.precipitation_sum,
+        rainProb: data.daily.precipitation_probability_max,
+        windMax: data.daily.wind_speed_10m_max,
+        et0: data.daily.et0_fao_evapotranspiration
+      }
+    };
+    localStorage.setItem('tt_weather', JSON.stringify({cachedAt: Date.now(), data: weatherData}));
+    weatherLoading = false;
+    return weatherData;
+  }catch(e){
+    console.error('Weather fetch failed', e);
+    weatherLoading = false;
+    return null;
+  }
+}
+
+function renderWeatherCard(){
+  if(!weatherData){
+    return `
+      <div class="card" style="border-left:4px solid var(--blue)">
+        <div class="sec-head" style="margin:0 0 8px">
+          <h3 style="color:var(--blue);margin:0">🌤️ Weather · ${esc(WEATHER_LOCATION)}</h3>
+        </div>
+        <div class="empty" style="padding:12px">${weatherLoading ? 'Loading weather…' : 'Weather not loaded.'}</div>
+        <button type="button" class="submit" style="background:var(--blue)" data-action="weather-refresh">${weatherLoading ? 'Loading…' : 'Load Weather'}</button>
+      </div>`;
+  }
+
+  const c = weatherData.current;
+  const wx = weatherCodeLabel(c.code);
+  const d = weatherData.daily;
+
+  let daysHtml = '';
+  for(let i = 0; i < Math.min(5, d.dates.length); i++){
+    const date = new Date(d.dates[i]);
+    const dayLabel = i === 0 ? 'Today' : date.toLocaleDateString('en-AU', {weekday: 'short'});
+    const wcode = weatherCodeLabel(d.codes[i]);
+    daysHtml += `
+      <div style="flex:0 0 auto;text-align:center;padding:8px 6px;background:#f7faf7;border-radius:10px;min-width:72px">
+        <div style="font-size:11px;color:var(--muted);font-weight:600">${dayLabel}</div>
+        <div style="font-size:20px;margin:4px 0">${wcode.icon}</div>
+        <div style="font-size:11px;color:var(--muted)">${Math.round(d.tempMin[i])}°/${Math.round(d.tempMax[i])}°</div>
+        ${d.rainSum[i] > 0.1 ? `<div style="font-size:10px;color:var(--blue);font-weight:700;margin-top:3px">💧 ${d.rainSum[i].toFixed(1)}mm</div>` : ''}
+      </div>`;
+  }
+
+  const totalRain = d.rainSum.slice(0, 7).reduce((a, b) => a + (b || 0), 0);
+  const totalET0 = d.et0.slice(0, 7).reduce((a, b) => a + (b || 0), 0);
+  const et0Diff = totalET0 - totalRain;
+
+  const adviceHtml = weatherAdvice
+    ? `<div class="result" style="border-left-color:var(--blue);background:#e3f2fd;margin-top:12px;font-size:13.5px;line-height:1.6;white-space:pre-wrap">${esc(weatherAdvice)}</div>`
+    : '';
+
+  return `
+    <div class="card" style="border-left:4px solid var(--blue)">
+      <div class="sec-head" style="margin:0 0 8px">
+        <h3 style="color:var(--blue);margin:0">🌤️ Weather · ${esc(WEATHER_LOCATION)}</h3>
+        <button type="button" class="del" style="font-size:16px;color:var(--blue);font-weight:700" data-action="weather-refresh">↻</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px">
+        <div style="font-size:44px">${wx.icon}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:22px;font-weight:800;color:var(--text)">${Math.round(c.temp)}°C</div>
+          <div style="font-size:12.5px;color:var(--muted)">${wx.label} · ${Math.round(c.humidity)}% humidity</div>
+          <div style="font-size:12.5px;color:var(--muted)">💧 ${c.rain.toFixed(1)}mm now · 💨 ${Math.round(c.wind)} km/h ${windDirLabel(c.windDir)}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;-webkit-overflow-scrolling:touch">${daysHtml}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
+        <div style="background:#f7faf7;border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">7-day Rain</div>
+          <div style="font-size:19px;font-weight:800;color:var(--blue);margin-top:2px">${totalRain.toFixed(1)} mm</div>
+        </div>
+        <div style="background:#f7faf7;border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700">7-day ET₀</div>
+          <div style="font-size:19px;font-weight:800;color:var(--amber);margin-top:2px">${totalET0.toFixed(1)} mm</div>
+        </div>
+      </div>
+      ${totalET0 > 0 ? `
+        <div style="font-size:12px;color:var(--muted);text-align:center;margin-top:8px;line-height:1.5">
+          ${et0Diff > 0
+            ? `⚠️ Turf is losing <b>${et0Diff.toFixed(1)} mm</b> more water than it's receiving this week — consider extra irrigation.`
+            : `✅ Rainfall is keeping up with water loss this week.`}
+        </div>` : ''}
+      <button type="button" class="submit" style="background:var(--blue);margin-top:12px" data-action="weather-advice">
+        🤖 Get AI Turf Advice
+      </button>
+      ${adviceHtml}
+    </div>`;
+}
+
+async function getWeatherAdvice(){
+  if(!weatherData){
+    toast('Loading weather first…');
+    await fetchWeather(true);
+    if(!weatherData){ toast('Could not load weather'); return; }
+  }
+
+  const overlay = $('#overlay');
+  const sheetForm = $('#sheetForm');
+  $('#sheetTitle').textContent = 'AI Turf Advice';
+  sheetForm.onsubmit = (ev) => ev.preventDefault();
+  sheetForm.innerHTML = `
+    <div style="text-align:center;padding:24px 0">
+      <div style="font-size:42px;margin-bottom:12px">🤖</div>
+      <div style="font-size:14px;color:var(--muted)">Analysing weather and turf impact…</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:10px">3–8 seconds</div>
+    </div>`;
+  overlay.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+
+  const c = weatherData.current;
+  const d = weatherData.daily;
+
+  let forecastLines = '';
+  for(let i = 0; i < Math.min(7, d.dates.length); i++){
+    const date = new Date(d.dates[i]);
+    const dayLabel = i === 0 ? 'Today' : date.toLocaleDateString('en-AU', {weekday: 'short', day: 'numeric', month: 'short'});
+    const wx = weatherCodeLabel(d.codes[i]);
+    forecastLines += `${dayLabel}: ${wx.label}, ${Math.round(d.tempMin[i])}–${Math.round(d.tempMax[i])}°C, rain ${(d.rainSum[i] || 0).toFixed(1)}mm (${d.rainProb[i] || 0}% chance), ET₀ ${(d.et0[i] || 0).toFixed(1)}mm, wind max ${Math.round(d.windMax[i] || 0)} km/h\n`;
+  }
+
+  const prompt = `You are a turf management expert for a golf course in South East Queensland, Australia.
+
+${ausContextBlock()}
+
+Current weather at the course:
+- Temperature: ${c.temp}°C
+- Humidity: ${c.humidity}%
+- Rain now: ${c.rain} mm
+- Wind: ${c.wind} km/h from ${windDirLabel(c.windDir)}
+- Conditions: ${weatherCodeLabel(c.code).label}
+
+7-day forecast:
+${forecastLines}
+
+Analyse this weather and give me concise, practical turf management advice covering:
+
+1. **Irrigation** — how much water does the turf need this week? Any hand-watering or syringing needed? Consider ET₀ vs rainfall.
+2. **Disease risk** — flag risk level for Dollar Spot, Brown Patch, Pythium based on temp + humidity + leaf wetness. What action (if any) is needed?
+3. **Mowing** — any adjustments to height, frequency or timing? Growth flush expected?
+4. **Chemical/PGR application** — is the weather window suitable this week? Consider wind, rain, temps.
+5. **Anything else critical** — frost, heat stress, waterlogging, etc.
+
+Be specific and practical. Use Australian common names. Keep it tight — bullet points, no waffle. Around 200 words total.`;
+
+  try{
+    const res = await fetch(PROXY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [
+          { role: 'system', content: 'You are a concise turf management assistant. Give practical, specific advice in bullet points.' },
+          { role: 'user', content: prompt }
+        ]
+      })
+    });
+    if(!res.ok){ const err = await res.text().catch(() => ''); throw new Error(`Proxy ${res.status}: ${err.slice(0,120)}`); }
+    const data = await res.json();
+    weatherAdvice = data?.choices?.[0]?.message?.content || '(No response)';
+    closeSheet();
+    render();
+    toast('Advice ready ✓');
+  }catch(e){
+    console.error(e);
+    sheetForm.innerHTML = `
+      <div class="result" style="border-left-color:var(--red);background:#fdecea"><b>Could not get advice.</b><br>${esc(e.message || 'Unknown error')}</div>
+      <button type="button" class="submit" data-action="close-sheet" style="margin-top:12px">Close</button>`;
+  }
+}
+
+/* =========================================================
+   Theme
+   ========================================================= */
 const THEMES = [
   {id:'forest',name:'Forest',green:'#1b5e20',green2:'#2e7d32',lime:'#7cb342'},
   {id:'ocean',name:'Ocean',green:'#0d47a1',green2:'#1565c0',lime:'#42a5f5'},
@@ -625,9 +886,11 @@ function applyTheme(){
   b.classList.remove('theme-ocean','theme-sunset','theme-plum','theme-charcoal','theme-sand','theme-forest');
   b.classList.remove('density-comfortable','density-compact');
   b.classList.remove('has-bg-photo');
-  const theme = appTheme || {preset:'forest',density:'comfortable',bgPhoto:null};
+  b.classList.remove('nav-gradient','nav-glass','nav-floating');
+  const theme = appTheme || {preset:'forest',density:'comfortable',bgPhoto:null,navStyle:'gradient'};
   if(theme.preset && theme.preset !== 'forest') b.classList.add('theme-' + theme.preset);
   b.classList.add('density-' + (theme.density || 'comfortable'));
+  b.classList.add('nav-' + (theme.navStyle || 'gradient'));
   if(theme.bgPhoto){
     b.style.setProperty('--bg-photo', `url("${theme.bgPhoto}")`);
     b.classList.add('has-bg-photo');
@@ -649,7 +912,7 @@ async function loadTheme(){
     snap.forEach(d => {
       if(d.id === 'appearance'){
         const data = d.data();
-        appTheme = {preset:data.preset||'forest',density:data.density||'comfortable',bgPhoto:data.bgPhoto||null};
+        appTheme = {preset:data.preset||'forest',density:data.density||'comfortable',bgPhoto:data.bgPhoto||null,navStyle:data.navStyle||'gradient'};
       }
     });
   }catch(e){ console.warn('loadTheme failed', e); }
@@ -661,8 +924,8 @@ async function saveTheme(){
   if(!u) return;
   try{
     await setDoc(doc(db, 'users', u, 'settings', 'appearance'), {
-      preset: appTheme.preset, density: appTheme.density, bgPhoto: appTheme.bgPhoto,
-      updatedAt: serverTimestamp()
+      preset:appTheme.preset, density:appTheme.density, bgPhoto:appTheme.bgPhoto,
+      navStyle:appTheme.navStyle || 'gradient', updatedAt:serverTimestamp()
     }, { merge: true });
   }catch(e){ console.warn('saveTheme failed', e); }
 }
@@ -907,11 +1170,11 @@ function friendlyAuthError(code){
     'auth/invalid-credential':'Incorrect email or password.',
     'auth/email-already-in-use':'That email is already registered.',
     'auth/weak-password':'Password must be at least 6 characters.',
-    'auth/unauthorized-domain':'This domain is not authorised in Firebase. Add it under Authentication → Settings → Authorized domains.',
+    'auth/unauthorized-domain':'This domain is not authorised in Firebase.',
     'auth/popup-blocked':'Popup was blocked. Allow popups for this site.',
     'auth/popup-closed-by-user':'Sign-in cancelled.',
-    'auth/operation-not-allowed':'Email/Password sign-in is not enabled. Enable it in Firebase Console → Authentication → Sign-in method.',
-    'auth/configuration-not-found':'Sign-in method not enabled. Enable Google and Email/Password in Firebase Console → Authentication → Sign-in method.'
+    'auth/operation-not-allowed':'Email/Password sign-in is not enabled.',
+    'auth/configuration-not-found':'Sign-in method not enabled in Firebase Console.'
   };
   return map[code] || ('Sign-in failed: ' + code);
 }
@@ -972,6 +1235,9 @@ onAuthStateChanged(auth, async (user) => {
     await loadTheme();
     await fsLoadAll();
     await loadMySignIn();
+    fetchWeather(false).then(() => {
+      if(activeTab === 'dash') render();
+    });
     if(userRole === 'staff'){
       if(!state.events.length && !state.jobs.length){
         state.events = seedEvents();
@@ -1000,6 +1266,8 @@ onAuthStateChanged(auth, async (user) => {
     if(notifyInterval){ clearInterval(notifyInterval); notifyInterval = null; }
     stopChatListener(); chatMessages = [];
     stopSignInsListener();
+    weatherData = null;
+    weatherAdvice = null;
   }
 });
 
@@ -1252,11 +1520,13 @@ function viewDash(){
       <div class="card" style="border-left:4px solid var(--green)">
         <h3 style="color:var(--green)">👋 Welcome, ${esc(userName || 'Volunteer')}</h3>
         <p style="font-size:13.5px;color:var(--muted);margin:0">Chat with the crew in the 💬 Chat tab.</p>
-      </div>`;
+      </div>
+      ${renderWeatherCard()}`;
   }
   if(userRole === 'committee'){
     return `
       ${signInCardHtml()}
+      ${renderWeatherCard()}
       <div class="stats" style="grid-template-columns:1fr 1fr">
         <div class="stat"><b>${state.events.length}</b><span>Events</span></div>
         <div class="stat"><b>${state.events.filter(e => !e.done && e.date >= t).length}</b><span>Upcoming</span></div>
@@ -1278,7 +1548,9 @@ function viewDash(){
     <div class="stats" style="grid-template-columns:1fr 1fr">
       <div class="stat"><b>${todays.filter(j=>j.status!=='done').length}</b><span>Today</span></div>
       <div class="stat"><b>${open}</b><span>Open Jobs</span></div>
-    </div>`;
+    </div>
+
+    ${renderWeatherCard()}`;
 
   if(overdue > 0){
     html += `<div class="card" style="border-left:4px solid var(--red)"><h3 style="color:var(--red)">⚠ ${overdue} overdue job${overdue>1?'s':''}</h3><div style="font-size:13.5px;color:#5a6b5c">Check the Jobs tab and reschedule.</div></div>`;
@@ -1749,10 +2021,7 @@ function openFixNameForm(currentResult){
   sheetForm.onsubmit = (ev) => ev.preventDefault();
   const currentName = currentResult?.name && currentResult.name !== 'Unknown' ? currentResult.name : '';
   sheetForm.innerHTML = `
-    <p style="font-size:13px;color:var(--muted);margin:0 0 16px;line-height:1.5">
-      The AI thought this was <b>${esc(currentName || 'Unknown')}</b>.<br>
-      Type the correct name and the AI will fill in the rest of the details.
-    </p>
+    <p style="font-size:13px;color:var(--muted);margin:0 0 16px;line-height:1.5">The AI thought this was <b>${esc(currentName || 'Unknown')}</b>.<br>Type the correct name and the AI will fill in the rest.</p>
     <div class="field"><label>Correct common name *</label><input id="fixCommonName" placeholder="e.g. Kikuyu, Couch, Nutgrass, Dollar Spot"></div>
     <div class="field"><label>Botanical name (optional)</label><input id="fixBotanicalName" placeholder="e.g. Pennisetum clandestinum"></div>
     <div class="row2" style="margin-top:14px">
@@ -2375,7 +2644,7 @@ function formData(){
   const roleLabel = {staff:'Staff',committee:'Committee',volunteer:'Volunteer'}[userRole] || userRole;
   const todaySignIns = allSignIns.filter(s => s.date === todayISO());
   const onCourse = todaySignIns.filter(s => !s.outAt).length;
-  const themeSwatches = THEMES.map(t => `<div class="theme-swatch ${appTheme.preset===t.id?'active':''}" data-action="pick-theme" data-theme="${t.id}" style="background: linear-gradient(135deg, ${t.green} 0%, ${t.green2} 55%, ${t.lime} 100%)"><span>${t.name}</span></div>`).join('');
+  const themeSwatches = THEMES.map(t => `<div class="theme-swatch ${appTheme.preset===t.id?'active':''}" data-action="pick-theme" data-theme="${t.id}" style="background:linear-gradient(135deg,${t.green} 0%,${t.green2} 55%,${t.lime} 100%)"><span>${t.name}</span></div>`).join('');
   const bgPreview = appTheme.bgPhoto ? `<img src="${appTheme.bgPhoto}" class="bg-thumb"><button type="button" class="submit" style="background:#fff;color:var(--red);border:1.5px solid var(--red);padding:10px;font-size:13.5px;margin-top:8px" data-action="remove-bg-photo">✕ Remove background</button>` : `<p style="font-size:12.5px;color:var(--muted);margin:0 0 8px">No background image set.</p>`;
 
   openSheet('Settings', `
@@ -2384,6 +2653,7 @@ function formData(){
       <span class="role-badge role-${userRole}">${esc(roleLabel)}</span>
       ${userName ? `<span style="margin-left:6px">${esc(userName)}</span>` : ''}
     </p>
+
     <div class="card" style="background:#f7faf7;box-shadow:none;margin-bottom:14px">
       <h3 style="margin-bottom:8px">Appearance</h3>
       <label>Colour theme</label>
@@ -2392,6 +2662,12 @@ function formData(){
       <div class="density-row">
         <button type="button" class="density-chip ${appTheme.density==='comfortable'?'active':''}" data-action="pick-density" data-density="comfortable">Comfortable</button>
         <button type="button" class="density-chip ${appTheme.density==='compact'?'active':''}" data-action="pick-density" data-density="compact">Compact</button>
+      </div>
+      <label style="margin-top:14px">Bottom bar style</label>
+      <div class="nav-style-row">
+        <button type="button" class="nav-style-chip ${appTheme.navStyle==='gradient'?'active':''}" data-action="pick-nav" data-nav="gradient"><div class="nav-style-preview gradient"><div class="nav-style-preview-bar"></div></div><span>Gradient</span></button>
+        <button type="button" class="nav-style-chip ${appTheme.navStyle==='glass'?'active':''}" data-action="pick-nav" data-nav="glass"><div class="nav-style-preview glass"><div class="nav-style-preview-bar"></div></div><span>Glass</span></button>
+        <button type="button" class="nav-style-chip ${appTheme.navStyle==='floating'?'active':''}" data-action="pick-nav" data-nav="floating"><div class="nav-style-preview floating"><div class="nav-style-preview-bar"></div></div><span>Floating</span></button>
       </div>
       <label style="margin-top:14px">Background photo</label>
       ${bgPreview}
@@ -2403,16 +2679,25 @@ function formData(){
       <input type="file" id="bgPhotoGallery" accept="image/*" style="display:none">
       <p style="font-size:11.5px;color:var(--muted);margin:10px 0 0">Photos are shown with a soft overlay so text stays readable.</p>
     </div>
+
+    <div class="card" style="background:#f7faf7;box-shadow:none;margin-bottom:14px">
+      <h3 style="margin-bottom:8px">Weather</h3>
+      <p style="font-size:12.5px;color:var(--muted);margin:0 0 10px">Current conditions and 7-day forecast for ${esc(WEATHER_LOCATION)} via Open-Meteo. Data refreshes automatically every 30 minutes.</p>
+      <button type="button" class="submit" style="background:var(--blue);padding:11px;font-size:14px" data-action="weather-refresh">↻ Refresh Weather</button>
+    </div>
+
     <div class="card" style="background:#f7faf7;box-shadow:none;margin-bottom:14px">
       <h3 style="margin-bottom:8px">Today's Sign-Ins</h3>
       <div style="font-size:12.5px;color:var(--muted)">${todaySignIns.length} sessions · ${onCourse} on course now</div>
     </div>
+
     <div class="card" style="background:#f7faf7;box-shadow:none;margin-bottom:14px">
       <h3 style="margin-bottom:8px">Reminders</h3>
       <p style="font-size:12.5px;color:var(--muted);margin:0 0 10px">Get a notification when you open TurfTrack with items due today, tomorrow or this week.</p>
       <button type="button" class="submit" style="background:var(--green2);padding:11px;font-size:14px" data-action="enable-notifications">${hasPerm ? '✓ Notifications enabled' : '🔔 Enable Notifications'}</button>
       <button type="button" class="submit" style="background:#ef6c00;padding:11px;font-size:14px;margin-top:8px" data-action="test-notification">Send a test notification</button>
     </div>
+
     <button type="button" class="submit" style="background:#1565c0" data-action="signout">Sign out</button>`, () => {});
 }
 
@@ -2428,9 +2713,21 @@ document.addEventListener('click', async (e) => {
 
     case 'pick-theme': appTheme.preset = el.dataset.theme; applyTheme(); await saveTheme(); formData(); break;
     case 'pick-density': appTheme.density = el.dataset.density; applyTheme(); await saveTheme(); formData(); break;
+    case 'pick-nav': appTheme.navStyle = el.dataset.nav; applyTheme(); await saveTheme(); formData(); break;
     case 'bg-camera': $('#bgPhotoCamera')?.click(); break;
     case 'bg-gallery': $('#bgPhotoGallery')?.click(); break;
     case 'remove-bg-photo': appTheme.bgPhoto = null; applyTheme(); await saveTheme(); formData(); toast('Background removed'); break;
+
+    case 'weather-refresh': {
+      toast('Refreshing weather…');
+      await fetchWeather(true);
+      render();
+      toast('Weather updated ✓');
+      break;
+    }
+    case 'weather-advice':
+      await getWeatherAdvice();
+      break;
 
     case 'signin-today': try{ await signInNow(); toast(`✅ Signed in at ${fmtTime(mySignInToday.inAt)}`); render(); }catch(err){ console.error(err); toast('Could not sign in'); } break;
     case 'signout-today': if(!confirm('Sign out now?')) break; try{ await signOutNow(); toast(`👋 Signed out — ${(mySignInToday.hours || 0).toFixed(2)} hours`); render(); }catch(err){ console.error(err); toast('Could not sign out'); } break;
@@ -2496,6 +2793,7 @@ document.addEventListener('click', async (e) => {
         await loadTheme();
         await fsLoadAll();
         await loadMySignIn();
+        fetchWeather(false).then(() => { if(activeTab === 'dash') render(); });
         selectedDay = todayISO();
         render();
         startNotifyLoop();
@@ -2522,6 +2820,7 @@ document.addEventListener('click', async (e) => {
         await loadTheme();
         await fsLoadAll();
         await loadMySignIn();
+        fetchWeather(false).then(() => { if(activeTab === 'dash') render(); });
         selectedDay = todayISO();
         render();
         startNotifyLoop();
