@@ -223,39 +223,23 @@
   .qr-signin-btn{width:100%;background:#fff;color:var(--green);border:0;padding:14px;border-radius:12px;font-size:15.5px;font-weight:800;cursor:pointer;font-family:inherit}
   .qr-signin-btn.out{background:#fff;color:var(--red)}
 
-  /* ============ Weather screen ============ */
   #weatherScreen{position:fixed;inset:0;z-index:250;background:var(--bg);overflow-y:auto;padding-bottom:100px}
   #weatherScreen.hidden{display:none}
-  .wx-header{
-    background:linear-gradient(135deg,var(--green),var(--green2));
-    color:#fff;padding:14px 16px;position:sticky;top:0;z-index:3;
-    display:flex;align-items:center;gap:12px;
-    box-shadow:0 2px 12px rgba(0,0,0,.15);
-  }
+  .wx-header{background:linear-gradient(135deg,var(--green),var(--green2));color:#fff;padding:14px 16px;position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:12px;box-shadow:0 2px 12px rgba(0,0,0,.15)}
   .wx-header button{background:rgba(255,255,255,.15);border:0;color:#fff;width:36px;height:36px;border-radius:10px;font-size:18px;cursor:pointer;font-family:inherit}
   .wx-header h2{margin:0;font-size:17px;flex:1}
   .wx-header .wx-sub{font-size:11.5px;opacity:.85;margin-top:2px}
   .wx-body{padding:14px;max-width:820px;margin:0 auto}
 
-  .wx-current{
-    background:linear-gradient(135deg,var(--green),var(--green2));
-    color:#fff;border-radius:18px;padding:20px;margin-bottom:14px;
-    box-shadow:0 6px 24px rgba(0,0,0,.15);
-  }
+  .wx-current{background:linear-gradient(135deg,var(--green),var(--green2));color:#fff;border-radius:18px;padding:20px;margin-bottom:14px;box-shadow:0 6px 24px rgba(0,0,0,.15)}
   .wx-current .wx-temp{font-size:52px;font-weight:800;line-height:1}
   .wx-current .wx-cond{font-size:16px;font-weight:600;margin-top:6px;opacity:.95}
   .wx-current .wx-meta{font-size:13px;opacity:.85;margin-top:10px;display:flex;flex-wrap:wrap;gap:12px}
 
-  .wx-section{
-    background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;
-    box-shadow:0 1px 3px rgba(0,0,0,.06)
-  }
+  .wx-section{background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
   .wx-section h3{margin:0 0 12px;font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
 
-  .wx-hourly-strip{
-    display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;
-    scrollbar-width:none;-webkit-overflow-scrolling:touch;
-  }
+  .wx-hourly-strip{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
   .wx-hourly-strip::-webkit-scrollbar{display:none}
   .wx-hour{flex:0 0 auto;min-width:64px;text-align:center;padding:8px 6px;background:#f7faf7;border-radius:10px}
   .wx-hour .h{font-size:10px;color:var(--muted);font-weight:600}
@@ -263,10 +247,7 @@
   .wx-hour .t{font-size:12.5px;font-weight:700}
   .wx-hour .r{font-size:10px;color:var(--blue);font-weight:700;margin-top:2px}
 
-  .wx-day-card{
-    background:#f7faf7;border-radius:12px;padding:12px;margin-bottom:8px;
-    display:flex;align-items:center;gap:12px;
-  }
+  .wx-day-card{background:#f7faf7;border-radius:12px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
   .wx-day-card .day-wx-icon{font-size:24px;flex:0 0 32px;text-align:center}
   .wx-day-card .day-info{flex:1;min-width:0}
   .wx-day-card .day-name{font-size:13px;font-weight:700;color:var(--text)}
@@ -274,7 +255,7 @@
   .wx-day-card .day-stats{display:flex;gap:10px;font-size:11px;margin-top:4px;flex-wrap:wrap}
   .wx-day-card .day-stats span{color:var(--muted)}
   .wx-day-card .day-stats b{color:var(--text);font-weight:700}
-  .wx-badge{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;padding:2px 6px;border-radius:10px;margin-top:4px;display:inline-block}
+  .wx-badge{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;padding:2px 6px;border-radius:10px;display:inline-block}
 
   .wx-14day{display:flex;gap:4px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}
   .wx-14day::-webkit-scrollbar{display:none}
@@ -286,7 +267,6 @@
 
   .wx-legend{font-size:10px;color:var(--muted);text-align:center;margin-top:8px;padding:0 6px;line-height:1.5}
 
-  /* Areas */
   .area-card{background:#f7faf7;border-radius:12px;padding:12px;margin-bottom:8px}
   .area-card .area-name{font-weight:700;font-size:14px;display:flex;justify-content:space-between;align-items:center}
   .area-card .area-turf{font-size:12px;color:var(--muted);margin-top:2px}
@@ -362,7 +342,6 @@
     <button data-action="nav" data-tab="dash" class="active"><span class="ni">🏠</span>Home</button>
     <button data-action="nav" data-tab="jobs"><span class="ni">✅</span>Jobs</button>
     <button data-action="nav" data-tab="calendar"><span class="ni">📅</span>Calendar</button>
-    <button data-action="nav" data-tab="program"><span class="ni">🧪</span>Program</button>
     <button data-action="nav" data-tab="plant"><span class="ni">🌿</span>Plant</button>
     <button data-action="nav" data-tab="chat"><span class="ni">💬</span>Chat</button>
     <button data-action="nav" data-tab="team"><span class="ni">👥</span>Team</button>
@@ -521,15 +500,11 @@ let allSignIns = [];
 let mySignInToday = null;
 let appTheme = { preset:'forest', density:'comfortable', bgPhoto:null, navStyle:'gradient' };
 
-// Weather
 let weatherData = null;
 let weatherAdvice = null;
 let weatherLoading = false;
-// Rain log: {id, date, mm, recordedBy, notes}
 let rainLog = [];
-// Irrigation log: {id, date, areaId, mm, notes}
 let irrigationLog = [];
-// Turf areas: array of {id, name, turfType, kc, sun, soil, notes}
 let turfAreas = [];
 
 const _urlParams = new URLSearchParams(window.location.search);
@@ -665,7 +640,6 @@ async function fetchWeather(force){
   }
 }
 
-// Get next N hours from now
 function nextHours(n){
   if(!weatherData || !weatherData.hourly) return [];
   const now = new Date();
@@ -683,55 +657,76 @@ function nextHours(n){
   }));
 }
 
-/* ---------- Disease risk (simple model for SE QLD) ---------- */
 function diseaseRisk(day){
   const maxT = day.tempMax, minT = day.tempMin;
   const rain = day.rainSum || 0;
   const avgT = (maxT + minT) / 2;
   const risks = [];
-
-  // Dollar spot: 15-30°C, high humidity, leaf wetness
   if(avgT >= 15 && avgT <= 30 && rain > 0.5){
     const level = rain > 5 ? 'High' : rain > 1 ? 'Medium' : 'Low';
     risks.push({ name:'Dollar Spot', level, cls: level === 'High' ? 'p-high' : level === 'Medium' ? 'p-med' : 'p-low' });
   }
-  // Brown patch: 25-32°C, humidity over 85%, wet
   if(avgT >= 25 && avgT <= 32 && rain > 2){
     const level = rain > 8 ? 'High' : 'Medium';
     risks.push({ name:'Brown Patch', level, cls: level === 'High' ? 'p-high' : 'p-med' });
   }
-  // Pythium: hot, heavy rain
   if(avgT > 25 && rain > 10){
     risks.push({ name:'Pythium', level:'High', cls:'p-high' });
   }
   return risks;
 }
 
-/* ---------- Spray window guidance ---------- */
-function sprayWindow(day){
-  const wind = day.windMax || 0;
-  const rain = day.rainSum || 0;
-  const maxT = day.tempMax || 20;
-  const minT = day.tempMin || 10;
+/* Spray window now uses hourly data for a specific time block */
+function sprayWindowForHours(dateStr, startHour, endHour){
+  if(!weatherData || !weatherData.hourly) return null;
+  const h = weatherData.hourly;
+  const hours = [];
+  for(let i = 0; i < h.times.length; i++){
+    const t = h.times[i];
+    if(!t || !t.startsWith(dateStr)) continue;
+    const hour = parseInt(t.slice(11,13), 10);
+    if(hour < startHour || hour > endHour) continue;
+    hours.push({
+      hour,
+      wind: h.wind[i] || 0,
+      temp: h.temps[i] || 0,
+      rain: h.rain[i] || 0,
+      rainChance: h.rainChance[i] || 0,
+      humidity: h.humidity[i] || 0
+    });
+  }
+  if(!hours.length) return null;
 
-  // Good: wind under 15, rain under 1mm, temps between 12-28
-  if(wind < 15 && rain < 1 && minT > 8 && maxT < 30){
-    return { level:'Good', cls:'p-low', note:'Calm, dry' };
+  const maxWind = Math.max(...hours.map(x => x.wind));
+  const totalRain = hours.reduce((s,x) => s + x.rain, 0);
+  const maxRainChance = Math.max(...hours.map(x => x.rainChance));
+  const avgTemp = hours.reduce((s,x) => s + x.temp, 0) / hours.length;
+
+  if(maxWind > 25 || totalRain > 5){
+    return {
+      level:'Poor', cls:'p-high',
+      reason: maxWind > 25 ? `Wind up to ${Math.round(maxWind)} km/h` : `Rain ${totalRain.toFixed(1)} mm expected`
+    };
   }
-  // Don't: high wind or heavy rain
-  if(wind > 25 || rain > 5){
-    return { level:'Poor', cls:'p-high', note: wind > 25 ? 'Too windy' : 'Too wet' };
+  if(maxWind < 15 && totalRain < 1 && avgTemp > 8 && avgTemp < 30){
+    return {
+      level:'Good', cls:'p-low',
+      reason: `Wind ${Math.round(maxWind)} km/h · ${Math.round(avgTemp)}°C`
+    };
   }
-  // Marginal
-  return { level:'Marginal', cls:'p-med', note:'Check details' };
+  let reason = 'Check details';
+  if(maxWind >= 15 && maxWind <= 25) reason = `Wind ${Math.round(maxWind)} km/h`;
+  else if(avgTemp <= 8) reason = 'Too cold';
+  else if(avgTemp >= 30) reason = 'Too hot';
+  else if(maxRainChance > 40) reason = `${maxRainChance}% rain chance`;
+  return { level:'Marginal', cls:'p-med', reason };
 }
 
-/* ---------- Water balance calculations ---------- */
 function getWeekWaterBalance(){
-  if(!weatherData || !weatherData.daily) return { rain: 0, et: 0, deficit: 0 };
+  if(!weatherData || !weatherData.daily) return { rain:0, et:0, deficit:0 };
   const rainTotal = weatherData.daily.rainSum.slice(0, 7).reduce((a,b) => a + (b || 0), 0);
   const etTotal = weatherData.daily.et0.slice(0, 7).reduce((a,b) => a + (b || 0), 0);
-  return { rain: rainTotal, et: etTotal, deficit: etTotal - rainTotal };
+  return { rain:rainTotal, et:etTotal, deficit:etTotal - rainTotal };
 }
 
 function getRainLogThisWeek(){
@@ -756,50 +751,31 @@ function getRainLogThisYear(){
    Firestore for weather extras
    ========================================================= */
 async function loadRainLog(){
-  const u = userPath();
-  if(!u) return;
-  try{
-    const snap = await getDocs(collection(db, 'users', u, 'rainLog'));
-    rainLog = snap.docs.map(d => ({ id:d.id, ...d.data() }));
-  }catch(e){ console.warn('loadRainLog failed', e); }
+  const u = userPath(); if(!u) return;
+  try{ const snap = await getDocs(collection(db, 'users', u, 'rainLog')); rainLog = snap.docs.map(d => ({ id:d.id, ...d.data() })); }catch(e){}
 }
-
 async function saveRainEntry(entry){
-  const u = userPath();
-  if(!u) return;
+  const u = userPath(); if(!u) return;
   await setDoc(doc(db, 'users', u, 'rainLog', entry.id), entry, { merge:true });
 }
-
 async function deleteRainEntry(id){
-  const u = userPath();
-  if(!u) return;
+  const u = userPath(); if(!u) return;
   await deleteDoc(doc(db, 'users', u, 'rainLog', id));
 }
-
 async function loadIrrigationLog(){
-  const u = userPath();
-  if(!u) return;
-  try{
-    const snap = await getDocs(collection(db, 'users', u, 'irrigationLog'));
-    irrigationLog = snap.docs.map(d => ({ id:d.id, ...d.data() }));
-  }catch(e){ console.warn('loadIrrigationLog failed', e); }
+  const u = userPath(); if(!u) return;
+  try{ const snap = await getDocs(collection(db, 'users', u, 'irrigationLog')); irrigationLog = snap.docs.map(d => ({ id:d.id, ...d.data() })); }catch(e){}
 }
-
 async function saveIrrigationEntry(entry){
-  const u = userPath();
-  if(!u) return;
+  const u = userPath(); if(!u) return;
   await setDoc(doc(db, 'users', u, 'irrigationLog', entry.id), entry, { merge:true });
 }
-
 async function deleteIrrigationEntry(id){
-  const u = userPath();
-  if(!u) return;
+  const u = userPath(); if(!u) return;
   await deleteDoc(doc(db, 'users', u, 'irrigationLog', id));
 }
-
 async function loadTurfAreas(){
-  const u = userPath();
-  if(!u) return;
+  const u = userPath(); if(!u) return;
   try{
     const snap = await getDocs(collection(db, 'users', u, 'settings'));
     let found = null;
@@ -809,18 +785,11 @@ async function loadTurfAreas(){
     } else {
       turfAreas = DEFAULT_AREAS.map(a => ({ ...a }));
     }
-  }catch(e){
-    console.warn('loadTurfAreas failed', e);
-    turfAreas = DEFAULT_AREAS.map(a => ({ ...a }));
-  }
+  }catch(e){ turfAreas = DEFAULT_AREAS.map(a => ({ ...a })); }
 }
-
 async function saveTurfAreas(){
-  const u = userPath();
-  if(!u) return;
-  await setDoc(doc(db, 'users', u, 'settings', 'turfAreas'), {
-    areas: turfAreas, updatedAt: serverTimestamp()
-  }, { merge:true });
+  const u = userPath(); if(!u) return;
+  await setDoc(doc(db, 'users', u, 'settings', 'turfAreas'), { areas: turfAreas, updatedAt: serverTimestamp() }, { merge:true });
 }
 
 /* =========================================================
@@ -841,7 +810,6 @@ function renderWeatherCard(){
   const wx = weatherCode(c.code);
   const bal = getWeekWaterBalance();
   const rainLogged = getRainLogThisWeek();
-  const today = weatherData.daily;
 
   return `
     <div class="card" style="border-left:4px solid var(--blue);cursor:pointer" data-action="wx-open">
@@ -887,15 +855,10 @@ async function openWeatherScreen(){
   $('#wxLocationTitle').textContent = WEATHER_LOCATION;
   screen.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
-
   body.innerHTML = '<div class="empty" style="padding:60px 10px"><span class="big">🌤️</span>Loading weather…</div>';
-
-  if(!weatherData){
-    await fetchWeather(false);
-  }
+  if(!weatherData) await fetchWeather(false);
   renderWeatherScreen();
 }
-
 function closeWeatherScreen(){
   $('#weatherScreen').classList.add('hidden');
   document.body.style.overflow = '';
@@ -907,16 +870,13 @@ function renderWeatherScreen(){
     body.innerHTML = '<div class="empty" style="padding:60px 10px"><span class="big">⚠️</span>Could not load weather</div>';
     return;
   }
-
   const c = weatherData.current;
   const wx = weatherCode(c.code);
   const d = weatherData.daily;
   const bal = getWeekWaterBalance();
 
-  // Header sub
   $('#wxHeaderSub').textContent = `Updated ${new Date(weatherData.fetchedAt).toLocaleTimeString('en-AU',{hour:'2-digit', minute:'2-digit'})}`;
 
-  /* Current block */
   const currentHtml = `
     <div class="wx-current">
       <div style="display:flex;align-items:center;gap:18px">
@@ -935,7 +895,6 @@ function renderWeatherScreen(){
       </div>
     </div>`;
 
-  /* Hourly strip */
   const hours = nextHours(12);
   let hourlyHtml = '<div class="wx-hourly-strip">';
   hours.forEach((h, i) => {
@@ -952,7 +911,6 @@ function renderWeatherScreen(){
   });
   hourlyHtml += '</div>';
 
-  /* 7-day cards */
   let sevenHtml = '';
   for(let i = 0; i < Math.min(7, d.dates.length); i++){
     const date = new Date(d.dates[i]);
@@ -963,7 +921,9 @@ function renderWeatherScreen(){
       rainSum: d.rainSum[i], windMax: d.windMax[i], et0: d.et0[i]
     };
     const risks = diseaseRisk(dayData);
-    const spray = sprayWindow(dayData);
+    const dateStr = d.dates[i];
+    const morningSpray = sprayWindowForHours(dateStr, 5, 9);
+    const middaySpray  = sprayWindowForHours(dateStr, 10, 14);
 
     sevenHtml += `
       <div class="wx-day-card">
@@ -976,15 +936,15 @@ function renderWeatherScreen(){
             <span>ET₀ <b>${(d.et0[i]||0).toFixed(1)}mm</b></span>
             <span>💨 <b>${Math.round(d.windMax[i]||0)}km/h</b></span>
           </div>
-          <div>
-            <span class="wx-badge ${spray.cls}">Spray: ${spray.level}</span>
-            ${risks.length ? risks.slice(0,2).map(r => `<span class="wx-badge ${r.cls}" style="margin-left:4px">${r.name} · ${r.level}</span>`).join('') : ''}
+          <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">
+            ${morningSpray ? `<span class="wx-badge ${morningSpray.cls}" title="${esc(morningSpray.reason)}">🌅 5–9am: ${morningSpray.level}</span>` : ''}
+            ${middaySpray ? `<span class="wx-badge ${middaySpray.cls}" title="${esc(middaySpray.reason)}">☀️ 10am–2pm: ${middaySpray.level}</span>` : ''}
           </div>
+          ${risks.length ? `<div style="margin-top:4px">${risks.slice(0,2).map(r => `<span class="wx-badge ${r.cls}" style="margin-right:4px">${r.name} · ${r.level}</span>`).join('')}</div>` : ''}
         </div>
       </div>`;
   }
 
-  /* Rain log */
   const rainWeek = getRainLogThisWeek();
   const rainMonth = getRainLogThisMonth();
   const rainYear = getRainLogThisYear();
@@ -1021,7 +981,6 @@ function renderWeatherScreen(){
         </div>`).join('') : '<div class="empty" style="padding:14px 0;font-size:13px">No readings logged yet</div>'}
     </div>`;
 
-  /* Turf areas */
   let areasHtml = `
     <div class="wx-section">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -1034,17 +993,11 @@ function renderWeatherScreen(){
         <div class="area-name">${esc(a.name)} <span style="font-size:11px;color:var(--muted);font-weight:500">Kc ${a.kc}</span></div>
         <div class="area-turf">${esc(a.turfType)}${a.soil ? ` · ${esc(a.soil)}` : ''}${a.sun ? ` · ${esc(a.sun)}` : ''}</div>
         ${a.notes ? `<div style="font-size:11.5px;color:var(--muted);margin-top:4px;font-style:italic">${esc(a.notes)}</div>` : ''}
-        <div class="area-need">
-          <span>7-day water need</span>
-          <b>${areaEt.toFixed(1)} mm</b>
-        </div>
+        <div class="area-need"><span>7-day water need</span><b>${areaEt.toFixed(1)} mm</b></div>
       </div>`;
   });
-  areasHtml += `
-      <button type="button" class="submit" style="background:#fff;color:var(--green);border:1.5px solid var(--green);margin-top:6px" data-action="area-edit">✏️ Edit Areas</button>
-    </div>`;
+  areasHtml += `<button type="button" class="submit" style="background:#fff;color:var(--green);border:1.5px solid var(--green);margin-top:6px" data-action="area-edit">✏️ Edit Areas</button></div>`;
 
-  /* 14-day outlook */
   let fourteenHtml = '<div class="wx-14day">';
   for(let i = 0; i < d.dates.length; i++){
     const date = new Date(d.dates[i]);
@@ -1060,7 +1013,6 @@ function renderWeatherScreen(){
   }
   fourteenHtml += '</div>';
 
-  /* Water balance + AI */
   const balanceHtml = `
     <div class="wx-section">
       <h3>💧 7-Day Water Balance</h3>
@@ -1087,36 +1039,24 @@ function renderWeatherScreen(){
       ${weatherAdvice ? `<div class="result" style="border-left-color:var(--blue);background:#e3f2fd;margin-top:14px;font-size:13.5px;line-height:1.6;white-space:pre-wrap">${esc(weatherAdvice)}</div>` : ''}
     </div>`;
 
-  /* Assembled */
   body.innerHTML = `
     ${currentHtml}
-    <div class="wx-section">
-      <h3>Next 12 hours</h3>
-      ${hourlyHtml}
-    </div>
-    <div class="wx-section">
-      <h3>7-Day Forecast</h3>
-      ${sevenHtml}
-    </div>
+    <div class="wx-section"><h3>Next 12 hours</h3>${hourlyHtml}</div>
+    <div class="wx-section"><h3>7-Day Forecast</h3>${sevenHtml}</div>
     ${rainLogHtml}
     ${areasHtml}
-    <div class="wx-section">
-      <h3>14-Day Outlook</h3>
-      ${fourteenHtml}
-    </div>
+    <div class="wx-section"><h3>14-Day Outlook</h3>${fourteenHtml}</div>
     ${balanceHtml}
     <div class="wx-legend">
       Weather by Open-Meteo · includes BoM ACCESS-G model<br>
-      ET₀ = reference evapotranspiration (water the turf loses to the air)
+      ET₀ = water the turf loses to the air<br>
+      Spray windows: 5–9am (main) and 10am–2pm (winter/short days)
     </div>
   `;
 }
 
 async function getWeatherAdvice(){
-  if(!weatherData){
-    toast('Weather not loaded');
-    return;
-  }
+  if(!weatherData){ toast('Weather not loaded'); return; }
   const overlay = $('#overlay');
   const sheetForm = $('#sheetForm');
   $('#sheetTitle').textContent = 'AI Turf Advice';
@@ -1134,7 +1074,12 @@ async function getWeatherAdvice(){
     const date = new Date(d.dates[i]);
     const dayLabel = i === 0 ? 'Today' : date.toLocaleDateString('en-AU',{weekday:'short', day:'numeric', month:'short'});
     const w = weatherCode(d.codes[i]);
-    forecastLines += `${dayLabel}: ${w.label}, ${Math.round(d.tempMin[i])}–${Math.round(d.tempMax[i])}°C, rain ${(d.rainSum[i]||0).toFixed(1)}mm (${d.rainProb[i]||0}% chance), ET₀ ${(d.et0[i]||0).toFixed(1)}mm, wind max ${Math.round(d.windMax[i]||0)} km/h\n`;
+    const am = sprayWindowForHours(d.dates[i], 5, 9);
+    const pm = sprayWindowForHours(d.dates[i], 10, 14);
+    forecastLines += `${dayLabel}: ${w.label}, ${Math.round(d.tempMin[i])}–${Math.round(d.tempMax[i])}°C, rain ${(d.rainSum[i]||0).toFixed(1)}mm (${d.rainProb[i]||0}% chance), ET₀ ${(d.et0[i]||0).toFixed(1)}mm, wind max ${Math.round(d.windMax[i]||0)} km/h`;
+    if(am) forecastLines += `, spray 5-9am: ${am.level} (${am.reason})`;
+    if(pm) forecastLines += `, spray 10am-2pm: ${pm.level} (${pm.reason})`;
+    forecastLines += `\n`;
   }
 
   const areasLines = turfAreas.map(a => `- ${a.name} (${a.turfType}, Kc ${a.kc})`).join('\n');
@@ -1172,7 +1117,7 @@ Give me concise, practical turf advice covering:
 
 3. **Mowing** — adjustments to height, frequency or timing for TifEagle greens.
 
-4. **Chemical / PGR** — is the spray window suitable this week? Wind, rain, temps.
+4. **Chemical / PGR** — the course sprays mostly between 5am and 9am (before golfers) and occasionally 10am–2pm on calm winter days. The forecast shows the rating for both windows. Give the specific best slot for each day where relevant.
 
 5. **Anything critical for TifEagle** — localised dry spot, scalping risk, growth flush, thatch.
 
@@ -1197,14 +1142,12 @@ Be specific. Use Australian common names. Bullet points, no waffle. Around 220 w
     toast('Advice ready ✓');
   }catch(e){
     console.error(e);
-    sheetForm.innerHTML = `
-      <div class="result" style="border-left-color:var(--red);background:#fdecea"><b>Could not get advice.</b><br>${esc(e.message || 'Unknown error')}</div>
-      <button type="button" class="submit" data-action="close-sheet" style="margin-top:12px">Close</button>`;
+    sheetForm.innerHTML = `<div class="result" style="border-left-color:var(--red);background:#fdecea"><b>Could not get advice.</b><br>${esc(e.message || 'Unknown error')}</div><button type="button" class="submit" data-action="close-sheet" style="margin-top:12px">Close</button>`;
   }
 }
 
 /* =========================================================
-   Theme + user role
+   Theme
    ========================================================= */
 const THEMES = [
   {id:'forest',name:'Forest',green:'#1b5e20',green2:'#2e7d32',lime:'#7cb342'},
@@ -1238,8 +1181,7 @@ function applyTheme(){
 function userPath(){ return currentUser ? currentUser.uid : null; }
 
 async function loadTheme(){
-  const u = userPath();
-  if(!u) return;
+  const u = userPath(); if(!u) return;
   try{
     const snap = await getDocs(collection(db, 'users', u, 'settings'));
     snap.forEach(d => {
@@ -1248,24 +1190,22 @@ async function loadTheme(){
         appTheme = {preset:data.preset||'forest',density:data.density||'comfortable',bgPhoto:data.bgPhoto||null,navStyle:data.navStyle||'gradient'};
       }
     });
-  }catch(e){ console.warn('loadTheme failed', e); }
+  }catch(e){}
   applyTheme();
 }
 
 async function saveTheme(){
-  const u = userPath();
-  if(!u) return;
+  const u = userPath(); if(!u) return;
   try{
     await setDoc(doc(db, 'users', u, 'settings', 'appearance'), {
       preset:appTheme.preset, density:appTheme.density, bgPhoto:appTheme.bgPhoto,
       navStyle:appTheme.navStyle || 'gradient', updatedAt:serverTimestamp()
     }, { merge:true });
-  }catch(e){ console.warn('saveTheme failed', e); }
+  }catch(e){}
 }
 
 async function loadUserRole(){
-  const u = userPath();
-  if(!u) return false;
+  const u = userPath(); if(!u) return false;
   try{
     const snap = await getDocs(collection(db, 'users', u, 'settings'));
     let main = null;
@@ -1276,12 +1216,11 @@ async function loadUserRole(){
     userName = main.name || '';
     userPhone = main.phone || '';
     return true;
-  }catch(e){ console.error('loadUserRole failed', e); return false; }
+  }catch(e){ return false; }
 }
 
 async function saveUserRole(role, name, phone){
-  const u = userPath();
-  if(!u) return false;
+  const u = userPath(); if(!u) return false;
   let first = false;
   try{ const snap = await getDocs(collection(db, 'users')); first = snap.size <= 1; }catch(e){}
   const auto = (role === 'staff' && first);
@@ -1303,19 +1242,17 @@ async function approveUser(uid_, role){
 async function rejectUser(uid_){ await deleteDoc(doc(db, 'users', uid_, 'settings', 'main')); }
 
 async function publishMembershipIndex(role, approved, name){
-  const u = userPath();
-  if(!u) return;
+  const u = userPath(); if(!u) return;
   try{
     await setDoc(doc(db, 'clubs', 'rbgc', 'members', u), {
       uid:u, email:currentUser?.email||'', role, approved:approved === true, name:name||'',
       updatedAt:serverTimestamp()
     }, { merge:true });
-  }catch(e){ console.warn('publishMembershipIndex failed', e); }
+  }catch(e){}
 }
 
 async function fsLoadAll(){
-  const u = userPath();
-  if(!u) return;
+  const u = userPath(); if(!u) return;
   const load = async (sub) => {
     const snap = await getDocs(collection(db, 'users', u, sub));
     return snap.docs.map(d => ({ id:d.id, ...d.data() }));
@@ -1346,13 +1283,12 @@ async function fsLoadAll(){
   }catch(e){
     console.error('Load failed', e);
     setSyncStatus('⚠️ Offline', true);
-    toast('Could not load from cloud — using cache');
+    toast('Could not load from cloud');
   }
 }
 
 async function fsSave(sub, obj){
-  const u = userPath();
-  if(!u) return;
+  const u = userPath(); if(!u) return;
   try{
     setSyncStatus('⏳ Saving');
     const { id, ...data } = obj;
@@ -1367,23 +1303,21 @@ async function fsSave(sub, obj){
 }
 
 async function fsDelete(sub, id){
-  const u = userPath();
-  if(!u) return;
+  const u = userPath(); if(!u) return;
   try{
     setSyncStatus('⏳ Saving');
     await deleteDoc(doc(db, 'users', u, sub, id));
     setSyncStatus('☁️ Synced');
-  }catch(e){ console.error('Delete failed', e); setSyncStatus('⚠️ Offline', true); }
+  }catch(e){ setSyncStatus('⚠️ Offline', true); }
 }
 
 async function fsSaveSettings(){
-  const u = userPath();
-  if(!u) return;
+  const u = userPath(); if(!u) return;
   try{
     await setDoc(doc(db, 'users', u, 'settings', 'main'), {
       weather:state.weather, courseStatus:state.courseStatus, updatedAt:serverTimestamp()
     }, { merge:true });
-  }catch(e){ console.warn(e); }
+  }catch(e){}
 }
 
 /* =========================================================
@@ -1400,7 +1334,7 @@ async function loadMySignIn(){
     snap.forEach(d => { if(d.id === id) found = {id:d.id, ...d.data()}; });
     mySignInToday = found;
     return found;
-  }catch(e){ console.warn('loadMySignIn failed', e); return null; }
+  }catch(e){ return null; }
 }
 
 async function signInNow(){
@@ -1563,15 +1497,8 @@ onAuthStateChanged(auth, async (user) => {
     appRoot.classList.remove('hidden');
     await loadTheme();
     await fsLoadAll();
-    await Promise.all([
-      loadMySignIn(),
-      loadRainLog(),
-      loadIrrigationLog(),
-      loadTurfAreas()
-    ]);
-    fetchWeather(false).then(() => {
-      if(activeTab === 'dash') render();
-    });
+    await Promise.all([ loadMySignIn(), loadRainLog(), loadIrrigationLog(), loadTurfAreas() ]);
+    fetchWeather(false).then(() => { if(activeTab === 'dash') render(); });
     if(userRole === 'staff'){
       if(!state.events.length && !state.jobs.length){
         state.events = seedEvents();
@@ -1682,14 +1609,13 @@ function seedProgram(){
    Router
    ========================================================= */
 function render(){
-  const v = $('#view');
-  if(!v) return;
+  const v = $('#view'); if(!v) return;
   const tabsForRole = {
-    staff:['dash','jobs','calendar','program','plant','chat','team','learn'],
+    staff:['dash','jobs','calendar','plant','chat','team','learn'],
     committee:['dash','calendar','chat','team'],
     volunteer:['dash','chat','team']
   }[userRole] || ['dash'];
-  if(!tabsForRole.includes(activeTab)) activeTab = 'dash';
+  if(!tabsForRole.includes(activeTab) && activeTab !== 'program') activeTab = 'dash';
   if(activeTab === 'dash') v.innerHTML = viewDash();
   if(activeTab === 'jobs') v.innerHTML = viewJobs();
   if(activeTab === 'calendar') v.innerHTML = viewCalendar();
@@ -1699,25 +1625,24 @@ function render(){
   if(activeTab === 'chat'){ v.innerHTML = viewChat(); renderChatMessages(); }
   if(activeTab === 'team'){
     v.innerHTML = '<div class="empty" style="padding:40px"><span class="big">👥</span>Loading team…</div>';
-    viewTeam().then(html => { v.innerHTML = html; }).catch(e => { console.error(e); v.innerHTML = '<div class="empty">Could not load team</div>'; });
+    viewTeam().then(html => { v.innerHTML = html; }).catch(e => { v.innerHTML = '<div class="empty">Could not load team</div>'; });
   }
+  const effectiveTab = activeTab === 'program' ? 'dash' : activeTab;
   $$('nav button').forEach(b => {
     const t = b.dataset.tab;
     b.style.display = tabsForRole.includes(t) ? '' : 'none';
-    b.classList.toggle('active', t === activeTab);
+    b.classList.toggle('active', t === effectiveTab);
   });
   const sub = $('#headSub');
   if(sub) sub.textContent = new Date().toLocaleDateString('en-AU',{weekday:'long', day:'numeric', month:'long'});
 }
 
 /* =========================================================
-   Helpers used by views
+   Helpers
    ========================================================= */
 function findProgramItem(monthId, weekNum, itemId){
-  const month = state.program.find(m => m.id === monthId);
-  if(!month) return null;
-  const week = (month.weeks || []).find(w => w.week === weekNum);
-  if(!week) return null;
+  const month = state.program.find(m => m.id === monthId); if(!month) return null;
+  const week = (month.weeks || []).find(w => w.week === weekNum); if(!week) return null;
   const item = (week.items || []).find(i => i.id === itemId);
   return item ? {month, week, item} : null;
 }
@@ -1821,7 +1746,7 @@ function checkAndNotify(){
     showNotification('🔔 TurfTrack — Today', body, 'tt_today');
     localStorage.setItem(lastKey, todayStr);
   } else if(r.tomorrow.length){
-    const body = r.tomorrow.length === 1 ? `Tomorrow: ${r.tomorrow[0].title}` : `${r.tomorrow.length} items coming tomorrow`;
+    const body = r.tomorrow.length === 1 ? `Tomorrow: ${r.tomorrow[0].title}` : `${r.tomorrow.length} items tomorrow`;
     showNotification('⏰ TurfTrack — Tomorrow', body, 'tt_tomorrow');
     localStorage.setItem(lastKey, todayStr);
   } else if(r.week.length){
@@ -1836,7 +1761,7 @@ function startNotifyLoop(){
 }
 
 /* =========================================================
-   Sign-in card (dashboard)
+   Sign-in card
    ========================================================= */
 function signInCardHtml(){
   const signedIn = mySignInToday && mySignInToday.inAt && !mySignInToday.outAt;
@@ -1882,18 +1807,12 @@ function viewDash(){
   }
 
   const todays = state.jobs.filter(j => j.due === t);
-  const open = state.jobs.filter(j => j.status !== 'done').length;
   const overdue = state.jobs.filter(j => j.status !== 'done' && j.due && j.due < t).length;
   const upcoming = state.events.filter(e => e.date >= t).sort((a,b) => a.date.localeCompare(b.date)).slice(0,6);
   const reminders = buildReminders();
   const weekProgram = getThisWeekProgram();
 
-  let html = `
-    <div class="stats" style="grid-template-columns:1fr 1fr">
-      <div class="stat"><b>${todays.filter(j=>j.status!=='done').length}</b><span>Today</span></div>
-      <div class="stat"><b>${open}</b><span>Open Jobs</span></div>
-    </div>
-    ${renderWeatherCard()}`;
+  let html = `${renderWeatherCard()}`;
 
   if(overdue > 0){
     html += `<div class="card" style="border-left:4px solid var(--red)"><h3 style="color:var(--red)">⚠ ${overdue} overdue job${overdue>1?'s':''}</h3></div>`;
@@ -1918,26 +1837,27 @@ function viewDash(){
 
   if(weekProgram.length){
     const doneCount = weekProgram.filter(p => p.done).length;
-    html += `<div class="card" style="border-left:4px solid var(--green)"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h3 style="margin:0;color:var(--green)">🧪 This Week's Applications</h3><span style="font-size:11px;color:var(--muted);font-weight:600">${doneCount}/${weekProgram.length} applied</span></div>`;
+    html += `<div class="card" style="border-left:4px solid var(--green);cursor:pointer" data-action="open-program">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <h3 style="margin:0;color:var(--green)">🧪 This Week's Applications</h3>
+        <span style="font-size:11px;color:var(--muted)">${doneCount}/${weekProgram.length} applied · Tap to open →</span>
+      </div>`;
     weekProgram.forEach(p => {
-      html += `<div class="item" style="padding:8px 0"><div class="tick ${p.done?'on':''}" data-action="toggle-program" data-month="${p.monthId}" data-week="${p.week}" data-item="${p.itemId}">${p.done?'✓':''}</div><div class="item-body"><div class="item-title ${p.done?'done':''}" style="font-size:13.5px">${esc(p.product)}</div><div class="item-meta"><span class="pill p-type">${esc(p.rate)}</span><span>${esc(p.monthName)} · Week ${p.week}</span></div></div></div>`;
+      html += `<div class="item" style="padding:8px 0">
+        <div class="tick ${p.done?'on':''}" data-action="toggle-program" data-month="${p.monthId}" data-week="${p.week}" data-item="${p.itemId}">${p.done?'✓':''}</div>
+        <div class="item-body">
+          <div class="item-title ${p.done?'done':''}" style="font-size:13.5px">${esc(p.product)}</div>
+          <div class="item-meta">
+            <span class="pill p-type">${esc(p.rate)}</span>
+            <span>${esc(p.monthName)} · Week ${p.week}</span>
+          </div>
+        </div>
+      </div>`;
     });
     html += `</div>`;
   }
 
   html += `
-    <div class="card">
-      <h3>Course Conditions</h3>
-      <div class="row2">
-        <div class="field" style="margin:0"><label>Status</label>
-          <select id="dashStatus">${['Open','Closed','Temp Greens','Buggy Ban','Frost Delay','Preferred Lies'].map(s => `<option ${state.courseStatus===s?'selected':''}>${s}</option>`).join('')}</select>
-        </div>
-        <div class="field" style="margin:0"><label>Weather / notes</label>
-          <input id="dashWeather" placeholder="e.g. 14°C, light NW" value="${esc(state.weather)}">
-        </div>
-      </div>
-      <button class="submit" style="margin-top:12px;padding:10px;font-size:14px" data-action="save-conditions">Save Conditions</button>
-    </div>
     <div class="sec-head"><h2>Today's Jobs</h2><button class="add-btn" data-action="add-job">+</button></div>
     <div class="card">${todays.length ? todays.map(jobItem).join('') : `<div class="empty"><span class="big">🌱</span>No jobs scheduled for today.</div>`}</div>
     <div class="sec-head"><h2>Upcoming</h2></div>
@@ -1997,1281 +1917,4 @@ function viewCalendar(){
   const upcoming = state.events.filter(e => e.date >= t && e.date <= iso(in30)).sort((a,b) => a.date.localeCompare(b.date));
 
   return `
-    <div class="sec-head"><h2>Calendar</h2><div style="display:flex;gap:6px"><button class="add-btn" style="background:var(--blue)" data-action="import-doc">📄</button><button class="add-btn" data-action="add-event" data-date="${t}">+</button></div></div>
-    <input type="file" id="importDocCamera" accept="image/*" capture="environment" style="display:none">
-    <input type="file" id="importDocGallery" accept="image/*" style="display:none">
-    <div class="card">
-      <div class="cal-head"><h2>${monthName}</h2><div class="cal-nav"><button data-action="cal-prev">‹</button><button data-action="cal-today">•</button><button data-action="cal-next">›</button></div></div>
-      <div class="cal-grid">${['M','T','W','T','F','S','S'].map(d=>`<div class="cal-dow">${d}</div>`).join('')}${cells}</div>
-      <div class="legend">${EVENT_TYPES.map(tp => `<span><i class="dot d-${tp}" style="display:inline-block"></i>${EVENT_LABEL[tp]}</span>`).join('')}<span><i class="dot d-program" style="display:inline-block"></i>Program</span></div>
-    </div>
-    ${dayPanel}
-    <div class="sec-head"><h2>Next 30 Days</h2></div>
-    <div class="card">${upcoming.length ? upcoming.map(evItem).join('') : `<div class="empty"><span class="big">📅</span>No events in the next 30 days.</div>`}</div>`;
-}
-
-function evItem(e){
-  return `<div class="item"><div class="tick ${e.done?'on':''}" data-action="toggle-event" data-id="${e.id}">${e.done?'✓':''}</div><div class="item-body"><div class="item-title ${e.done?'done':''}">${esc(e.title)}</div><div class="item-meta"><span class="pill p-type">${EVENT_LABEL[e.type] || e.type}</span><span>${prettyDate(e.date)}</span></div>${e.notes ? `<div class="item-note">${esc(e.notes)}</div>` : ''}</div><button class="del" data-action="del-event" data-id="${e.id}">✕</button></div>`;
-}
-
-function viewProgram(){
-  let html = `<div class="sec-head"><h2>Nutrition Program</h2><div style="display:flex;gap:6px"><button class="add-btn" style="background:var(--blue)" data-action="import-program">📄</button><button class="add-btn" data-action="add-program-month">+</button></div></div>`;
-  html += `<input type="file" id="programDocCamera" accept="image/*" capture="environment" style="display:none"><input type="file" id="programDocGallery" accept="image/*" style="display:none">`;
-
-  if(!state.program.length){
-    return html + `<div class="card"><div class="empty"><span class="big">🧪</span>No program yet. Tap 📄 to import or + to add a month.</div></div>`;
-  }
-
-  const sorted = [...state.program].sort((a,b) => {
-    const aS = a.weeks?.[0]?.weekStart || '9999';
-    const bS = b.weeks?.[0]?.weekStart || '9999';
-    return aS.localeCompare(bS);
-  });
-
-  sorted.forEach(month => {
-    const done = (month.weeks||[]).reduce((n,w) => n + (w.items||[]).filter(i => i.done).length, 0);
-    const total = (month.weeks||[]).reduce((n,w) => n + (w.items||[]).length, 0);
-    html += `<div class="card"><div class="sec-head" style="margin-bottom:6px"><h2 style="font-size:16px">${esc(month.month)}</h2><div style="display:flex;gap:6px;align-items:center"><span style="font-size:11px;color:var(--muted);font-weight:600">${done}/${total} applied</span><button class="del" data-action="edit-program-month" data-id="${month.id}" style="font-size:14px;color:var(--blue)">✏️</button></div></div>`;
-    (month.weeks || []).forEach(wk => {
-      html += `<div style="margin-top:12px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="font-size:12px;font-weight:700;color:var(--green2);text-transform:uppercase">Week ${wk.week}${wk.weekStart ? ` · ${prettyDate(wk.weekStart)}` : ''}</div><div style="display:flex;gap:4px"><button class="del" data-action="add-program-item" data-month="${month.id}" data-week="${wk.week}" style="font-size:14px;color:var(--green2)">＋</button><button class="del" data-action="edit-program-week" data-month="${month.id}" data-week="${wk.week}" style="font-size:14px;color:var(--blue)">✏️</button></div></div>${(wk.items||[]).map(item => `<div class="item" style="padding:8px 0"><div class="tick ${item.done?'on':''}" data-action="toggle-program" data-month="${month.id}" data-week="${wk.week}" data-item="${item.id}">${item.done?'✓':''}</div><div class="item-body" data-action="edit-program-item" data-month="${month.id}" data-week="${wk.week}" data-item="${item.id}" style="cursor:pointer"><div class="item-title ${item.done?'done':''}" style="font-size:13.5px">${esc(item.product)}</div><div class="item-meta"><span>Rate: ${esc(item.rate)}</span></div></div></div>`).join('')}</div>`;
-    });
-    html += `</div>`;
-  });
-
-  if(sorted.length){
-    html += `<button type="button" class="submit" data-action="delete-all-program" style="background:#fff;color:var(--red);border:1.5px solid var(--red);padding:13px;font-size:14px;margin-top:8px;margin-bottom:20px">🗑 Delete entire program</button>`;
-  }
-  return html;
-}
-
-function viewPlant(){
-  const history = [...(state.plantIds || [])].sort((a,b) => (b.created||'').localeCompare(a.created||''));
-  const todayCount = history.filter(p => (p.created||'').slice(0,10) === todayISO()).length;
-  const filtered = history.filter(p => {
-    if(plantFilter === 'All') return true;
-    if(plantFilter === 'Plant') return p.category === 'Desirable Turf';
-    return p.category === plantFilter;
-  });
-
-  return `
-    <div class="sec-head"><h2>Plant ID</h2><span style="font-size:11px;color:var(--muted);font-weight:600">${todayCount}/20 today</span></div>
-    <div class="card" style="text-align:center;padding:22px 16px">
-      <div style="font-size:40px;margin-bottom:8px">🌿</div>
-      <h3 style="text-transform:none;font-size:15px;color:var(--text);margin-bottom:6px">Identify a plant, weed, disease or pest</h3>
-      <p style="font-size:13px;color:var(--muted);margin:0 0 18px">Take a clear photo — fill the frame, good light, focus on leaves or symptoms.</p>
-      <button type="button" class="submit" style="background:var(--green);padding:14px;font-size:15px;margin-bottom:8px" data-action="plant-camera">📷 Take Photo</button>
-      <button type="button" class="submit" style="background:#fff;color:var(--green);border:1.5px solid var(--green);padding:13px;font-size:14px" data-action="plant-gallery">🖼 Choose from Gallery</button>
-      <input type="file" id="plantInputCamera" accept="image/*" capture="environment" style="display:none">
-      <input type="file" id="plantInputGallery" accept="image/*" style="display:none">
-    </div>
-    <div class="sec-head"><h2>Plant Records</h2><span style="font-size:11px;color:var(--muted);font-weight:600">${filtered.length}${plantFilter !== 'All' ? ` of ${history.length}` : ''}</span></div>
-    <div class="filter-bar">${['All','Plant','Weed','Pest','Disease'].map(f => `<button class="filter-chip ${plantFilter===f?'active':''}" data-action="plant-filter" data-filter="${f}">${f}</button>`).join('')}</div>
-    <div class="card">${filtered.length ? filtered.slice(0,50).map(plantItem).join('') : `<div class="empty"><span class="big">📸</span>${history.length ? `No ${plantFilter.toLowerCase()} records yet.` : 'No identifications yet. Tap Take Photo to start.'}</div>`}</div>`;
-}
-
-function plantItem(p){
-  const catClass = {'Weed':'p-high','Disease':'p-high','Pest':'p-med','Desirable Turf':'p-low','Unknown':'p-area'}[p.category] || 'p-area';
-  const chat = state.plantChats.find(c => c.plantId === p.id);
-  const hasChat = chat && chat.messages && chat.messages.length > 0;
-  const photoCount = (p.photos && p.photos.length) || (p.thumb ? 1 : 0);
-  return `<div class="item" data-action="view-plant" data-id="${p.id}" style="cursor:pointer">${p.thumb ? `<img src="${p.thumb}" style="width:52px;height:52px;border-radius:10px;object-fit:cover;flex:0 0 52px">` : ''}<div class="item-body"><div class="item-title">${esc(p.name || 'Unknown')}</div><div class="item-meta"><span class="pill ${catClass}">${esc(p.category || 'Unknown')}</span><span>${p.confidence ? p.confidence + '%' : ''}</span><span>${prettyDate((p.created||'').slice(0,10))}</span>${photoCount > 1 ? `<span>📷 ${photoCount}</span>` : ''}${hasChat ? `<span style="color:var(--green2);font-weight:700">💬 ${chat.messages.length}</span>` : ''}</div></div><span style="color:#b9c7bb;font-size:20px;line-height:1">›</span></div>`;
-}
-
-function viewChat(){
-  return `
-    <div class="sec-head"><h2>Crew Chat</h2><span style="font-size:11px;color:var(--muted);font-weight:600" id="chatCount"></span></div>
-    <div style="display:flex;flex-direction:column;height:calc(100vh - 210px);min-height:420px">
-      <div id="chatLog" style="flex:1;overflow-y:auto;padding:12px;background:#fff;border:1px solid var(--line);border-radius:var(--radius) var(--radius) 0 0"><div class="empty" style="padding:30px 10px"><span class="big">💬</span>Loading messages…</div></div>
-      <div style="background:#fff;border:1px solid var(--line);border-top:0;border-radius:0 0 var(--radius) var(--radius);padding:10px">
-        <div style="display:flex;gap:8px;align-items:center">
-          <button type="button" class="del" data-action="chat-photo" style="width:42px;height:42px;font-size:20px;padding:0;background:#eef3ee;border-radius:11px;color:var(--green2);flex:0 0 42px;display:grid;place-items:center">📷</button>
-          <input id="chatInput" placeholder="Message the crew…" autocomplete="off" style="flex:1;padding:12px">
-          <button type="button" class="submit" style="width:auto;padding:12px 18px;font-size:14px;margin:0" data-action="chat-send">Send</button>
-        </div>
-        <input type="file" id="chatPhotoCamera" accept="image/*" capture="environment" style="display:none">
-        <input type="file" id="chatPhotoGallery" accept="image/*" style="display:none">
-      </div>
-    </div>`;
-}
-
-function startChatListener(){
-  if(chatUnsubscribe){ try{ chatUnsubscribe(); }catch(e){} }
-  try{
-    const q = query(collection(db, 'clubs', 'rbgc', 'chat'), orderBy('ts', 'asc'), limit(200));
-    chatUnsubscribe = onSnapshot(q, (snap) => {
-      chatMessages = snap.docs.map(d => ({id:d.id, ...d.data()}));
-      renderChatMessages();
-    });
-  }catch(e){}
-}
-function stopChatListener(){ if(chatUnsubscribe){ try{ chatUnsubscribe(); }catch(e){} chatUnsubscribe = null; } }
-
-function renderChatMessages(){
-  const log = $('#chatLog');
-  if(!log) return;
-  if(!chatMessages.length){ log.innerHTML = `<div class="empty" style="padding:30px 10px"><span class="big">💬</span>No messages yet.</div>`; return; }
-  log.innerHTML = chatMessages.map(m => chatMsg(m)).join('');
-  log.scrollTop = log.scrollHeight;
-  const c = $('#chatCount'); if(c) c.textContent = `${chatMessages.length} msg`;
-}
-
-function chatMsg(m){
-  const isMe = currentUser && m.senderUid === currentUser.uid;
-  const canDelete = isMe || userRole === 'staff' || userRole === 'committee';
-  const d = new Date(m.ts || Date.now());
-  const time = d.toLocaleTimeString('en-AU',{hour:'2-digit', minute:'2-digit'});
-  const dateStr = d.toLocaleDateString('en-AU',{day:'numeric', month:'short'});
-  const roleClass = {'staff':'role-staff','committee':'role-committee','volunteer':'role-volunteer'}[m.senderRole] || 'role-pending';
-  const roleLabel = {'staff':'Staff','committee':'Committee','volunteer':'Volunteer'}[m.senderRole] || '';
-  const initial = (m.senderName || '?').charAt(0).toUpperCase();
-  return `<div style="display:flex;gap:8px;margin-bottom:14px;${isMe?'flex-direction:row-reverse':''}"><div style="flex:0 0 34px;height:34px;border-radius:50%;background:${isMe?'var(--green)':'#c3d3c5'};color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px">${esc(initial)}</div><div style="flex:1;min-width:0;max-width:82%"><div style="display:flex;gap:6px;align-items:center;margin-bottom:3px;flex-wrap:wrap;${isMe?'justify-content:flex-end':''}"><span style="font-weight:600;font-size:13px">${esc(m.senderName||'Unknown')}</span>${roleLabel?`<span class="pill ${roleClass}" style="font-size:9px">${roleLabel}</span>`:''}<span style="font-size:10.5px;color:var(--muted)">${dateStr} ${time}</span>${canDelete?`<button class="del" data-action="chat-delete" data-id="${m.id}" style="font-size:13px;padding:0 3px">✕</button>`:''}</div><div style="background:${isMe?'#e8f5e9':'#f7faf7'};border-radius:12px;padding:9px 12px;font-size:13.5px;line-height:1.5;word-wrap:break-word">${m.photo?`<img src="${m.photo}" style="width:100%;max-width:240px;border-radius:10px;margin-bottom:${m.text?'6px':'0'};cursor:zoom-in;display:block" data-action="view-photo" data-src="${m.photo}">`:''}${m.text?esc(m.text).replace(/\n/g,'<br>'):''}</div></div></div>`;
-}
-
-async function sendChatMessage(text, photo){
-  if(!currentUser) return;
-  const trimmed = (text || '').trim();
-  if(!trimmed && !photo) return;
-  await setDoc(doc(db, 'clubs', 'rbgc', 'chat', uid('msg')), {
-    senderUid:currentUser.uid, senderName:userName || currentUser.email || 'Unknown',
-    senderRole:userRole || 'volunteer', text:trimmed, photo:photo||null, ts:Date.now()
-  });
-}
-async function deleteChatMessage(id){ if(!id) return; await deleteDoc(doc(db, 'clubs','rbgc','chat', id)); }
-
-async function handleChatPhoto(inputEl){
-  const file = inputEl.files?.[0]; if(!file) return;
-  try{
-    toast('Uploading…');
-    const url = await compressImage(file, 900, 0.72);
-    await sendChatMessage('', url);
-    inputEl.value = '';
-  }catch(e){ toast('Photo failed'); inputEl.value=''; }
-}
-
-async function viewTeam(){
-  let members = [];
-  try{ const snap = await getDocs(collection(db,'clubs','rbgc','members')); members = snap.docs.map(d => ({id:d.id, ...d.data()})); }catch(e){}
-  const staff = userRole === 'staff' || userRole === 'committee';
-  const pending = members.filter(m => !m.approved);
-  const approved = members.filter(m => m.approved);
-  const onCourse = getOnCourseNow();
-  const catClass = r => ({'staff':'role-staff','committee':'role-committee','volunteer':'role-volunteer'}[r] || 'role-pending');
-  const catLabel = r => ({'staff':'Staff','committee':'Committee','volunteer':'Volunteer'}[r] || 'Unknown');
-
-  if(!staff){
-    const mine = allSignIns.filter(s => s.uid === currentUser.uid);
-    const hours = mine.reduce((s,x) => s + (x.hours||0), 0);
-    const recent = mine.sort((a,b) => (b.date||'').localeCompare(a.date||'')).slice(0,10);
-    return `
-      <div class="sec-head"><h2>Team</h2></div>
-      <div class="card"><h3>On Course Now · ${onCourse.length}</h3>${onCourse.length?onCourse.map(s=>`<div class="item"><div class="item-body"><div class="item-title">${esc(s.name)}</div><div class="item-meta"><span>Since ${esc(fmtTime(s.inAt))}</span></div></div></div>`).join(''):`<div class="empty" style="padding:12px">Nobody on course.</div>`}</div>
-      <div class="card"><h3>My Hours</h3><div class="stats" style="grid-template-columns:1fr 1fr;margin-bottom:0"><div class="stat"><b>${hours.toFixed(1)}</b><span>Total</span></div><div class="stat"><b>${mine.length}</b><span>Sessions</span></div></div></div>
-      <div class="card"><h3>Recent Sessions</h3>${recent.length?recent.map(s=>`<div class="item"><div class="item-body"><div class="item-title" style="font-size:13.5px">${prettyDate(s.date)}</div><div class="item-meta"><span>In ${esc(fmtTime(s.inAt))}</span>${s.hours?`<span>${s.hours.toFixed(2)} h</span>`:'<span style="color:var(--green2);font-weight:700">On course</span>'}</div></div></div>`).join(''):`<div class="empty" style="padding:12px">No sessions.</div>`}</div>`;
-  }
-
-  return `
-    <div class="sec-head"><h2>Team</h2></div>
-    <div class="card"><h3>On Course Now · ${onCourse.length}</h3>${onCourse.length?onCourse.map(s=>`<div class="item"><div class="item-body"><div class="item-title">${esc(s.name)}</div><div class="item-meta"><span>Since ${esc(fmtTime(s.inAt))}</span></div></div></div>`).join(''):`<div class="empty" style="padding:12px">Nobody on course.</div>`}</div>
-    <div class="card">
-      <h3>QR Sign-In</h3>
-      <p style="font-size:13px;color:var(--muted);margin:0 0 12px">Print or show this at the shed.</p>
-      <div style="text-align:center;padding:10px;background:#f7faf7;border-radius:12px">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(SIGN_IN_QR_URL)}&size=400x400&margin=10" style="width:100%;max-width:280px;border-radius:12px;display:block;margin:0 auto">
-      </div>
-      <button type="button" class="submit" style="background:var(--blue);margin-top:12px" data-action="qr-open">🔗 Open QR page</button>
-    </div>
-    <div class="card">
-      <h3>Pending · ${pending.length}</h3>
-      ${pending.length?pending.map(m=>`<div class="item" style="align-items:center"><div class="item-body"><div class="item-title">${esc(m.name||m.email||'')}</div><div class="item-meta"><span class="pill role-pending">${esc(catLabel(m.role))}</span><span>${esc(m.email||'')}</span></div></div><div style="display:flex;gap:6px"><button type="button" data-action="team-approve" data-uid="${m.uid}" data-role="${m.role}" style="background:var(--green);color:#fff;border:0;padding:8px 12px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">✓ Approve</button><button type="button" data-action="team-reject" data-uid="${m.uid}" style="background:#fff;color:var(--red);border:1.5px solid var(--red);padding:8px 12px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">✕</button></div></div>`).join(''):`<div class="empty" style="padding:12px">No pending requests.</div>`}
-    </div>
-    <div class="card">
-      <h3>Members · ${approved.length}</h3>
-      ${approved.length?approved.map(m=>{
-        const hrs = getVolunteerHours(m.uid);
-        return `<div class="item"><div class="item-body"><div class="item-title">${esc(m.name||m.email||'')}</div><div class="item-meta"><span class="pill ${catClass(m.role)}">${esc(catLabel(m.role))}</span><span>${esc(m.email||'')}</span>${hrs>0?`<span>· ${hrs.toFixed(1)} hrs</span>`:''}</div></div></div>`;
-      }).join(''):`<div class="empty" style="padding:12px">No members.</div>`}
-    </div>
-    <div class="card">
-      <h3>Recent Sign-Ins</h3>
-      ${allSignIns.length?allSignIns.slice(0,20).map(s=>`<div class="item"><div class="item-body"><div class="item-title" style="font-size:13.5px">${esc(s.name)}</div><div class="item-meta"><span>${prettyDate(s.date)}</span><span>In ${esc(fmtTime(s.inAt))}</span>${s.outAt?`<span>Out ${esc(fmtTime(s.outAt))}</span>`:'<span style="color:var(--green2);font-weight:700">On course</span>'}${s.hours?`<span>${s.hours.toFixed(2)} h</span>`:''}</div></div></div>`).join(''):`<div class="empty" style="padding:12px">No sign-ins yet.</div>`}
-    </div>`;
-}
-
-/* =========================================================
-   Image compression
-   ========================================================= */
-async function compressImage(file, maxSize = 900, quality = 0.75){
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        let {width, height} = img;
-        if(width > height && width > maxSize){ height = Math.round(height * maxSize / width); width = maxSize; }
-        else if(height > maxSize){ width = Math.round(width * maxSize / height); height = maxSize; }
-        const canvas = document.createElement('canvas');
-        canvas.width = width; canvas.height = height;
-        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', quality));
-      };
-      img.onerror = reject;
-      img.src = e.target.result;
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-/* =========================================================
-   Plant ID
-   ========================================================= */
-async function handlePlantPhoto(inputEl){
-  const file = inputEl.files?.[0]; if(!file) return;
-  const todayCount = (state.plantIds||[]).filter(p => (p.created||'').slice(0,10) === todayISO()).length;
-  if(todayCount >= 20){ toast('Daily limit reached (20)'); inputEl.value = ''; return; }
-  try{
-    toast('Compressing photo…');
-    const dataUrl = await compressImage(file);
-    openPlantSheet(dataUrl, null, true);
-    const result = await identifyPlant(dataUrl);
-    openPlantSheet(dataUrl, result, false);
-    inputEl.value = '';
-  }catch(e){
-    console.error(e);
-    openPlantSheet(null, null, false, e.message || 'Unknown error');
-    inputEl.value = '';
-  }
-}
-
-async function identifyPlant(dataUrl){
-  const base64 = dataUrl.split(',')[1];
-  const res = await fetch(PROXY_URL, {
-    method: 'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ messages: [
-      {role:'system', content:PLANT_PROMPT},
-      {role:'user', content:[
-        {type:'text', text:'Identify this.'},
-        {type:'image_url', image_url:{url:`data:image/jpeg;base64,${base64}`}}
-      ]}
-    ]})
-  });
-  if(!res.ok){ const err = await res.text().catch(() => ''); throw new Error(`Proxy ${res.status}: ${err.slice(0,120)}`); }
-  const data = await res.json();
-  const raw = data?.choices?.[0]?.message?.content || '';
-  const clean = raw.replace(/^```json\s*|\s*```$/g, '').trim();
-  try{ return JSON.parse(clean); }catch(e){ throw new Error('AI returned unexpected format'); }
-}
-
-function openPlantSheet(dataUrl, result, loading, errorMsg, plantId){
-  const overlay = $('#overlay'); const sheetForm = $('#sheetForm');
-  $('#sheetTitle').textContent = loading ? 'Identifying…' : 'Identification';
-  sheetForm.onsubmit = (ev) => ev.preventDefault();
-
-  if(loading){
-    sheetForm.innerHTML = `<div style="text-align:center;padding:12px 0 24px"><img src="${dataUrl}" style="width:100%;max-width:280px;border-radius:14px;margin-bottom:16px;opacity:.85"><div style="font-size:38px;margin:8px 0">🔍</div><div style="font-size:14px;color:var(--muted)">Analysing species, symptoms and treatments…</div></div>`;
-    overlay.classList.remove('hidden'); document.body.style.overflow='hidden'; return;
-  }
-
-  const plant = plantId ? state.plantIds.find(p => p.id === plantId) : null;
-  if(!result && !plant){
-    sheetForm.innerHTML = `${dataUrl?`<img src="${dataUrl}" style="width:100%;border-radius:14px;margin-bottom:16px">`:''}<div class="result" style="border-left-color:var(--red);background:#fdecea"><b>Could not identify.</b><br>${esc(errorMsg||'')}</div><button type="button" class="submit" data-action="close-sheet" style="margin-top:12px">Close</button>`;
-    overlay.classList.remove('hidden'); document.body.style.overflow='hidden'; return;
-  }
-
-  const d = plant ? {name:plant.name, botanicalName:plant.botanicalName, category:plant.category, confidence:plant.confidence, description:plant.description, action:plant.action, products:plant.products, safety:plant.safety} : result;
-  const photos = plant ? ((plant.photos && plant.photos.length) ? plant.photos : (plant.thumb ? [plant.thumb] : [])) : (dataUrl ? [dataUrl] : []);
-  const catClass = {'Weed':'p-high','Disease':'p-high','Pest':'p-med','Desirable Turf':'p-low','Unknown':'p-area'}[d.category] || 'p-area';
-
-  let photosHtml = '';
-  if(photos.length === 1){ photosHtml = `<img src="${photos[0]}" style="width:100%;border-radius:14px;margin-bottom:14px;cursor:zoom-in" data-action="view-photo" data-src="${photos[0]}">`; }
-  else if(photos.length > 1){
-    photosHtml = `<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;margin-bottom:8px">${photos.map(p => `<img src="${p}" style="flex:0 0 auto;height:150px;border-radius:12px;object-fit:cover" data-action="view-photo" data-src="${p}">`).join('')}</div>`;
-  }
-
-  sheetForm.innerHTML = `
-    ${photosHtml}
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
-      <span class="pill ${catClass}">${esc(d.category||'Unknown')}</span>
-      <span style="font-size:12px;color:var(--muted);font-weight:600">${d.confidence||0}% confident</span>
-    </div>
-    <h2 style="margin:4px 0 2px;font-size:22px;color:var(--green)">${esc(d.name||'Unknown')}</h2>
-    <div style="font-style:italic;color:var(--muted);font-size:13.5px;margin-bottom:14px">${esc(d.botanicalName||'Unknown')}</div>
-    <div class="card" style="box-shadow:none;border:1px solid var(--line);margin-bottom:10px"><h3 style="margin-bottom:6px">Description</h3><div style="font-size:13.5px;line-height:1.55">${esc(d.description||'')}</div></div>
-    <div class="card" style="box-shadow:none;border:1px solid var(--line);margin-bottom:10px"><h3 style="margin-bottom:6px">Recommended Action</h3><div style="font-size:13.5px;line-height:1.55">${esc(d.action||'')}</div></div>
-    ${d.products && d.products !== 'None' ? `<div class="card" style="box-shadow:none;border:1px solid var(--line);margin-bottom:10px"><h3 style="margin-bottom:6px">Products / Treatments</h3><div style="font-size:13.5px;line-height:1.55">${esc(d.products)}</div></div>` : ''}
-    ${d.safety && d.safety !== 'None' ? `<div class="card" style="box-shadow:none;border:1px solid #ffe0b2;background:#fff8e1;margin-bottom:10px"><h3 style="margin-bottom:6px;color:var(--amber)">⚠ Safety</h3><div style="font-size:13.5px;line-height:1.55">${esc(d.safety)}</div></div>` : ''}
-    ${plantId ? `
-      <div class="row2" style="margin-top:14px">
-        <button type="button" class="submit" data-action="close-sheet" style="background:#eef3ee;color:var(--text);padding:12px;font-size:14px">Close</button>
-        <button type="button" class="submit" data-action="ask-plant" data-id="${plantId}" style="padding:12px;font-size:14px">💬 Ask AI</button>
-      </div>
-      <div class="row2" style="margin-top:8px">
-        <button type="button" class="submit" data-action="edit-plant" data-id="${plantId}" style="background:#fff;color:var(--blue);border:1.5px solid var(--blue);padding:12px;font-size:14px">✏️ Edit</button>
-        <button type="button" class="submit" data-action="reidentify-plant" data-id="${plantId}" style="background:#fff;color:var(--green);border:1.5px solid var(--green);padding:12px;font-size:14px">🔍 Re-identify</button>
-      </div>
-      <button type="button" class="submit" data-action="manual-name" data-id="${plantId}" style="background:#fff;color:var(--amber);border:1.5px solid var(--amber);padding:12px;font-size:14px;margin-top:8px">🏷 I know the name — fill in</button>
-      <button type="button" class="submit" data-action="delete-plant-detail" data-id="${plantId}" style="background:#fff;color:var(--red);border:1.5px solid var(--red);padding:12px;font-size:14px;margin-top:8px">🗑 Delete this plant</button>
-    ` : `
-      <button type="button" class="submit" data-action="fix-plant-name-fresh" style="background:#fff;color:var(--amber);border:1.5px solid var(--amber);padding:12px;font-size:14px;margin-top:8px">✏️ Wrong name? Fix it</button>
-      <div class="row2" style="margin-top:8px">
-        <button type="button" class="submit" data-action="close-sheet" style="background:#eef3ee;color:var(--text);padding:12px;font-size:14px">Discard</button>
-        <button type="button" class="submit" data-action="save-plant" id="savePlantBtn" style="padding:12px;font-size:14px">💾 Save</button>
-      </div>
-    `}
-    <div id="plantSaveData" style="display:none">${esc(JSON.stringify(d))}</div>`;
-  overlay.classList.remove('hidden'); document.body.style.overflow='hidden';
-  _plantPhotoData = dataUrl;
-}
-
-function openFixNameForm(currentResult){
-  const overlay = $('#overlay'); const sheetForm = $('#sheetForm');
-  $('#sheetTitle').textContent = 'What is it really?';
-  sheetForm.onsubmit = (ev) => ev.preventDefault();
-  const cn = currentResult?.name && currentResult.name !== 'Unknown' ? currentResult.name : '';
-  sheetForm.innerHTML = `
-    <p style="font-size:13px;color:var(--muted);margin:0 0 16px">AI thought it was <b>${esc(cn||'Unknown')}</b>. Type the correct name.</p>
-    <div class="field"><label>Common name *</label><input id="fixCommonName" placeholder="e.g. Kikuyu, Couch, Nutgrass"></div>
-    <div class="field"><label>Botanical name (optional)</label><input id="fixBotanicalName" placeholder="e.g. Pennisetum clandestinum"></div>
-    <div class="row2" style="margin-top:14px">
-      <button type="button" class="submit" data-action="close-sheet" style="background:#eef3ee;color:var(--text)">Cancel</button>
-      <button type="button" class="submit" data-action="fix-name-submit">🤖 Fill in rest</button>
-    </div>`;
-}
-
-async function refillFreshPlant(cn, bn){
-  const overlay = $('#overlay'); const sheetForm = $('#sheetForm');
-  $('#sheetTitle').textContent = 'Looking up…';
-  sheetForm.innerHTML = '<div style="text-align:center;padding:24px 0"><div style="font-size:42px;margin-bottom:12px">🤖</div><div style="font-size:14px;color:var(--muted)">Looking up…</div></div>';
-  try{
-    const res = await fetch(PROXY_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({messages:[
-      {role:'system', content:getNameFillPrompt(cn, bn)},
-      {role:'user', content:`Common: ${cn}\nBotanical: ${bn}`}
-    ]})});
-    if(!res.ok) throw new Error(`Proxy ${res.status}`);
-    const data = await res.json();
-    const raw = data?.choices?.[0]?.message?.content || '';
-    const clean = raw.replace(/^```json\s*|```$/g, '').trim();
-    const parsed = JSON.parse(clean);
-    const dataUrl = window._freshPlantDataUrl || _plantPhotoData;
-    window._freshPlantDataUrl = null;
-    openPlantSheet(dataUrl, parsed, false);
-    toast('Updated — review and save');
-  }catch(e){
-    sheetForm.innerHTML = `<div class="result" style="border-left-color:var(--red);background:#fdecea"><b>Failed.</b><br>${esc(e.message)}</div><div class="row2" style="margin-top:12px"><button type="button" class="submit" data-action="fix-plant-name-fresh" style="background:#eef3ee;color:var(--text)">Try again</button><button type="button" class="submit" data-action="close-sheet">Close</button></div>`;
-  }
-}
-
-function openManualNameForm(plantId){
-  const plant = state.plantIds.find(p => p.id === plantId); if(!plant) return;
-  const overlay = $('#overlay'); const sheetForm = $('#sheetForm');
-  $('#sheetTitle').textContent = 'I know the name';
-  sheetForm.onsubmit = (ev) => ev.preventDefault();
-  sheetForm.innerHTML = `
-    <p style="font-size:13px;color:var(--muted);margin:0 0 16px">Type the name you know and the AI will fill in the rest.</p>
-    <div class="field"><label>Common name</label><input id="manualCommonName" value="${esc(plant.name && plant.name!=='Unknown'?plant.name:'')}"></div>
-    <div class="field"><label>Botanical name</label><input id="manualBotanicalName" value="${esc(plant.botanicalName && plant.botanicalName!=='Unknown'?plant.botanicalName:'')}"></div>
-    <div class="row2" style="margin-top:14px">
-      <button type="button" class="submit" data-action="view-plant" data-id="${plant.id}" style="background:#eef3ee;color:var(--text)">Cancel</button>
-      <button type="button" class="submit" data-action="manual-name-submit" data-id="${plant.id}">🤖 Fill in rest</button>
-    </div>`;
-}
-
-async function fillInByName(plantId, cn, bn){
-  const overlay = $('#overlay'); const sheetForm = $('#sheetForm');
-  $('#sheetTitle').textContent = 'Looking up…';
-  sheetForm.innerHTML = '<div style="text-align:center;padding:24px 0"><div style="font-size:42px;margin-bottom:12px">🤖</div><div style="font-size:14px;color:var(--muted)">Filling in details…</div></div>';
-  try{
-    const res = await fetch(PROXY_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({messages:[
-      {role:'system', content:getNameFillPrompt(cn, bn)},
-      {role:'user', content:`Common: ${cn}\nBotanical: ${bn}`}
-    ]})});
-    if(!res.ok) throw new Error(`Proxy ${res.status}`);
-    const data = await res.json();
-    const raw = data?.choices?.[0]?.message?.content || '';
-    const clean = raw.replace(/^```json\s*|```$/g, '').trim();
-    const parsed = JSON.parse(clean);
-    showManualNamePreview(plantId, parsed);
-  }catch(e){
-    sheetForm.innerHTML = `<div class="result" style="border-left-color:var(--red);background:#fdecea"><b>Failed.</b><br>${esc(e.message)}</div><button type="button" class="submit" data-action="manual-name" data-id="${plantId}" style="margin-top:12px;background:#eef3ee;color:var(--text)">Try again</button>`;
-  }
-}
-
-function showManualNamePreview(plantId, result){
-  const overlay = $('#overlay'); const sheetForm = $('#sheetForm');
-  $('#sheetTitle').textContent = 'Preview';
-  sheetForm.onsubmit = (ev) => ev.preventDefault();
-  const catClass = {'Weed':'p-high','Disease':'p-high','Pest':'p-med','Desirable Turf':'p-low','Unknown':'p-area'}[result.category] || 'p-area';
-  sheetForm.innerHTML = `
-    <div style="font-size:13px;color:var(--muted);margin-bottom:14px">Review. Tap Apply to save.</div>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span class="pill ${catClass}">${esc(result.category||'Unknown')}</span><span style="font-size:12px;color:var(--muted);font-weight:600">${result.confidence||0}%</span></div>
-    <h2 style="margin:4px 0 2px;font-size:20px;color:var(--green)">${esc(result.name||'Unknown')}</h2>
-    <div style="font-style:italic;color:var(--muted);font-size:13px;margin-bottom:14px">${esc(result.botanicalName||'Unknown')}</div>
-    <div class="card" style="box-shadow:none;border:1px solid var(--line);margin-bottom:10px"><h3 style="margin-bottom:6px">Description</h3><div style="font-size:13.5px">${esc(result.description||'')}</div></div>
-    <div class="card" style="box-shadow:none;border:1px solid var(--line);margin-bottom:10px"><h3 style="margin-bottom:6px">Action</h3><div style="font-size:13.5px">${esc(result.action||'')}</div></div>
-    ${result.products && result.products!=='None'?`<div class="card" style="box-shadow:none;border:1px solid var(--line);margin-bottom:10px"><h3 style="margin-bottom:6px">Products</h3><div style="font-size:13.5px">${esc(result.products)}</div></div>`:''}
-    ${result.safety && result.safety!=='None'?`<div class="card" style="box-shadow:none;border:1px solid #ffe0b2;background:#fff8e1;margin-bottom:10px"><h3 style="margin-bottom:6px;color:var(--amber)">⚠ Safety</h3><div style="font-size:13.5px">${esc(result.safety)}</div></div>`:''}
-    <div class="row2" style="margin-top:14px">
-      <button type="button" class="submit" data-action="manual-name" data-id="${plantId}" style="background:#eef3ee;color:var(--text)">Back</button>
-      <button type="button" class="submit" data-action="manual-name-apply" data-id="${plantId}">✅ Apply</button>
-    </div>
-    <div id="manualNameData" style="display:none">${esc(JSON.stringify(result))}</div>`;
-}
-
-function openPlantEditForm(plantId){
-  const plant = state.plantIds.find(p => p.id === plantId); if(!plant) return;
-  const overlay = $('#overlay'); const sheetForm = $('#sheetForm');
-  $('#sheetTitle').textContent = 'Edit plant';
-  sheetForm.onsubmit = (ev) => ev.preventDefault();
-  window._editPhotos = (plant.photos && plant.photos.length) ? [...plant.photos] : (plant.thumb ? [plant.thumb] : []);
-  const strip = () => window._editPhotos.map((p, i) => `<div style="position:relative;flex:0 0 auto"><img src="${p}" style="width:80px;height:80px;border-radius:10px;object-fit:cover;display:block"><button type="button" data-action="edit-remove-photo" data-idx="${i}" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:var(--red);color:#fff;border:2px solid #fff;font-size:12px;line-height:1;cursor:pointer;padding:0">✕</button></div>`).join('');
-  sheetForm.innerHTML = `
-    <div class="field"><label>Photos (${window._editPhotos.length})</label>
-      <div id="editPhotoStrip" style="display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px">${strip()}</div>
-      <div class="row2" style="margin-top:4px">
-        <button type="button" data-action="edit-add-camera" style="padding:11px;border-radius:11px;border:1.5px solid var(--line);background:#fff;font-weight:600;cursor:pointer;font-family:inherit;font-size:13.5px">📷 Add Photo</button>
-        <button type="button" data-action="edit-add-gallery" style="padding:11px;border-radius:11px;border:1.5px solid var(--line);background:#fff;font-weight:600;cursor:pointer;font-family:inherit;font-size:13.5px">🖼 From Gallery</button>
-      </div>
-      <input type="file" id="editPhotoCamera" accept="image/*" capture="environment" style="display:none">
-      <input type="file" id="editPhotoGallery" accept="image/*" style="display:none">
-    </div>
-    <div class="field"><label>Common name</label><input name="name" value="${esc(plant.name||'')}" required></div>
-    <div class="field"><label>Botanical name</label><input name="botanicalName" value="${esc(plant.botanicalName||'')}"></div>
-    <div class="row2">
-      <div class="field"><label>Category</label><select name="category">${['Weed','Disease','Pest','Desirable Turf','Unknown'].map(c => `<option ${plant.category===c?'selected':''}>${c}</option>`).join('')}</select></div>
-      <div class="field"><label>Confidence %</label><input name="confidence" type="number" min="0" max="100" value="${plant.confidence||0}"></div>
-    </div>
-    <div class="field"><label>Description</label><textarea name="description">${esc(plant.description||'')}</textarea></div>
-    <div class="field"><label>Action</label><textarea name="action">${esc(plant.action||'')}</textarea></div>
-    <div class="field"><label>Products</label><textarea name="products">${esc(plant.products||'')}</textarea></div>
-    <div class="field"><label>Safety</label><textarea name="safety">${esc(plant.safety||'')}</textarea></div>
-    <div class="row2" style="margin-top:14px">
-      <button type="button" class="submit" data-action="view-plant" data-id="${plantId}" style="background:#eef3ee;color:var(--text)">Cancel</button>
-      <button type="button" class="submit" data-action="edit-save-plant" data-id="${plantId}">💾 Save</button>
-    </div>`;
-}
-
-function refreshEditPhotoStrip(){
-  const s = $('#editPhotoStrip'); if(!s) return;
-  s.innerHTML = (window._editPhotos||[]).map((p, i) => `<div style="position:relative;flex:0 0 auto"><img src="${p}" style="width:80px;height:80px;border-radius:10px;object-fit:cover;display:block"><button type="button" data-action="edit-remove-photo" data-idx="${i}" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:var(--red);color:#fff;border:2px solid #fff;font-size:12px;line-height:1;cursor:pointer;padding:0">✕</button></div>`).join('');
-}
-
-async function handleEditPhoto(inputEl){
-  const file = inputEl.files?.[0]; if(!file) return;
-  try{
-    toast('Compressing…');
-    const url = await compressImage(file);
-    window._editPhotos = window._editPhotos || [];
-    window._editPhotos.push(url);
-    inputEl.value = '';
-    refreshEditPhotoStrip();
-    toast('Photo added');
-  }catch(e){ toast('Failed'); inputEl.value=''; }
-}
-
-async function handleBgPhoto(inputEl){
-  const file = inputEl.files?.[0]; if(!file) return;
-  try{
-    toast('Compressing…');
-    const url = await compressImage(file, 1200, 0.6);
-    appTheme.bgPhoto = url;
-    await saveTheme(); applyTheme();
-    inputEl.value = '';
-    formData();
-    toast('Background updated');
-  }catch(e){ toast('Failed'); inputEl.value=''; }
-}
-
-async function reidentifyPlant(plantId){
-  const plant = state.plantIds.find(p => p.id === plantId); if(!plant) return;
-  const photos = (plant.photos && plant.photos.length) ? plant.photos : (plant.thumb ? [plant.thumb] : []);
-  if(!photos.length){ toast('No photo'); return; }
-  const overlay = $('#overlay'); const sheetForm = $('#sheetForm');
-  $('#sheetTitle').textContent = 'Re-identifying…';
-  sheetForm.onsubmit = (ev) => ev.preventDefault();
-  sheetForm.innerHTML = `<div style="text-align:center;padding:20px 0"><img src="${photos[0]}" style="width:100%;max-width:240px;border-radius:14px;margin-bottom:16px;opacity:.85"><div style="font-size:38px;margin:8px 0">🔍</div><div style="font-size:14px;color:var(--muted)">Analysing…</div></div>`;
-  overlay.classList.remove('hidden'); document.body.style.overflow='hidden';
-  try{
-    const content = [{type:'text', text: photos.length > 1 ? 'Identify. Multiple photos attached. Give 2-3 possibilities.' : 'Identify this. Give 2-3 possibilities.'}, ...photos.map(p => ({type:'image_url', image_url:{url:p}}))];
-    const res = await fetch(PROXY_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({messages:[{role:'system', content:REIDENTIFY_PROMPT},{role:'user', content}]})});
-    if(!res.ok) throw new Error(`Proxy ${res.status}`);
-    const data = await res.json();
-    const raw = data?.choices?.[0]?.message?.content || '';
-    const clean = raw.replace(/^```json\s*|```$/g, '').trim();
-    const parsed = JSON.parse(clean);
-    const results = Array.isArray(parsed.results) ? parsed.results : [];
-    showReidentifyResults(plant, results);
-  }catch(e){
-    sheetForm.innerHTML = `<div class="result" style="border-left-color:var(--red);background:#fdecea"><b>Failed.</b><br>${esc(e.message)}</div><button type="button" class="submit" data-action="view-plant" data-id="${plantId}" style="margin-top:12px;background:#eef3ee;color:var(--text)">Close</button>`;
-  }
-}
-
-function showReidentifyResults(plant, results){
-  const overlay = $('#overlay'); const sheetForm = $('#sheetForm');
-  sheetForm.onsubmit = (ev) => ev.preventDefault();
-  $('#sheetTitle').textContent = `${results.length} possible match${results.length>1?'es':''}`;
-  if(!results.length){
-    sheetForm.innerHTML = `<div class="result" style="border-left-color:var(--amber);background:#fff8e1">No suggestions. Try a clearer photo.</div><button type="button" class="submit" data-action="view-plant" data-id="${plant.id}" style="margin-top:12px;background:#eef3ee;color:var(--text)">Close</button>`;
-    return;
-  }
-  window._reidentifyResults = results;
-  const cards = results.map((r, i) => {
-    const cc = {'Weed':'p-high','Disease':'p-high','Pest':'p-med','Desirable Turf':'p-low','Unknown':'p-area'}[r.category] || 'p-area';
-    return `<div class="card" style="border:1.5px solid var(--line);margin-bottom:10px"><div style="display:flex;justify-content:space-between;gap:10px;margin-bottom:6px"><div style="flex:1"><div style="font-weight:600;font-size:15px">${esc(r.name||'Unknown')}</div><div style="font-style:italic;color:var(--muted);font-size:12.5px">${esc(r.botanicalName||'Unknown')}</div></div><span class="pill ${cc}">${esc(r.category||'Unknown')}</span></div><div style="font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px">${r.confidence||0}% confident</div><div style="font-size:13px;line-height:1.5">${esc(r.description||'')}</div>${r.action?`<div style="font-size:12.5px;margin-top:6px"><b style="color:var(--green2)">Action:</b> ${esc(r.action)}</div>`:''}<button type="button" data-action="apply-reidentify" data-plant-id="${plant.id}" data-idx="${i}" style="width:100%;background:var(--green);color:#fff;border:0;padding:11px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-top:12px;font-family:inherit">✅ Use this result</button></div>`;
-  }).join('');
-  sheetForm.innerHTML = `<div style="font-size:13px;color:var(--muted);margin-bottom:12px">Tap to apply. Current: <b>${esc(plant.name)}</b></div>${cards}<button type="button" class="submit" data-action="view-plant" data-id="${plant.id}" style="background:#eef3ee;color:var(--text)">Cancel</button>`;
-}
-
-async function openPlantChat(plantId){
-  const plant = state.plantIds.find(p => p.id === plantId); if(!plant) return;
-  let chat = state.plantChats.find(c => c.plantId === plantId);
-  if(!chat){
-    chat = { id:uid('pc'), plantId, messages:[], created:new Date().toISOString() };
-    state.plantChats.push(chat);
-    await fsSave('plantChats', chat);
-  }
-  renderPlantChat(plant, chat);
-}
-
-function renderPlantChat(plant, chat){
-  const overlay = $('#overlay'); const sheetForm = $('#sheetForm');
-  $('#sheetTitle').textContent = 'Ask about this plant';
-  sheetForm.onsubmit = (ev) => ev.preventDefault();
-  const msgs = chat.messages.length ? chat.messages.map(m => chatBubble(m)).join('') : `<div style="text-align:center;color:var(--muted);padding:26px 12px;font-size:13px"><div style="font-size:30px;margin-bottom:8px">💬</div>Ask anything about this plant</div>`;
-  sheetForm.innerHTML = `
-    <div style="display:flex;gap:10px;align-items:center;padding:0 0 12px;border-bottom:1px solid var(--line);margin-bottom:14px">
-      ${plant.thumb?`<img src="${plant.thumb}" style="width:46px;height:46px;border-radius:9px;object-fit:cover">`:''}
-      <div style="flex:1;min-width:0"><div style="font-weight:600;font-size:14.5px">${esc(plant.name)}</div><div style="font-size:11.5px;color:var(--muted);font-style:italic">${esc(plant.botanicalName)}</div></div>
-      <button type="button" class="del" data-action="close-sheet" style="font-size:20px">✕</button>
-    </div>
-    <div id="chatMessages" style="min-height:180px;max-height:50vh;overflow-y:auto;padding-right:4px;margin-bottom:12px">${msgs}</div>
-    <div style="display:flex;gap:8px;position:sticky;bottom:0;background:#fff;padding:10px 0 4px;border-top:1px solid var(--line)">
-      <input id="chatInput" placeholder="Ask a question..." style="flex:1">
-      <button type="button" class="submit" style="margin:0;width:auto;padding:11px 18px;font-size:14px" data-action="chat-send-plant" data-plant="${plant.id}">Send</button>
-    </div>`;
-  overlay.classList.remove('hidden'); document.body.style.overflow='hidden';
-  setTimeout(() => {
-    const el = $('#chatInput');
-    if(el){ el.focus(); el.addEventListener('keydown', (ev) => { if(ev.key === 'Enter' && !ev.shiftKey){ ev.preventDefault(); document.querySelector('[data-action="chat-send-plant"]')?.click(); } }); }
-    scrollChatBottom();
-  }, 80);
-}
-
-function scrollChatBottom(){ const el = $('#chatMessages'); if(el) el.scrollTop = el.scrollHeight; }
-function chatBubble(m){
-  const isU = m.role === 'user';
-  return `<div style="display:flex;justify-content:${isU?'flex-end':'flex-start'};margin-bottom:9px"><div style="max-width:82%;padding:9px 13px;border-radius:15px;font-size:13.5px;line-height:1.5;${isU?'background:var(--green);color:#fff;border-bottom-right-radius:5px':'background:#eef3ee;color:var(--text);border-bottom-left-radius:5px'}">${esc(m.content).replace(/\n/g,'<br>')}</div></div>`;
-}
-
-async function askAboutPlant(plant, history){
-  const sp = `You are a turf management assistant for golf courses in SE Queensland, Australia.\n\n${ausContextBlock()}\n\nPlant: ${plant.name} (${plant.botanicalName})\nCategory: ${plant.category}\nDescription: ${plant.description}\nAction: ${plant.action}\nProducts: ${plant.products}\nSafety: ${plant.safety}\n\nAnswer follow-ups. Be practical, concise, specific to SE QLD. Use AU common names and APVMA products. Under 4 sentences.`;
-  const messages = [{role:'system', content:sp}, ...history.map(m => ({role:m.role, content:m.content}))];
-  const res = await fetch(PROXY_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({messages})});
-  if(!res.ok) throw new Error(`Proxy ${res.status}`);
-  const data = await res.json();
-  return data?.choices?.[0]?.message?.content || '(No response)';
-}
-
-/* =========================================================
-   Program edit forms
-   ========================================================= */
-function formEditProgramItem(monthId, weekNum, itemId){
-  const f = findProgramItem(monthId, weekNum, itemId); if(!f) return;
-  const {month, week, item} = f;
-  openSheet('Edit Application', `
-    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">${esc(month.month)} · Week ${week.week}</div>
-    <div class="field"><label>Product</label><input name="product" value="${esc(item.product)}" required list="programProducts"><datalist id="programProducts">${getAllProgramProducts().map(p => `<option value="${esc(p)}">`).join('')}</datalist></div>
-    <div class="field"><label>Rate</label><input name="rate" value="${esc(item.rate)}"></div>
-    <button type="submit" class="submit">💾 Save</button>
-    <button type="button" class="submit" data-action="delete-program-item" data-month="${monthId}" data-week="${weekNum}" data-item="${itemId}" style="background:#fff;color:var(--red);border:1.5px solid var(--red);margin-top:8px">🗑 Delete</button>`,
-  async d => { item.product = d.product.trim(); item.rate = d.rate.trim(); await fsSave('program', month); toast('Updated'); });
-}
-
-function formAddProgramItem(monthId, weekNum){
-  const month = state.program.find(m => m.id === monthId); if(!month) return;
-  const week = (month.weeks||[]).find(w => w.week === weekNum); if(!week) return;
-  openSheet('Add Application', `
-    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">${esc(month.month)} · Week ${week.week}</div>
-    <div class="field"><label>Product *</label><input name="product" required list="programProducts2"><datalist id="programProducts2">${getAllProgramProducts().map(p => `<option value="${esc(p)}">`).join('')}</datalist></div>
-    <div class="field"><label>Rate</label><input name="rate"></div>`,
-  async d => { week.items = week.items || []; week.items.push({id:uid('pi'), product:d.product.trim(), rate:d.rate.trim()||'—', done:false}); await fsSave('program', month); toast('Added'); });
-}
-
-function formEditProgramWeek(monthId, weekNum){
-  const month = state.program.find(m => m.id === monthId); if(!month) return;
-  const week = (month.weeks||[]).find(w => w.week === weekNum); if(!week) return;
-  openSheet('Edit Week', `
-    <div class="row2">
-      <div class="field"><label>Week #</label><input type="number" name="week" min="1" max="10" value="${week.week}"></div>
-      <div class="field"><label>Start date</label><input type="date" name="weekStart" value="${week.weekStart||''}"></div>
-    </div>
-    <button type="submit" class="submit">💾 Save</button>
-    <button type="button" class="submit" data-action="delete-program-week" data-month="${monthId}" data-week="${weekNum}" style="background:#fff;color:var(--red);border:1.5px solid var(--red);margin-top:8px">🗑 Delete week</button>`,
-  async d => { week.week = parseInt(d.week) || week.week; if(d.weekStart) week.weekStart = d.weekStart; await fsSave('program', month); toast('Updated'); });
-}
-
-function formAddProgramMonth(){
-  openSheet('Add Month', `
-    <div class="field"><label>Month name *</label><input name="month" required placeholder="e.g. July 2026"></div>`,
-  async d => { const month = {id:uid('pm'), month:d.month.trim(), weeks:[]}; state.program.push(month); await fsSave('program', month); toast('Added'); });
-}
-
-function formEditProgramMonth(monthId){
-  const month = state.program.find(m => m.id === monthId); if(!month) return;
-  openSheet('Edit Month', `
-    <div class="field"><label>Month name</label><input name="month" value="${esc(month.month)}" required></div>
-    <button type="submit" class="submit">💾 Save</button>
-    <button type="button" class="submit" data-action="delete-program-month" data-id="${monthId}" style="background:#fff;color:var(--red);border:1.5px solid var(--red);margin-top:8px">🗑 Delete month</button>`,
-  async d => { month.month = d.month.trim(); await fsSave('program', month); toast('Updated'); });
-}
-
-/* =========================================================
-   Program import
-   ========================================================= */
-async function handleProgramPhoto(inputEl){
-  const file = inputEl.files?.[0]; if(!file) return;
-  try{
-    toast('Reading program…');
-    const url = await compressImage(file, 1400, 0.8);
-    openSheet('Reading program…', `<div style="text-align:center;padding:16px 0 24px"><img src="${url}" style="width:100%;max-width:280px;border-radius:14px;margin-bottom:16px"><div style="font-size:38px;margin:8px 0">🧪</div><div style="font-size:14px;color:var(--muted)">Extracting…</div></div>`, () => {});
-    const base64 = url.split(',')[1];
-    const res = await fetch(PROXY_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({messages:[{role:'system', content:getProgramImportPrompt()},{role:'user', content:[{type:'text', text:'Extract program.'},{type:'image_url', image_url:{url:`data:image/jpeg;base64,${base64}`}}]}]})});
-    if(!res.ok) throw new Error(`Proxy ${res.status}`);
-    const data = await res.json();
-    const raw = data?.choices?.[0]?.message?.content || '';
-    const clean = raw.replace(/^```json\s*|```$/g, '').trim();
-    const parsed = JSON.parse(clean);
-    const months = Array.isArray(parsed.months) ? parsed.months : [];
-    inputEl.value = '';
-    openProgramImportSheet(months, url);
-  }catch(e){ console.error(e); inputEl.value = ''; closeSheet(); toast('Import failed'); }
-}
-
-function openProgramImportSheet(months, dataUrl){
-  const overlay = $('#overlay'); const sheetForm = $('#sheetForm');
-  const total = months.reduce((n,m) => n + (m.weeks||[]).reduce((k,w) => k + (w.items||[]).length, 0), 0);
-  $('#sheetTitle').textContent = months.length ? `${months.length} month(s), ${total} item(s)` : 'Nothing found';
-  sheetForm.onsubmit = (ev) => ev.preventDefault();
-  if(!months.length){
-    sheetForm.innerHTML = `<div class="result" style="border-left-color:var(--amber);background:#fff8e1">Could not read program.</div><button type="button" class="submit" data-action="close-sheet" style="margin-top:12px">Close</button>`;
-    overlay.classList.remove('hidden'); document.body.style.overflow='hidden'; return;
-  }
-  window._pendingProgram = months;
-  let preview = '';
-  months.forEach(m => {
-    preview += `<div style="margin-bottom:14px"><div style="font-weight:700;font-size:14.5px;color:var(--green2);margin-bottom:6px">${esc(m.month||'Untitled')}</div>`;
-    (m.weeks||[]).forEach(w => {
-      preview += `<div style="padding-left:8px;border-left:2px solid var(--line);margin-bottom:8px"><div style="font-size:12px;color:var(--muted);font-weight:600;margin-bottom:4px">Week ${w.week}${w.weekStart?` · ${w.weekStart}`:''}</div>`;
-      (w.items||[]).forEach(i => { preview += `<div style="font-size:13px;padding:2px 0">• ${esc(i.product)} <span style="color:var(--muted)">${esc(i.rate||'')}</span></div>`; });
-      preview += `</div>`;
-    });
-    preview += `</div>`;
-  });
-  sheetForm.innerHTML = `
-    <div style="font-size:13px;color:var(--muted);margin-bottom:14px">Review and tap Add.</div>
-    <div style="max-height:50vh;overflow-y:auto;background:#f7faf7;border-radius:12px;padding:14px;margin-bottom:14px">${preview}</div>
-    <button type="button" class="submit" data-action="import-program-confirm">✅ Add to Program</button>
-    <button type="button" class="submit" style="background:#eef3ee;color:var(--text);margin-top:8px" data-action="close-sheet">Cancel</button>`;
-  overlay.classList.remove('hidden'); document.body.style.overflow='hidden';
-}
-
-/* =========================================================
-   Event import
-   ========================================================= */
-async function handleDocPhoto(inputEl){
-  const file = inputEl.files?.[0]; if(!file) return;
-  try{
-    toast('Reading…');
-    const url = await compressImage(file, 1400, 0.8);
-    openSheet('Reading…', `<div style="text-align:center;padding:16px 0 24px"><img src="${url}" style="width:100%;max-width:280px;border-radius:14px;margin-bottom:16px"><div style="font-size:38px;margin:8px 0">📄</div><div style="font-size:14px;color:var(--muted)">Extracting events…</div></div>`, () => {});
-    const base64 = url.split(',')[1];
-    const res = await fetch(PROXY_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({messages:[{role:'system', content:getDocExtractPrompt()},{role:'user', content:[{type:'text', text:'Extract events.'},{type:'image_url', image_url:{url:`data:image/jpeg;base64,${base64}`}}]}]})});
-    if(!res.ok) throw new Error(`Proxy ${res.status}`);
-    const data = await res.json();
-    const raw = data?.choices?.[0]?.message?.content || '';
-    const clean = raw.replace(/^```json\s*|```$/g, '').trim();
-    const parsed = JSON.parse(clean);
-    const events = (Array.isArray(parsed.events) ? parsed.events : []).filter(e => e && e.date && e.title);
-    inputEl.value = '';
-    openImportSheet(events, url);
-  }catch(e){ console.error(e); inputEl.value = ''; closeSheet(); toast('Import failed'); }
-}
-
-function openImportSheet(events, dataUrl){
-  const overlay = $('#overlay'); const sheetForm = $('#sheetForm');
-  $('#sheetTitle').textContent = events.length ? `${events.length} event(s)` : 'Nothing found';
-  sheetForm.onsubmit = (ev) => ev.preventDefault();
-  if(!events.length){
-    sheetForm.innerHTML = `<div class="result" style="border-left-color:var(--amber);background:#fff8e1">Could not find events.</div><button type="button" class="submit" data-action="close-sheet" style="margin-top:12px">Close</button>`;
-    overlay.classList.remove('hidden'); document.body.style.overflow='hidden'; return;
-  }
-  window._pendingImport = events.map(e => ({...e, _checked:true}));
-  sheetForm.innerHTML = `
-    <div style="font-size:13px;color:var(--muted);margin-bottom:14px">Uncheck any you don't want. Tap Add.</div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:12px;color:var(--muted);font-weight:600"><span id="importCount">${events.length}</span> selected</span><a style="font-size:12px;color:var(--green);font-weight:700;cursor:pointer;text-decoration:none" data-action="import-toggle-all">Toggle all</a></div>
-    <div id="importList" style="max-height:50vh;overflow-y:auto;margin-bottom:14px">${events.map((e, i) => importRow(e, i)).join('')}</div>
-    <button type="button" class="submit" data-action="import-confirm">✅ Add to Calendar</button>
-    <button type="button" class="submit" style="background:#eef3ee;color:var(--text);margin-top:8px" data-action="close-sheet">Cancel</button>`;
-  overlay.classList.remove('hidden'); document.body.style.overflow='hidden';
-}
-
-function importRow(e, idx){
-  const tk = EVENT_TYPES.includes(e.type) ? e.type : 'agronomy';
-  return `<label class="item" style="padding:9px 0;cursor:pointer;align-items:flex-start"><input type="checkbox" data-import-idx="${idx}" checked style="width:auto;margin-top:5px;flex:0 0 auto" onchange="window._onImportToggle(${idx}, this.checked)"><div class="item-body"><div class="item-title" style="font-size:13.5px">${esc(e.title)}</div><div class="item-meta"><span class="pill p-type">${EVENT_LABEL[tk]}</span><span>${prettyDate(e.date)}</span></div>${e.notes?`<div class="item-note" style="font-size:12px">${esc(e.notes)}</div>`:''}</div></label>`;
-}
-window._onImportToggle = function(idx, checked){
-  if(!window._pendingImport || !window._pendingImport[idx]) return;
-  window._pendingImport[idx]._checked = checked;
-  const c = $('#importCount'); if(c) c.textContent = window._pendingImport.filter(e => e._checked).length;
-};
-
-/* =========================================================
-   Learn
-   ========================================================= */
-function viewLearn(){
-  const entries = [...state.learn].sort((a,b) => (b.date||'').localeCompare(a.date||''));
-  const hours = entries.reduce((s,e) => s + (parseFloat(e.hours) || 0), 0);
-  const topics = new Set(entries.map(e => (e.topic||'').trim().toLowerCase()).filter(Boolean));
-  return `
-    <div class="sec-head"><h2>Learning Journal</h2><button class="add-btn" data-action="add-learn">+</button></div>
-    <div class="stats">
-      <div class="stat"><b>${entries.length}</b><span>Entries</span></div>
-      <div class="stat"><b>${hours.toFixed(1)}</b><span>Hours</span></div>
-      <div class="stat"><b>${topics.size}</b><span>Topics</span></div>
-    </div>
-    <div class="card">
-      <h3>Useful Calculators</h3>
-      <details class="calc"><summary>Spray / Liquid Mix Calculator</summary><div class="calc-body">
-        <div class="field"><label>Area to spray (m²)</label><input type="number" id="cArea"></div>
-        <div class="row2">
-          <div class="field"><label>Product rate (per 100 m²)</label><input type="number" id="cRate"></div>
-          <div class="field"><label>Spray volume (L / 100 m²)</label><input type="number" id="cVol"></div>
-        </div>
-        <div class="field"><label>Tank size (L)</label><input type="number" id="cTank"></div>
-        <button type="button" class="submit" style="padding:11px;font-size:14px" data-action="calc-spray">Calculate</button>
-        <div id="cSprayOut"></div>
-      </div></details>
-      <details class="calc"><summary>Fertiliser Calculator</summary><div class="calc-body">
-        <div class="field"><label>Area (m²)</label><input type="number" id="fArea"></div>
-        <div class="field"><label>Target N (g N / m²)</label><input type="number" id="fN" step="0.1"></div>
-        <div class="field"><label>Product N (%)</label><input type="number" id="fPct"></div>
-        <button type="button" class="submit" style="padding:11px;font-size:14px" data-action="calc-fert">Calculate</button>
-        <div id="cFertOut"></div>
-      </div></details>
-      <details class="calc"><summary>Area Calculator (rectangle)</summary><div class="calc-body">
-        <div class="row2">
-          <div class="field"><label>Length (m)</label><input type="number" id="aLen"></div>
-          <div class="field"><label>Width (m)</label><input type="number" id="aWid"></div>
-        </div>
-        <button type="button" class="submit" style="padding:11px;font-size:14px" data-action="calc-area">Calculate</button>
-        <div id="cAreaOut"></div>
-      </div></details>
-    </div>
-    <div class="card"><h3>Journal Entries</h3>${entries.length ? entries.map(learnItem).join('') : `<div class="empty"><span class="big">📚</span>Log what you learned today.</div>`}</div>`;
-}
-
-function learnItem(e){
-  return `<div class="item"><div class="item-body"><div class="item-title">${esc(e.topic)}</div><div class="item-meta"><span>${prettyDate(e.date)}</span>${e.category?`<span class="pill p-area">${esc(e.category)}</span>`:''}${e.hours?`<span>${esc(e.hours)} h</span>`:''}${e.supervisor?`<span>· 👤 ${esc(e.supervisor)}</span>`:''}</div>${e.notes?`<div class="item-note">${esc(e.notes)}</div>`:''}</div><button class="del" data-action="del-learn" data-id="${e.id}">✕</button></div>`;
-}
-
-/* =========================================================
-   Sheet base
-   ========================================================= */
-const overlay = $('#overlay');
-const sheetForm = $('#sheetForm');
-
-function openSheet(title, fieldsHtml, onSubmit){
-  $('#sheetTitle').textContent = title;
-  sheetForm.innerHTML = fieldsHtml + `<button type="submit" class="submit">Save</button>`;
-  overlay.classList.remove('hidden');
-  document.body.style.overflow = 'hidden';
-  sheetForm.onsubmit = async (ev) => {
-    ev.preventDefault();
-    const data = {};
-    new FormData(sheetForm).forEach((v,k) => data[k] = v);
-    await onSubmit(data);
-    closeSheet();
-    render();
-  };
-}
-function closeSheet(){ overlay.classList.add('hidden'); document.body.style.overflow = ''; }
-$('#sheetClose').addEventListener('click', closeSheet);
-overlay.addEventListener('click', e => { if(e.target === overlay) closeSheet(); });
-document.addEventListener('keydown', e => { if(e.key === 'Escape') closeSheet(); });
-
-function optList(arr, sel){ return arr.map(o => `<option ${o===sel?'selected':''}>${esc(o)}</option>`).join(''); }
-
-/* =========================================================
-   Forms
-   ========================================================= */
-function formJob(){
-  const t = todayISO();
-  openSheet('New Job', `
-    <div class="field"><label>Job title *</label><input name="title" required></div>
-    <div class="row2">
-      <div class="field"><label>Area</label><select name="area">${optList(AREAS)}</select></div>
-      <div class="field"><label>Type</label><select name="type">${optList(JOB_TYPES)}</select></div>
-    </div>
-    <div class="row2">
-      <div class="field"><label>Priority</label><select name="priority">${optList(['High','Medium','Low'],'Medium')}</select></div>
-      <div class="field"><label>Due date</label><input type="date" name="due" value="${t}"></div>
-    </div>
-    <div class="field"><label>Assigned to</label><input name="assignee"></div>
-    <div class="field"><label>Notes / SOP</label><textarea name="notes"></textarea></div>`,
-  async d => {
-    const job = { id:uid('j'), title:d.title.trim(), area:d.area, type:d.type, priority:d.priority, due:d.due, assignee:d.assignee.trim(), notes:d.notes.trim(), status:'todo', created:new Date().toISOString() };
-    state.jobs.push(job);
-    await fsSave('jobs', job);
-    toast('Job saved');
-  });
-}
-
-function formEvent(dateStr){
-  openSheet('New Calendar Event', `
-    <div class="field"><label>Title *</label><input name="title" required></div>
-    <div class="row2">
-      <div class="field"><label>Date</label><input type="date" name="date" value="${dateStr || todayISO()}"></div>
-      <div class="field"><label>Type</label><select name="type">${EVENT_TYPES.map(t => `<option value="${t}" ${t==='agronomy'?'selected':''}>${EVENT_LABEL[t]}</option>`).join('')}</select></div>
-    </div>
-    <div class="field"><label>Notes</label><textarea name="notes"></textarea></div>`,
-  async d => {
-    const ev = { id:uid('e'), title:d.title.trim(), date:d.date, type:d.type, notes:d.notes.trim(), done:false };
-    state.events.push(ev);
-    selectedDay = d.date;
-    await fsSave('events', ev);
-    toast('Event added');
-  });
-}
-
-function formLearn(){
-  const t = todayISO();
-  openSheet('Learning Journal Entry', `
-    <div class="field"><label>What did you learn? *</label><input name="topic" required></div>
-    <div class="row2">
-      <div class="field"><label>Date</label><input type="date" name="date" value="${t}"></div>
-      <div class="field"><label>Category</label><select name="category">${optList(['Machinery','Agronomy','Irrigation','Chemicals','Health & Safety','Course Setup','Admin','Other'])}</select></div>
-    </div>
-    <div class="row2">
-      <div class="field"><label>Hours</label><input name="hours" inputmode="decimal"></div>
-      <div class="field"><label>Supervisor</label><input name="supervisor"></div>
-    </div>
-    <div class="field"><label>Notes</label><textarea name="notes"></textarea></div>`,
-  async d => {
-    const l = { id:uid('l'), topic:d.topic.trim(), date:d.date, category:d.category, hours:d.hours.trim(), supervisor:d.supervisor.trim(), notes:d.notes.trim() };
-    state.learn.push(l);
-    await fsSave('learn', l);
-    toast('Saved');
-  });
-}
-
-function formRain(){
-  const t = todayISO();
-  openSheet('Log Rain Reading', `
-    <div class="field"><label>Date</label><input type="date" name="date" value="${t}"></div>
-    <div class="field"><label>Amount (mm) *</label><input type="number" step="0.1" name="mm" required placeholder="e.g. 12.5"></div>
-    <div class="field"><label>Recorded by</label><input name="recordedBy" placeholder="e.g. Chris" value="${esc(userName || '')}"></div>
-    <div class="field"><label>Notes</label><textarea name="notes" placeholder="e.g. Heavy overnight storm"></textarea></div>`,
-  async d => {
-    const entry = { id:uid('rain'), date:d.date, mm: parseFloat(d.mm) || 0, recordedBy: d.recordedBy.trim(), notes: d.notes.trim(), created: new Date().toISOString() };
-    rainLog.push(entry);
-    await saveRainEntry(entry);
-    toast('Rain logged');
-  });
-}
-
-function formIrrigation(){
-  const t = todayISO();
-  const areaOptions = turfAreas.map(a => `<option value="${a.id}">${esc(a.name)}</option>`).join('');
-  openSheet('Log Irrigation', `
-    <div class="field"><label>Date</label><input type="date" name="date" value="${t}"></div>
-    <div class="field"><label>Area</label><select name="areaId">${areaOptions}</select></div>
-    <div class="field"><label>Amount applied (mm) *</label><input type="number" step="0.1" name="mm" required placeholder="e.g. 6"></div>
-    <div class="field"><label>Notes</label><textarea name="notes" placeholder="e.g. Greens cycle + hand water 4th"></textarea></div>`,
-  async d => {
-    const entry = { id:uid('irr'), date:d.date, areaId: d.areaId, mm: parseFloat(d.mm) || 0, notes: d.notes.trim(), created: new Date().toISOString() };
-    irrigationLog.push(entry);
-    await saveIrrigationEntry(entry);
-    toast('Irrigation logged');
-  });
-}
-
-function formEditAreas(){
-  const rows = turfAreas.map((a, i) => `
-    <div class="card" style="background:#f7faf7;box-shadow:none;margin-bottom:10px;padding:12px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <b style="font-size:14px">${esc(a.name)}</b>
-      </div>
-      <div class="field"><label>Turf type</label><input name="turfType_${i}" value="${esc(a.turfType)}"></div>
-      <div class="row2">
-        <div class="field"><label>Crop coefficient (Kc)</label><input type="number" step="0.01" name="kc_${i}" value="${a.kc}"></div>
-        <div class="field"><label>Sun</label><input name="sun_${i}" value="${esc(a.sun||'')}"></div>
-      </div>
-      <div class="field"><label>Soil</label><input name="soil_${i}" value="${esc(a.soil||'')}"></div>
-      <div class="field"><label>Notes</label><textarea name="notes_${i}">${esc(a.notes||'')}</textarea></div>
-    </div>`).join('');
-  openSheet('Edit Turf Areas', `
-    <p style="font-size:12.5px;color:var(--muted);margin:0 0 12px">Kc adjusts ET₀ to each area's real water need. Greens (TifEagle) ≈ 0.65, Fairways (Couch) ≈ 0.90, Rough (Kikuyu) ≈ 1.00.</p>
-    ${rows}`,
-  async () => {
-    const form = $('#sheetForm');
-    const fd = new FormData(form);
-    turfAreas = turfAreas.map((a, i) => ({
-      ...a,
-      turfType: (fd.get('turfType_'+i) || a.turfType).trim(),
-      kc: parseFloat(fd.get('kc_'+i)) || a.kc,
-      sun: (fd.get('sun_'+i) || '').trim(),
-      soil: (fd.get('soil_'+i) || '').trim(),
-      notes: (fd.get('notes_'+i) || '').trim()
-    }));
-    await saveTurfAreas();
-    toast('Areas saved');
-  });
-}
-
-function formData(){
-  const hasPerm = notificationsSupported() && Notification.permission === 'granted';
-  const roleLabel = {staff:'Staff',committee:'Committee',volunteer:'Volunteer'}[userRole] || userRole;
-  const todaySignIns = allSignIns.filter(s => s.date === todayISO());
-  const onCourse = todaySignIns.filter(s => !s.outAt).length;
-  const swatches = THEMES.map(t => `<div class="theme-swatch ${appTheme.preset===t.id?'active':''}" data-action="pick-theme" data-theme="${t.id}" style="background:linear-gradient(135deg,${t.green} 0%,${t.green2} 55%,${t.lime} 100%)"><span>${t.name}</span></div>`).join('');
-  const bgPrev = appTheme.bgPhoto ? `<img src="${appTheme.bgPhoto}" class="bg-thumb"><button type="button" class="submit" style="background:#fff;color:var(--red);border:1.5px solid var(--red);padding:10px;font-size:13.5px;margin-top:8px" data-action="remove-bg-photo">✕ Remove background</button>` : `<p style="font-size:12.5px;color:var(--muted);margin:0 0 8px">No background image set.</p>`;
-
-  openSheet('Settings', `
-    <p style="font-size:13.5px;color:var(--muted);margin:0 0 14px">
-      Signed in as <b>${esc(currentUser?.email || '')}</b><br>
-      <span class="role-badge role-${userRole}">${esc(roleLabel)}</span>
-      ${userName?`<span style="margin-left:6px">${esc(userName)}</span>`:''}
-    </p>
-    <div class="card" style="background:#f7faf7;box-shadow:none;margin-bottom:14px">
-      <h3 style="margin-bottom:8px">Appearance</h3>
-      <label>Colour theme</label>
-      <div class="theme-row">${swatches}</div>
-      <label style="margin-top:14px">Layout density</label>
-      <div class="density-row">
-        <button type="button" class="density-chip ${appTheme.density==='comfortable'?'active':''}" data-action="pick-density" data-density="comfortable">Comfortable</button>
-        <button type="button" class="density-chip ${appTheme.density==='compact'?'active':''}" data-action="pick-density" data-density="compact">Compact</button>
-      </div>
-      <label style="margin-top:14px">Bottom bar style</label>
-      <div class="nav-style-row">
-        <button type="button" class="nav-style-chip ${appTheme.navStyle==='gradient'?'active':''}" data-action="pick-nav" data-nav="gradient"><div class="nav-style-preview gradient"><div class="nav-style-preview-bar"></div></div><span>Gradient</span></button>
-        <button type="button" class="nav-style-chip ${appTheme.navStyle==='glass'?'active':''}" data-action="pick-nav" data-nav="glass"><div class="nav-style-preview glass"><div class="nav-style-preview-bar"></div></div><span>Glass</span></button>
-        <button type="button" class="nav-style-chip ${appTheme.navStyle==='floating'?'active':''}" data-action="pick-nav" data-nav="floating"><div class="nav-style-preview floating"><div class="nav-style-preview-bar"></div></div><span>Floating</span></button>
-      </div>
-      <label style="margin-top:14px">Background photo</label>
-      ${bgPrev}
-      <div class="row2" style="margin-top:8px">
-        <button type="button" data-action="bg-camera" style="padding:11px;border-radius:11px;border:1.5px solid var(--line);background:#fff;font-weight:600;cursor:pointer;font-family:inherit;font-size:13.5px">📷 Take Photo</button>
-        <button type="button" data-action="bg-gallery" style="padding:11px;border-radius:11px;border:1.5px solid var(--line);background:#fff;font-weight:600;cursor:pointer;font-family:inherit;font-size:13.5px">🖼 From Gallery</button>
-      </div>
-      <input type="file" id="bgPhotoCamera" accept="image/*" capture="environment" style="display:none">
-      <input type="file" id="bgPhotoGallery" accept="image/*" style="display:none">
-    </div>
-    <div class="card" style="background:#f7faf7;box-shadow:none;margin-bottom:14px">
-      <h3 style="margin-bottom:8px">Weather</h3>
-      <p style="font-size:12.5px;color:var(--muted);margin:0 0 10px">Current conditions and 14-day forecast for ${esc(WEATHER_LOCATION)} via Open-Meteo (includes BoM ACCESS-G model). Refreshes every 30 min.</p>
-      <button type="button" class="submit" style="background:var(--blue);padding:11px;font-size:14px" data-action="wx-refresh">↻ Refresh Weather</button>
-      <button type="button" class="submit" style="background:#fff;color:var(--green);border:1.5px solid var(--green);padding:11px;font-size:14px;margin-top:8px" data-action="area-edit">🌱 Edit Turf Areas</button>
-    </div>
-    <div class="card" style="background:#f7faf7;box-shadow:none;margin-bottom:14px">
-      <h3 style="margin-bottom:8px">Today's Sign-Ins</h3>
-      <div style="font-size:12.5px;color:var(--muted)">${todaySignIns.length} sessions · ${onCourse} on course</div>
-    </div>
-    <div class="card" style="background:#f7faf7;box-shadow:none;margin-bottom:14px">
-      <h3 style="margin-bottom:8px">Reminders</h3>
-      <button type="button" class="submit" style="background:var(--green2);padding:11px;font-size:14px" data-action="enable-notifications">${hasPerm?'✓ Enabled':'🔔 Enable Notifications'}</button>
-      <button type="button" class="submit" style="background:#ef6c00;padding:11px;font-size:14px;margin-top:8px" data-action="test-notification">Send test notification</button>
-    </div>
-    <button type="button" class="submit" style="background:#1565c0" data-action="signout">Sign out</button>`, () => {});
-}
-
-/* =========================================================
-   Click handlers
-   ========================================================= */
-document.addEventListener('click', async (e) => {
-  const el = e.target.closest('[data-action]');
-  if(!el) return;
-  const a = el.dataset.action;
-  const id = el.dataset.id;
-  const plantId = el.dataset.plantId;
-
-  switch(a){
-    case 'nav': activeTab = el.dataset.tab; closeSheet(); render(); break;
-
-    /* Weather */
-    case 'wx-open': await openWeatherScreen(); break;
-    case 'wx-close': closeWeatherScreen(); break;
-    case 'wx-refresh': {
-      toast('Refreshing…');
-      weatherAdvice = null;
-      await fetchWeather(true);
-      renderWeatherScreen();
-      if(activeTab === 'dash') render();
-      toast('Weather updated ✓');
-      break;
-    }
-    case 'wx-advice': await getWeatherAdvice(); break;
-    case 'rain-add': formRain(); break;
-    case 'rain-del': {
-      if(!confirm('Delete this rain reading?')) break;
-      rainLog = rainLog.filter(x => x.id !== id);
-      await deleteRainEntry(id);
-      renderWeatherScreen();
-      toast('Deleted');
-      break;
-    }
-    case 'irrig-add': formIrrigation(); break;
-    case 'area-edit': formEditAreas(); break;
-
-    /* Theme */
-    case 'pick-theme': appTheme.preset = el.dataset.theme; applyTheme(); await saveTheme(); formData(); break;
-    case 'pick-density': appTheme.density = el.dataset.density; applyTheme(); await saveTheme(); formData(); break;
-    case 'pick-nav': appTheme.navStyle = el.dataset.nav; applyTheme(); await saveTheme(); formData(); break;
-    case 'bg-camera': $('#bgPhotoCamera')?.click(); break;
-    case 'bg-gallery': $('#bgPhotoGallery')?.click(); break;
-    case 'remove-bg-photo': appTheme.bgPhoto = null; applyTheme(); await saveTheme(); formData(); toast('Background removed'); break;
-
-    case 'signin-today': try{ await signInNow(); toast(`Signed in at ${fmtTime(mySignInToday.inAt)}`); render(); }catch(e){ toast('Failed'); } break;
-    case 'signout-today': if(!confirm('Sign out?')) break; try{ await signOutNow(); toast(`Signed out`); render(); }catch(e){ toast('Failed'); } break;
-
-    /* Chat */
-    case 'chat-send': {
-      const i = $('#chatInput'); if(!i) break;
-      const t = i.value.trim(); if(!t) break;
-      i.value = '';
-      try{ await sendChatMessage(t, null); }catch(e){ toast('Failed'); }
-      break;
-    }
-    case 'chat-photo': openSheet('Send Photo', `<button type="button" class="submit" data-action="chat-photo-camera" style="padding:14px;font-size:15px;margin-bottom:8px">📷 Take Photo</button><button type="button" class="submit" style="background:#fff;color:var(--green);border:1.5px solid var(--green);padding:13px;font-size:14px" data-action="chat-photo-gallery">🖼 From Gallery</button>`, () => {}); break;
-    case 'chat-photo-camera': closeSheet(); setTimeout(() => $('#chatPhotoCamera')?.click(), 150); break;
-    case 'chat-photo-gallery': closeSheet(); setTimeout(() => $('#chatPhotoGallery')?.click(), 150); break;
-    case 'chat-delete': if(!confirm('Delete?')) break; try{ await deleteChatMessage(id); }catch(e){ toast('Failed'); } break;
-
-    case 'chat-send-plant': {
-      const pid = el.dataset.plant;
-      const input = $('#chatInput'); if(!input) break;
-      const txt = input.value.trim(); if(!txt) break;
-      const plant = state.plantIds.find(p => p.id === pid);
-      const chat = state.plantChats.find(c => c.plantId === pid);
-      if(!plant || !chat) break;
-      input.disabled = true; input.value = '';
-      chat.messages.push({role:'user', content:txt, ts:Date.now()});
-      const msgsEl = $('#chatMessages');
-      if(msgsEl){
-        msgsEl.innerHTML += chatBubble({role:'user', content:txt});
-        msgsEl.innerHTML += `<div id="ti"><div style="padding:9px 13px;border-radius:15px;background:#eef3ee;color:var(--muted);font-size:13px;font-style:italic;display:inline-block">Thinking…</div></div>`;
-        scrollChatBottom();
-      }
-      try{
-        const reply = await askAboutPlant(plant, chat.messages);
-        chat.messages.push({role:'assistant', content:reply, ts:Date.now()});
-        await fsSave('plantChats', chat);
-        renderPlantChat(plant, chat);
-      }catch(err){
-        const ti = $('#ti'); if(ti) ti.remove();
-        if(msgsEl){ msgsEl.innerHTML += `<div style="text-align:center;color:var(--red);font-size:12.5px;padding:8px">⚠ ${esc(err.message)}</div>`; scrollChatBottom(); }
-        if(input) input.disabled = false;
-        await fsSave('plantChats', chat);
-      }
-      break;
-    }
-
-    case 'qr-open': window.open(SIGN_IN_QR_URL, '_blank'); break;
-
-    case 'pick-role': {
-      const role = el.dataset.role;
-      const label = {staff:'greenkeeper',committee:'ground committee',volunteer:'volunteer'}[role];
-      let name = '';
-      while(!name){
-        const i = prompt(`What's your name?\n\nSigning in as: ${label}`);
-        if(i === null){ await signOut(auth); return; }
-        name = i.trim();
-      }
-      await saveUserRole(role, name, '');
-      await publishMembershipIndex(role, userApproved, name);
-      if(userApproved){
-        $('#roleScreen').classList.add('hidden');
-        appRoot.classList.remove('hidden');
-        await loadTheme();
-        await fsLoadAll();
-        await Promise.all([loadMySignIn(), loadRainLog(), loadIrrigationLog(), loadTurfAreas()]);
-        fetchWeather(false).then(() => { if(activeTab === 'dash') render(); });
-        selectedDay = todayISO();
-        render(); startNotifyLoop(); startChatListener(); startSignInsListener();
-        if(qrMode) await handleQrAction();
-        toast('Welcome!');
-      } else {
-        $('#roleScreen').classList.add('hidden');
-        $('#pendingScreen').classList.remove('hidden');
-        $('#pendingEmail').textContent = currentUser?.email || '';
-        $('#pendingRole').textContent = userRole || '—';
-        toast('Waiting for approval');
-      }
-      break;
-    }
-
-    case 'refresh-approval': {
-      const hasRole = await loadUserRole();
-      if(hasRole && userApproved){
-        toast('Approved! 🎉');
-        $('#pendingScreen').classList.add('hidden');
-        appRoot.classList.remove('hidden');
-        await loadTheme();
-        await fsLoadAll();
-        await Promise.all([loadMySignIn(), loadRainLog(), loadIrrigationLog(), loadTurfAreas()]);
-        fetchWeather(false).then(() => { if(activeTab === 'dash') render(); });
-        selectedDay = todayISO();
-        render(); startNotifyLoop(); startChatListener(); startSignInsListener();
-        if(qrMode) await handleQrAction();
-      } else toast('Still waiting');
-      break;
-    }
-
-    case 'team-approve': {
-      const uid_ = el.dataset.uid;
-      const role = el.dataset.role || 'volunteer';
-      if(!uid_ || !confirm('Approve?')) break;
-      try{ await approveUser(uid_, role); await setDoc(doc(db,'clubs','rbgc','members',uid_), {approved:true, approvedAt:serverTimestamp()}, {merge:true}); toast('Approved'); render(); }catch(e){ toast('Failed'); }
-      break;
-    }
-    case 'team-reject': {
-      const uid_ = el.dataset.uid;
-      if(!uid_ || !confirm('Reject?')) break;
-      try{ await rejectUser(uid_); await deleteDoc(doc(db,'clubs','rbgc','members',uid_)); toast('Rejected'); render(); }catch(e){ toast('Failed'); }
-      break;
-    }
-
-    case 'save-conditions':
-      state.courseStatus = $('#dashStatus').value;
-      state.weather = $('#dashWeather').value.trim();
-      await fsSaveSettings();
-      toast('Saved');
-      break;
-
-    case 'add-job': formJob(); break;
-    case 'toggle-job': { const j = state.jobs.find(x => x.id === id); if(!j) return; j.status = j.status === 'done' ? 'todo' : j.status === 'todo' ? 'doing' : 'done'; render(); await fsSave('jobs', j); break; }
-    case 'del-job': state.jobs = state.jobs.filter(x => x.id !== id); render(); await fsDelete('jobs', id); toast('Deleted'); break;
-
-    case 'cal-prev': calCursor.setMonth(calCursor.getMonth()-1); render(); break;
-    case 'cal-next': calCursor.setMonth(calCursor.getMonth()+1); render(); break;
-    case 'cal-today': calCursor = new Date(); selectedDay = todayISO(); render(); break;
-    case 'cal-day': selectedDay = (selectedDay === el.dataset.date) ? null : el.dataset.date; render(); break;
-
-    case 'add-event': formEvent(el.dataset.date); break;
-    case 'toggle-event': { const ev = state.events.find(x => x.id === id); if(!ev) return; ev.done = !ev.done; render(); await fsSave('events', ev); break; }
-    case 'del-event': state.events = state.events.filter(x => x.id !== id); render(); await fsDelete('events', id); toast('Deleted'); break;
-
-    case 'import-doc': openSheet('Import from document', `<p style="font-size:13.5px;color:var(--muted);margin:0 0 14px">Snap a yearly program, tournament list or renovation schedule. AI will extract events.</p><button type="button" class="submit" data-action="import-camera" style="padding:14px;font-size:15px;margin-bottom:8px">📷 Take Photo</button><button type="button" class="submit" style="background:#fff;color:var(--green);border:1.5px solid var(--green);padding:13px;font-size:14px" data-action="import-gallery">🖼 From Gallery</button>`, () => {}); break;
-    case 'import-camera': closeSheet(); setTimeout(() => $('#importDocCamera')?.click(), 150); break;
-    case 'import-gallery': closeSheet(); setTimeout(() => $('#importDocGallery')?.click(), 150); break;
-    case 'import-toggle-all': { const all = window._pendingImport || []; const any = all.some(e => e._checked); all.forEach(e => e._checked = !any); const l = $('#importList'); if(l) l.innerHTML = all.map((e, i) => importRow(e, i)).join(''); const c = $('#importCount'); if(c) c.textContent = all.filter(e => e._checked).length; break; }
-    case 'import-confirm': { const all = window._pendingImport || []; const add = all.filter(e => e._checked); if(!add.length){ toast('Nothing selected'); break; } closeSheet(); setSyncStatus('⏳ Saving'); for(const x of add){ const ev = {id:uid('e'), title:x.title.trim(), date:x.date, type:EVENT_TYPES.includes(x.type) ? x.type : 'agronomy', notes:(x.notes || '').trim(), done:false}; state.events.push(ev); await fsSave('events', ev); } setSyncStatus('☁️ Synced'); window._pendingImport = null; activeTab = 'calendar'; render(); toast(`Added ${add.length}`); break; }
-
-    case 'add-program-month': formAddProgramMonth(); break;
-    case 'edit-program-month': formEditProgramMonth(id); break;
-    case 'delete-program-month': { const m = state.program.find(x => x.id === id); if(!m || !confirm(`Delete ${m.month}?`)) break; state.program = state.program.filter(x => x.id !== id); closeSheet(); render(); await fsDelete('program', id); toast('Deleted'); break; }
-    case 'delete-all-program': { if(!confirm('Delete ENTIRE program?')) break; if(!confirm('Really sure?')) break; closeSheet(); setSyncStatus('⏳'); for(const m of [...state.program]){ try{ await fsDelete('program', m.id); }catch(e){} } state.program = []; setSyncStatus('☁️'); render(); toast('Program deleted'); break; }
-    case 'edit-program-week': formEditProgramWeek(el.dataset.month, parseInt(el.dataset.week)); break;
-    case 'delete-program-week': { const mid = el.dataset.month; const wk = parseInt(el.dataset.week); const m = state.program.find(x => x.id === mid); if(!m || !confirm(`Delete Week ${wk}?`)) break; m.weeks = (m.weeks || []).filter(w => w.week !== wk); closeSheet(); render(); await fsSave('program', m); toast('Deleted'); break; }
-    case 'add-program-item': formAddProgramItem(el.dataset.month, parseInt(el.dataset.week)); break;
-    case 'edit-program-item': e.stopPropagation(); formEditProgramItem(el.dataset.month, parseInt(el.dataset.week), el.dataset.item); break;
-    case 'delete-program-item': { const mid = el.dataset.month; const wk = parseInt(el.dataset.week); const iid = el.dataset.item; const m = state.program.find(x => x.id === mid); if(!m) break; const w = (m.weeks||[]).find(x => x.week === wk); if(!w || !confirm('Delete?')) break; w.items = (w.items||[]).filter(i => i.id !== iid); closeSheet(); render(); await fsSave('program', m); toast('Deleted'); break; }
-    case 'toggle-program': { e.stopPropagation(); const mid = el.dataset.month; const wk = parseInt(el.dataset.week); const iid = el.dataset.item; const m = state.program.find(x => x.id === mid); if(!m) return; const w = (m.weeks||[]).find(x => x.week === wk); if(!w) return; const it = (w.items||[]).find(i => i.id === iid); if(!it) return; it.done = !it.done; render(); await fsSave('program', m); break; }
-    case 'import-program': openSheet('Import Program', `<p style="font-size:13.5px;color:var(--muted);margin:0 0 14px">Snap your nutrition program document. AI reads months, weeks, products.</p><button type="button" class="submit" data-action="import-program-camera" style="padding:14px;font-size:15px;margin-bottom:8px">📷 Take Photo</button><button type="button" class="submit" style="background:#fff;color:var(--green);border:1.5px solid var(--green);padding:13px;font-size:14px" data-action="import-program-gallery">🖼 From Gallery</button>`, () => {}); break;
-    case 'import-program-camera': closeSheet(); setTimeout(() => $('#programDocCamera')?.click(), 150); break;
-    case 'import-program-gallery': closeSheet(); setTimeout(() => $('#programDocGallery')?.click(), 150); break;
-    case 'import-program-confirm': { const ms = window._pendingProgram || []; if(!ms.length){ toast('Nothing'); break; } closeSheet(); setSyncStatus('⏳'); for(const m of ms){ const mm = {id:uid('pm'), month:m.month || 'Untitled', weeks:(m.weeks || []).map(w => ({week:w.week || 1, weekStart:w.weekStart || todayISO(), items:(w.items || []).map(i => ({id:uid('pi'), product:i.product || 'Unknown', rate:i.rate || '—', done:false}))}))}; state.program.push(mm); await fsSave('program', mm); } setSyncStatus('☁️'); window._pendingProgram = null; render(); toast(`Added ${ms.length}`); break; }
-
-    case 'plant-camera': $('#plantInputCamera').click(); break;
-    case 'plant-gallery': $('#plantInputGallery').click(); break;
-    case 'close-sheet': closeSheet(); break;
-
-    case 'view-plant': { const pid = id || plantId; const p = state.plantIds.find(x => x.id === pid); if(!p) return; openPlantSheet(null, null, false, null, p.id); break; }
-    case 'plant-filter': plantFilter = el.dataset.filter; render(); break;
-    case 'view-photo': e.stopPropagation(); $('#photoViewerImg').src = el.dataset.src; $('#photoViewer').classList.remove('hidden'); break;
-    case 'close-photo-viewer': $('#photoViewer').classList.add('hidden'); break;
-
-    case 'fix-plant-name-fresh': {
-      const dl = $('#plantSaveData');
-      let cr = null; try{ cr = JSON.parse(dl.textContent); }catch(e){}
-      window._freshPlantDataUrl = _plantPhotoData;
-      openFixNameForm(cr);
-      break;
-    }
-    case 'fix-name-submit': {
-      const c = $('#fixCommonName')?.value.trim() || '';
-      const b = $('#fixBotanicalName')?.value.trim() || '';
-      if(!c && !b){ toast('Enter at least common name'); break; }
-      await refillFreshPlant(c, b);
-      break;
-    }
-
-    case 'save-plant': {
-      if(window._plantSaving) break;
-      window._plantSaving = true;
-      const dl = $('#plantSaveData');
-      if(!dl){ window._plantSaving = false; break; }
-      let result; try{ result = JSON.parse(dl.textContent); }catch(e){ window._plantSaving = false; break; }
-      const photo = _plantPhotoData;
-      const rec = { id:uid('pl'), name:result.name || 'Unknown', botanicalName:result.botanicalName || 'Unknown', category:result.category || 'Unknown', confidence:result.confidence || 0, description:result.description || '', action:result.action || '', products:result.products || '', safety:result.safety || '', photos:photo ? [photo] : [], thumb:photo || null, created:new Date().toISOString() };
-      closeSheet();
-      activeTab = 'plant';
-      state.plantIds.push(rec);
-      render();
-      toast('Saving…');
-      try{
-        await fsSave('plantIds', rec);
-        const lr = {id:uid('l'), topic:`${rec.name} (${rec.category})`, date:todayISO(), category:'Agronomy', hours:'', supervisor:'', notes:`${rec.botanicalName}\n\n${rec.description}\n\nAction: ${rec.action}`};
-        state.learn.push(lr);
-        await fsSave('learn', lr);
-        toast('Saved ✓');
-      }catch(e){ toast('Save failed'); } finally { window._plantSaving = false; }
-      break;
-    }
-
-    case 'delete-plant-detail': if(!confirm('Delete plant?')) break; state.plantIds = state.plantIds.filter(x => x.id !== id); state.plantChats = state.plantChats.filter(c => c.plantId !== id); closeSheet(); render(); await fsDelete('plantIds', id); toast('Deleted'); break;
-
-    case 'edit-plant': openPlantEditForm(id); break;
-    case 'edit-add-camera': $('#editPhotoCamera')?.click(); break;
-    case 'edit-add-gallery': $('#editPhotoGallery')?.click(); break;
-    case 'edit-remove-photo': window._editPhotos = window._editPhotos || []; window._editPhotos.splice(parseInt(el.dataset.idx), 1); refreshEditPhotoStrip(); break;
-    case 'edit-save-plant': { const p = state.plantIds.find(x => x.id === id); if(!p) break; const fd = new FormData($('#sheetForm')); const d = {}; fd.forEach((v,k) => d[k] = v); p.name = (d.name||'').trim() || 'Unknown'; p.botanicalName = (d.botanicalName||'').trim() || 'Unknown'; p.category = d.category || 'Unknown'; p.confidence = parseInt(d.confidence) || 0; p.description = (d.description||'').trim(); p.action = (d.action||'').trim(); p.products = (d.products||'').trim(); p.safety = (d.safety||'').trim(); p.photos = window._editPhotos || []; p.thumb = p.photos[0] || null; await fsSave('plantIds', p); window._editPhotos = null; openPlantSheet(null, null, false, null, p.id); toast('Saved'); break; }
-
-    case 'manual-name': openManualNameForm(id); break;
-    case 'manual-name-submit': { const c = $('#manualCommonName')?.value.trim() || ''; const b = $('#manualBotanicalName')?.value.trim() || ''; if(!c && !b){ toast('Enter at least one name'); break; } await fillInByName(id, c, b); break; }
-    case 'manual-name-apply': { const p = state.plantIds.find(x => x.id === id); const dl = $('#manualNameData'); if(!p || !dl) break; const r = JSON.parse(dl.textContent); p.name = r.name || 'Unknown'; p.botanicalName = r.botanicalName || 'Unknown'; p.category = r.category || 'Unknown'; p.confidence = r.confidence || 0; p.description = r.description || ''; p.action = r.action || ''; p.products = r.products || ''; p.safety = r.safety || ''; await fsSave('plantIds', p); openPlantSheet(null, null, false, null, p.id); toast('Applied'); break; }
-
-    case 'reidentify-plant': await reidentifyPlant(id); break;
-    case 'apply-reidentify': { const pid = el.dataset.plantId; const idx = parseInt(el.dataset.idx); const p = state.plantIds.find(x => x.id === pid); if(!p) break; const rs = window._reidentifyResults || []; const r = rs[idx]; if(!r) break; p.name = r.name || 'Unknown'; p.botanicalName = r.botanicalName || 'Unknown'; p.category = r.category || 'Unknown'; p.confidence = r.confidence || 0; p.description = r.description || ''; p.action = r.action || ''; p.products = r.products || ''; p.safety = r.safety || ''; await fsSave('plantIds', p); window._reidentifyResults = null; openPlantSheet(null, null, false, null, p.id); toast('Applied'); break; }
-
-    case 'ask-plant': await openPlantChat(id); break;
-
-    case 'add-learn': formLearn(); break;
-    case 'del-learn': state.learn = state.learn.filter(x => x.id !== id); render(); await fsDelete('learn', id); toast('Deleted'); break;
-
-    case 'calc-spray': { const a = parseFloat($('#cArea').value) || 0; const r = parseFloat($('#cRate').value) || 0; const v = parseFloat($('#cVol').value) || 0; const t = parseFloat($('#cTank').value) || 0; if(!a){ toast('Enter area'); break; } const u = a/100; const p = u*r; const w = u*v; const tk = t > 0 ? (w/t) : 0; $('#cSprayOut').innerHTML = `<div class="result">Product: <b>${p.toFixed(2)}</b><br>Water: <b>${w.toFixed(1)} L</b><br>${t>0?`Tanks: <b>${tk.toFixed(2)}</b> (${Math.ceil(tk)} loads)<br>`:''}<span style="font-size:12px;color:var(--muted)">Double-check the label.</span></div>`; break; }
-    case 'calc-fert': { const a = parseFloat($('#fArea').value) || 0; const n = parseFloat($('#fN').value) || 0; const p = parseFloat($('#fPct').value) || 0; if(!a || !n || !p){ toast('Fill all fields'); break; } const tN = a*n; const pG = tN/(p/100); $('#cFertOut').innerHTML = `<div class="result">Total N: <b>${(tN/1000).toFixed(2)} kg</b><br>Product: <b>${(pG/1000).toFixed(2)} kg</b><br><span style="font-size:12px;color:var(--muted)">Double-check the label.</span></div>`; break; }
-    case 'calc-area': { const L = parseFloat($('#aLen').value) || 0; const W = parseFloat($('#aWid').value) || 0; if(!L || !W){ toast('Enter length and width'); break; } const a = L*W; $('#cAreaOut').innerHTML = `<div class="result">Area: <b>${a.toFixed(1)} m²</b><br>= <b>${(a/100).toFixed(2)}</b> × 100m²<br>= <b>${(a/10000).toFixed(4)} ha</b></div>`; break; }
-
-    case 'menu': formData(); break;
-
-    case 'enable-notifications': { const ok = await requestNotifyPermission(); if(ok){ toast('Enabled'); if(currentUser) localStorage.removeItem('tt_last_notify_' + currentUser.uid); checkAndNotify(); formData(); } else toast('Not granted'); break; }
-    case 'test-notification': { const ok = await requestNotifyPermission(); if(ok) showNotification('⛳ TurfTrack test', 'Notifications working!', 'tt_test_' + Date.now()); break; }
-
-    case 'signout': closeSheet(); await signOut(auth); break;
-  }
-});
-
-document.addEventListener('change', (e) => {
-  if(e.target.id === 'plantInputCamera' || e.target.id === 'plantInputGallery') handlePlantPhoto(e.target);
-  if(e.target.id === 'importDocCamera' || e.target.id === 'importDocGallery') handleDocPhoto(e.target);
-  if(e.target.id === 'editPhotoCamera' || e.target.id === 'editPhotoGallery') handleEditPhoto(e.target);
-  if(e.target.id === 'programDocCamera' || e.target.id === 'programDocGallery') handleProgramPhoto(e.target);
-  if(e.target.id === 'chatPhotoCamera' || e.target.id === 'chatPhotoGallery') handleChatPhoto(e.target);
-  if(e.target.id === 'bgPhotoCamera' || e.target.id === 'bgPhotoGallery') handleBgPhoto(e.target);
-});
-
-document.addEventListener('visibilitychange', () => {
-  if(document.visibilityState === 'visible' && currentUser) checkAndNotify();
-});
-</script>
-</body>
-</html>
+    <div class="sec-head"><
