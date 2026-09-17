@@ -22,6 +22,7 @@
   body.theme-charcoal{--green:#263238;--green2:#37474f;--lime:#78909c;--bg:#eceff1}
   body.theme-sand{--green:#5d4037;--green2:#795548;--lime:#a1887f;--bg:#f7f1ee}
   body.theme-forest{--green:#1b5e20;--green2:#33691e;--lime:#827717;--bg:#eef4ec}
+  body.theme-workshop{--green:#8b1a1a;--green2:#a52a2a;--lime:#d84315;--bg:#f7eded}
   body.density-compact{--card-pad:10px;--item-pad:7px 0}
   body.density-compact .card{padding:10px}
   body.density-compact .item{padding:7px 0}
@@ -96,6 +97,13 @@
   .p-area{background:#eef3ee;color:#4a5c4c}
   .p-type{background:#e3f2fd;color:var(--blue)}
   .p-overdue{background:#fdecea;color:var(--red)}
+  .p-herb{background:#e8f5e9;color:#1b5e20}
+  .p-fung{background:#f3e5f5;color:#6a1b9a}
+  .p-insect{background:#fff3e0;color:#e65100}
+  .p-fert{background:#e0f2f1;color:#00695c}
+  .p-pgr{background:#fce4ec;color:#ad1457}
+  .p-wet{background:#e1f5fe;color:#01579b}
+  .p-other{background:#f5f5f5;color:#616161}
 
   .empty{text-align:center;color:var(--muted);padding:22px 10px;font-size:13.5px}
   .empty .big{font-size:28px;display:block;margin-bottom:6px;opacity:.5}
@@ -136,6 +144,7 @@
   input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green2);background:#fff}
   textarea{resize:vertical;min-height:76px}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
   .submit{width:100%;background:var(--green);color:#fff;border:0;padding:14px;border-radius:12px;font-size:15.5px;font-weight:700;cursor:pointer;margin-top:6px}
 
   details.calc{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden}
@@ -290,6 +299,16 @@
   .area-card .area-turf{font-size:12px;color:var(--muted);margin-top:2px}
   .area-card .area-need{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);font-size:12.5px;display:flex;justify-content:space-between}
   .area-card .area-need b{color:var(--green);font-size:14px}
+
+  /* Chem-specific */
+  .chem-chip-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .chem-unit-chip{background:#f0f4f0;border-radius:8px;padding:3px 8px;font-size:11px;font-weight:700;color:var(--muted)}
+  .chem-expiry-warn{background:#fff3e0;color:var(--amber);border-radius:8px;padding:3px 8px;font-size:11px;font-weight:700}
+  .chem-expiry-bad{background:#fdecea;color:var(--red);border-radius:8px;padding:3px 8px;font-size:11px;font-weight:700}
+  .chem-stock-warn{background:#fff3e0;color:var(--amber);border-radius:8px;padding:3px 8px;font-size:11px;font-weight:700}
+  .chem-stock-bad{background:#fdecea;color:var(--red);border-radius:8px;padding:3px 8px;font-size:11px;font-weight:700}
+  .wind-warn{background:#fff3e0;border-left:4px solid var(--amber);padding:10px;border-radius:8px;font-size:12.5px;line-height:1.5;margin-bottom:12px}
+  .spray-weather-box{background:#e3f2fd;border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.6;margin-bottom:12px;border-left:4px solid var(--blue)}
 </style>
 </head>
 <body class="theme-ocean nav-floating density-compact">
@@ -319,7 +338,7 @@
     <h1>Welcome to RBGC GK</h1>
     <p class="sub">How will you be using the app?</p>
     <div class="role-option" data-action="pick-role" data-role="staff">
-      <div class="ico">🏌️</div><div class="txt"><b>Greenkeeper / Superintendent</b><span>Full access to jobs, program, plant ID, learn & team</span></div>
+      <div class="ico">🏌️</div><div class="txt"><b>Greenkeeper / Superintendent</b><span>Full access to jobs, program, plant ID, learn, chem & team</span></div>
     </div>
     <div class="role-option" data-action="pick-role" data-role="committee">
       <div class="ico">📋</div><div class="txt"><b>Ground Committee</b><span>View club info, approve volunteers, post jobs</span></div>
@@ -359,6 +378,7 @@
   <nav>
     <button data-action="nav" data-tab="dash" class="active"><span class="ni">🏠</span>Home</button>
     <button data-action="nav" data-tab="jobs"><span class="ni">✅</span>Jobs</button>
+    <button data-action="nav" data-tab="chem"><span class="ni">🧴</span>Chem</button>
     <button data-action="nav" data-tab="calendar"><span class="ni">📅</span>Calendar</button>
     <button data-action="nav" data-tab="plant"><span class="ni">🌿</span>Plant</button>
     <button data-action="nav" data-tab="chat"><span class="ni">💬</span>Chat</button>
@@ -436,6 +456,14 @@ const AREAS = ['Greens','Tees','Fairways','Rough','Bunkers','Practice Area','Clu
 const JOB_TYPES = ['Mowing','Aeration','Topdressing','Fertiliser','Spraying','Irrigation','Bunker Work','Landscaping','Project','Other'];
 const EVENT_TYPES = ['agronomy','club','staff','equipment','chemical'];
 const EVENT_LABEL = {agronomy:'Agronomy',club:'Club Event',staff:'Staff',equipment:'Equipment',chemical:'Chemical'};
+
+const CHEM_TYPES = ['Herbicide','Fungicide','Insecticide','Fertiliser','PGR','Wetting Agent','Other'];
+const CHEM_TYPE_CLASS = {'Herbicide':'p-herb','Fungicide':'p-fung','Insecticide':'p-insect','Fertiliser':'p-fert','PGR':'p-pgr','Wetting Agent':'p-wet','Other':'p-other'};
+const RATE_UNITS = ['mL','L','g','kg'];
+const RATE_AREA_UNITS = ['per ha','per 100 m²'];
+const STOCK_UNITS = ['L','kg'];
+const SPRAY_METHODS = ['Boom','Knapsack','Granular'];
+const DEFAULT_SPRAY_AREAS = ['Greens 1–18','Tees','Fairways','Approaches','Bunker surrounds','Practice green','Practice fairway','Clubhouse grounds','Whole course'];
 
 const DEFAULT_AREAS = [
   { id:'greens', name:'Greens', turfType:'TifEagle (ultradwarf bermuda)', kc:0.65, sun:'Full sun', soil:'USGA sand-capped', notes:'Main focus. Watch for localised dry spot on high spots.' },
@@ -524,6 +552,12 @@ let weatherLoading = false;
 let rainLog = [];
 let irrigationLog = [];
 let turfAreas = [];
+
+// Chem state
+let chemicals = [];
+let sprays = [];
+let sprayAreas = [...DEFAULT_SPRAY_AREAS];
+let chemFilter = 'All';
 
 const _urlParams = new URLSearchParams(window.location.search);
 let qrMode = _urlParams.get('qr');
@@ -832,6 +866,115 @@ async function saveTurfAreas(){
   }, { merge:true });
 }
 
+/* =========================================================
+   CHEM LOADING + SAVING (club-wide, staff-only)
+   ========================================================= */
+async function loadChemicals(){
+  try{
+    const snap = await getDocs(collection(db, 'clubs', 'rbgc', 'chemicals'));
+    chemicals = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+  }catch(e){ console.warn('loadChemicals failed', e); chemicals = []; }
+}
+
+async function saveChemical(chem){
+  const { id, ...data } = chem;
+  data.updatedAt = serverTimestamp();
+  await setDoc(doc(db, 'clubs', 'rbgc', 'chemicals', id), data, { merge:true });
+}
+
+async function deleteChemical(id){
+  await deleteDoc(doc(db, 'clubs', 'rbgc', 'chemicals', id));
+}
+
+async function loadSprays(){
+  try{
+    const snap = await getDocs(collection(db, 'clubs', 'rbgc', 'sprays'));
+    sprays = snap.docs.map(d => ({ id:d.id, ...d.data() })).filter(s => !s.deletedAt);
+  }catch(e){ console.warn('loadSprays failed', e); sprays = []; }
+}
+
+async function saveSpray(spray){
+  const { id, ...data } = spray;
+  data.updatedAt = serverTimestamp();
+  await setDoc(doc(db, 'clubs', 'rbgc', 'sprays', id), data, { merge:true });
+}
+
+async function softDeleteSpray(id){
+  await setDoc(doc(db, 'clubs', 'rbgc', 'sprays', id), {
+    deletedAt: serverTimestamp()
+  }, { merge:true });
+}
+
+async function loadSprayAreas(){
+  try{
+    const snap = await getDocs(collection(db, 'clubs', 'rbgc', 'settings'));
+    let found = null;
+    snap.forEach(d => { if(d.id === 'sprayAreas') found = d.data(); });
+    if(found && Array.isArray(found.areas) && found.areas.length){
+      sprayAreas = found.areas;
+    } else {
+      sprayAreas = [...DEFAULT_SPRAY_AREAS];
+    }
+  }catch(e){
+    console.warn('loadSprayAreas failed', e);
+    sprayAreas = [...DEFAULT_SPRAY_AREAS];
+  }
+}
+
+async function saveSprayAreas(){
+  await setDoc(doc(db, 'clubs', 'rbgc', 'settings', 'sprayAreas'), {
+    areas: sprayAreas, updatedAt: serverTimestamp()
+  }, { merge:true });
+}
+
+/* =========================================================
+   Chem helpers
+   ========================================================= */
+function chemStatusFlags(chem){
+  const flags = [];
+  // Expiry
+  if(chem.expiryDate){
+    const today = todayISO();
+    if(chem.expiryDate < today) flags.push({ cls:'chem-expiry-bad', text:`Expired ${prettyDate(chem.expiryDate)}` });
+    else {
+      const days = Math.round((new Date(chem.expiryDate) - new Date(today)) / 86400000);
+      if(days <= 30) flags.push({ cls:'chem-expiry-warn', text:`Expires in ${days}d` });
+    }
+  }
+  // Stock
+  if(typeof chem.quantityOnHand === 'number' && typeof chem.reorderThreshold === 'number' && chem.reorderThreshold > 0){
+    if(chem.quantityOnHand <= 0) flags.push({ cls:'chem-stock-bad', text:'Out of stock' });
+    else if(chem.quantityOnHand <= chem.reorderThreshold) flags.push({ cls:'chem-stock-warn', text:'Low stock' });
+  }
+  return flags;
+}
+
+function formatQty(chem){
+  if(typeof chem.quantityOnHand !== 'number') return '—';
+  return `${chem.quantityOnHand} ${chem.stockUnit || ''}`.trim();
+}
+
+function formatRate(chem){
+  if(!chem.rateUnit) return '—';
+  return `${chem.rateUnit} ${chem.rateAreaUnit || ''}`.trim();
+}
+
+function getCurrentHourWeather(){
+  if(!weatherData || !weatherData.current) return null;
+  const c = weatherData.current;
+  return {
+    temp: c.temp,
+    wind: c.wind,
+    windDir: c.windDir,
+    humidity: c.humidity,
+    fetchedAt: weatherData.fetchedAt,
+    source: 'Open-Meteo (auto)'
+  };
+}
+
+/* =========================================================
+   Weather card (dashboard)
+   ========================================================= */
 function renderWeatherCard(){
   if(!weatherData){
     return `
@@ -1218,7 +1361,7 @@ const THEMES = [
 
 function applyTheme(){
   const b = document.body;
-  b.classList.remove('theme-ocean','theme-sunset','theme-plum','theme-charcoal','theme-sand','theme-forest');
+  b.classList.remove('theme-ocean','theme-sunset','theme-plum','theme-charcoal','theme-sand','theme-forest','theme-workshop');
   b.classList.remove('density-comfortable','density-compact','has-bg-photo');
   b.classList.remove('nav-gradient','nav-glass','nav-floating');
   const t = appTheme || {preset:'ocean',density:'compact',bgPhoto:null,navStyle:'floating'};
@@ -1564,6 +1707,13 @@ onAuthStateChanged(auth, async (user) => {
       loadIrrigationLog(),
       loadTurfAreas()
     ]);
+    if(userRole === 'staff'){
+      await Promise.all([
+        loadChemicals(),
+        loadSprays(),
+        loadSprayAreas()
+      ]);
+    }
     fetchWeather(false).then(() => {
       if(activeTab === 'dash') render();
     });
@@ -1597,6 +1747,7 @@ onAuthStateChanged(auth, async (user) => {
     stopSignInsListener();
     weatherData = null; weatherAdvice = null;
     rainLog = []; irrigationLog = []; turfAreas = [];
+    chemicals = []; sprays = []; sprayAreas = [...DEFAULT_SPRAY_AREAS];
   }
 });
 
@@ -1674,13 +1825,14 @@ function render(){
   const v = $('#view');
   if(!v) return;
   const tabsForRole = {
-    staff:['dash','jobs','calendar','program','plant','chat','team','learn'],
+    staff:['dash','jobs','chem','calendar','plant','chat','team','learn'],
     committee:['dash','calendar','chat','team'],
     volunteer:['dash','chat','team']
   }[userRole] || ['dash'];
   if(!tabsForRole.includes(activeTab)) activeTab = 'dash';
   if(activeTab === 'dash') v.innerHTML = viewDash();
   if(activeTab === 'jobs') v.innerHTML = viewJobs();
+  if(activeTab === 'chem') v.innerHTML = viewChem();
   if(activeTab === 'calendar') v.innerHTML = viewCalendar();
   if(activeTab === 'program') v.innerHTML = viewProgram();
   if(activeTab === 'plant') v.innerHTML = viewPlant();
@@ -1939,6 +2091,408 @@ function jobItem(j){
   const overdue = j.status !== 'done' && j.due && j.due < t;
   const done = j.status === 'done';
   return `<div class="item"><div class="tick ${done?'on':''}" data-action="toggle-job" data-id="${j.id}">${done?'✓':''}</div><div class="item-body"><div class="item-title ${done?'done':''}">${esc(j.title)}</div><div class="item-meta">${j.area ? `<span class="pill p-area">${esc(j.area)}</span>` : ''}${j.type ? `<span class="pill p-type">${esc(j.type)}</span>` : ''}${j.priority ? `<span class="pill p-${j.priority.toLowerCase()}">${esc(j.priority)}</span>` : ''}${overdue ? `<span class="pill p-overdue">Overdue</span>` : ''}${j.due ? `<span>${prettyDate(j.due)}</span>` : ''}${j.assignee ? `<span>· ${esc(j.assignee)}</span>` : ''}</div>${j.notes ? `<div class="item-note">${esc(j.notes)}</div>` : ''}</div><button class="del" data-action="del-job" data-id="${j.id}">✕</button></div>`;
+}
+
+/* =========================================================
+   CHEM VIEW
+   ========================================================= */
+function viewChem(){
+  const filtered = chemFilter === 'All' ? chemicals : chemicals.filter(c => c.type === chemFilter);
+  const alertCount = chemicals.reduce((n,c) => n + chemStatusFlags(c).length, 0);
+  const recentSprays = [...sprays].sort((a,b) => (b.date||'').localeCompare(a.date||'')).slice(0,5);
+
+  let html = `
+    <div class="sec-head"><h2>Chem</h2>
+      <div style="display:flex;gap:6px">
+        <button class="add-btn" style="background:var(--blue)" data-action="spray-new" title="Log spray">💧</button>
+        <button class="add-btn" data-action="chem-new" title="Add chemical">+</button>
+      </div>
+    </div>`;
+
+  if(alertCount > 0){
+    html += `<div class="card" style="border-left:4px solid var(--amber)"><h3 style="color:var(--amber)">⚠ ${alertCount} stock alert${alertCount>1?'s':''}</h3><div style="font-size:12.5px;color:var(--muted)">Expiring or low-stock products below</div></div>`;
+  }
+
+  html += `
+    <div class="card">
+      <h3 style="margin:0 0 10px">Recent Sprays</h3>
+      ${recentSprays.length ? recentSprays.map(s => sprayRow(s, true)).join('') : `<div class="empty" style="padding:10px">No sprays logged yet</div>`}
+      ${sprays.length > 5 ? `<button type="button" class="submit" style="background:#fff;color:var(--green);border:1.5px solid var(--green);padding:10px;font-size:13.5px;margin-top:10px" data-action="spray-list">View all sprays →</button>` : ''}
+    </div>`;
+
+  html += `<div class="filter-bar">${['All',...CHEM_TYPES].map(f => `<button class="filter-chip ${chemFilter===f?'active':''}" data-action="chem-filter" data-filter="${f}">${f}</button>`).join('')}</div>`;
+
+  html += `<div class="card">`;
+  if(!filtered.length){
+    html += `<div class="empty"><span class="big">🧴</span>${chemicals.length ? `No ${chemFilter} products.` : 'No chemicals yet. Tap + to add.'}</div>`;
+  } else {
+    filtered.sort((a,b) => (a.name||'').localeCompare(b.name||''));
+    html += filtered.map(chemRow).join('');
+  }
+  html += `</div>`;
+
+  html += `
+    <div class="card">
+      <h3 style="margin:0 0 10px">Spray Areas</h3>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+        ${sprayAreas.map(a => `<span class="pill p-area">${esc(a)}</span>`).join('')}
+      </div>
+      <button type="button" class="submit" style="background:#fff;color:var(--green);border:1.5px solid var(--green);padding:10px;font-size:13.5px" data-action="spray-areas-edit">✏️ Edit Areas</button>
+    </div>`;
+
+  return html;
+}
+
+function chemRow(c){
+  const typeCls = CHEM_TYPE_CLASS[c.type] || 'p-other';
+  const flags = chemStatusFlags(c);
+  return `<div class="item" data-action="chem-view" data-id="${c.id}" style="cursor:pointer">
+    <div class="item-body">
+      <div class="item-title">${esc(c.name || 'Unnamed product')}</div>
+      <div class="item-meta">
+        <span class="pill ${typeCls}">${esc(c.type || 'Other')}</span>
+        ${c.quantityOnHand !== undefined ? `<span>${formatQty(c)}</span>` : ''}
+        ${c.rateUnit ? `<span class="chem-unit-chip">${formatRate(c)}</span>` : ''}
+      </div>
+      ${flags.length ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">${flags.map(f => `<span class="${f.cls}">${esc(f.text)}</span>`).join('')}</div>` : ''}
+      ${c.activeIngredient ? `<div style="font-size:11.5px;color:var(--muted);margin-top:4px">${esc(c.activeIngredient)}</div>` : ''}
+    </div>
+    <span style="color:#b9c7bb;font-size:20px;line-height:1">›</span>
+  </div>`;
+}
+
+function sprayRow(s, compact){
+  const productName = s.snapshot?.name || 'Unknown product';
+  const typeCls = CHEM_TYPE_CLASS[s.snapshot?.type] || 'p-other';
+  return `<div class="item" data-action="spray-view" data-id="${s.id}" style="cursor:pointer;padding:8px 0">
+    <div class="item-body">
+      <div class="item-title" style="font-size:13.5px">${esc(productName)}</div>
+      <div class="item-meta">
+        <span class="pill ${typeCls}">${esc(s.snapshot?.type || 'Other')}</span>
+        <span>${esc(s.date)}${s.time ? ' · ' + esc(s.time) : ''}</span>
+        ${s.rate ? `<span>${esc(s.rate)} ${esc(s.snapshot?.rateUnit || '')}${s.snapshot?.rateAreaUnit ? ' ' + esc(s.snapshot.rateAreaUnit) : ''}</span>` : ''}
+      </div>
+      ${!compact && s.area ? `<div style="font-size:12px;color:var(--muted);margin-top:3px">📍 ${esc(s.area)}</div>` : ''}
+    </div>
+    <span style="color:#b9c7bb;font-size:20px;line-height:1">›</span>
+  </div>`;
+}
+
+/* =========================================================
+   CHEM FORMS
+   ========================================================= */
+function formChemical(existing){
+  const isEdit = !!existing;
+  const c = existing || {};
+  const rateAreaVal = c.rateAreaUnit || 'per ha';
+  openSheet(isEdit ? 'Edit Chemical' : 'Add Chemical', `
+    <div class="field"><label>Product name *</label><input name="name" required value="${esc(c.name||'')}" placeholder="e.g. Banner MAXX"></div>
+    <div class="row2">
+      <div class="field"><label>APVMA No.</label><input name="apvmaNo" value="${esc(c.apvmaNo||'')}" placeholder="e.g. 56789"></div>
+      <div class="field"><label>Batch No.</label><input name="batchNo" value="${esc(c.batchNo||'')}"></div>
+    </div>
+    <div class="field"><label>Active ingredient</label><input name="activeIngredient" value="${esc(c.activeIngredient||'')}" placeholder="e.g. Propiconazole 250 g/L"></div>
+    <div class="field"><label>Type</label><select name="type">${CHEM_TYPES.map(t => `<option ${c.type===t?'selected':''}>${t}</option>`).join('')}</select></div>
+    <div class="row3">
+      <div class="field"><label>Stock unit</label><select name="stockUnit">${STOCK_UNITS.map(u => `<option ${c.stockUnit===u?'selected':''}>${u}</option>`).join('')}</select></div>
+      <div class="field"><label>Rate unit</label><select name="rateUnit">${RATE_UNITS.map(u => `<option ${c.rateUnit===u?'selected':''}>${u}</option>`).join('')}</select></div>
+      <div class="field"><label>Rate area</label><select name="rateAreaUnit">${RATE_AREA_UNITS.map(u => `<option ${rateAreaVal===u?'selected':''}>${u}</option>`).join('')}</select></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Qty on hand</label><input type="number" step="0.01" name="quantityOnHand" value="${c.quantityOnHand ?? ''}" placeholder="e.g. 5"></div>
+      <div class="field"><label>Reorder below</label><input type="number" step="0.01" name="reorderThreshold" value="${c.reorderThreshold ?? ''}" placeholder="e.g. 1"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Batch expiry</label><input type="date" name="expiryDate" value="${c.expiryDate||''}"></div>
+      <div class="field"><label>Location</label><input name="location" value="${esc(c.location||'')}" placeholder="e.g. Chem shed, cabinet 2"></div>
+    </div>
+    <div class="field"><label>Supplier</label><input name="supplier" value="${esc(c.supplier||'')}" placeholder="e.g. Nuturf"></div>
+    <div class="field"><label>Notes</label><textarea name="notes">${esc(c.notes||'')}</textarea></div>
+    ${isEdit ? `<button type="button" class="submit" data-action="chem-delete" data-id="${c.id}" style="background:#fff;color:var(--red);border:1.5px solid var(--red);margin-top:8px">🗑 Delete this product</button>` : ''}
+  `,
+  async d => {
+    const rec = {
+      id: c.id || uid('chem'),
+      name: d.name.trim(),
+      apvmaNo: d.apvmaNo.trim(),
+      batchNo: d.batchNo.trim(),
+      activeIngredient: d.activeIngredient.trim(),
+      type: d.type,
+      stockUnit: d.stockUnit,
+      rateUnit: d.rateUnit,
+      rateAreaUnit: d.rateAreaUnit,
+      quantityOnHand: d.quantityOnHand !== '' ? parseFloat(d.quantityOnHand) : undefined,
+      reorderThreshold: d.reorderThreshold !== '' ? parseFloat(d.reorderThreshold) : undefined,
+      expiryDate: d.expiryDate || '',
+      location: d.location.trim(),
+      supplier: d.supplier.trim(),
+      notes: d.notes.trim(),
+      created: c.created || new Date().toISOString(),
+      createdBy: c.createdBy || currentUser?.uid || ''
+    };
+    await saveChemical(rec);
+    await loadChemicals();
+    toast(isEdit ? 'Updated' : 'Chemical added');
+  });
+}
+
+function formSpray(existing){
+  const isEdit = !!existing;
+  const s = existing || {};
+  const snap = s.snapshot || {};
+
+  // Compute weather
+  const wNow = getCurrentHourWeather();
+  const prefill = {
+    temp: s.weather?.temp ?? wNow?.temp ?? '',
+    wind: s.weather?.wind ?? wNow?.wind ?? '',
+    windDir: s.weather?.windDir ?? wNow?.windDir ?? '',
+    humidity: s.weather?.humidity ?? wNow?.humidity ?? ''
+  };
+
+  const productOptions = chemicals.length
+    ? chemicals.map(c => `<option value="${c.id}" ${snap.id===c.id?'selected':''}>${esc(c.name)}${c.activeIngredient ? ' — ' + esc(c.activeIngredient) : ''}</option>`).join('')
+    : '<option value="">No products yet — add one first</option>';
+
+  const areaOptions = sprayAreas.map(a => `<option value="${esc(a)}" ${s.area===a?'selected':''}>${esc(a)}</option>`).join('');
+
+  const windNum = parseFloat(prefill.wind);
+  const windWarn = !isNaN(windNum) && windNum > 15;
+
+  const t = todayISO();
+
+  openSheet(isEdit ? 'Edit Spray' : 'New Spray', `
+    <div class="row2">
+      <div class="field"><label>Date *</label><input type="date" name="date" value="${s.date || t}" required></div>
+      <div class="field"><label>Time</label><input type="time" name="time" value="${s.time || new Date().toTimeString().slice(0,5)}"></div>
+    </div>
+    <div class="field"><label>Product *</label><select name="productId" required>${productOptions}</select></div>
+    <div id="sprayProductInfo"></div>
+    <div class="row2">
+      <div class="field"><label>Rate</label><input name="rate" id="sprayRate" value="${esc(s.rate||'')}" placeholder="e.g. 2.5"><span id="sprayRateUnit" style="font-size:11px;color:var(--muted);margin-top:4px;display:block"></span></div>
+      <div class="field"><label>Water volume (L/ha)</label><input type="number" step="0.1" name="waterVolumeLha" value="${s.waterVolumeLha ?? ''}" placeholder="e.g. 150"></div>
+    </div>
+    <div class="field"><label>Total used</label><input type="number" step="0.01" name="totalUsed" value="${s.totalUsed ?? ''}" placeholder="Total in product's stock unit"></div>
+    <div class="field"><label>Area *</label>
+      <select name="areaSelect" id="sprayAreaSelect" style="margin-bottom:6px">
+        <option value="">— pick a preset —</option>
+        ${areaOptions}
+      </select>
+      <input name="area" id="sprayAreaText" value="${esc(s.area||'')}" placeholder="Or type: e.g. Greens 4, 7, 12" required>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Target</label><input name="target" value="${esc(s.target||'')}" placeholder="e.g. Crabgrass"></div>
+      <div class="field"><label>Method</label>
+        <select name="methodSelect">
+          <option value="">— pick —</option>
+          ${SPRAY_METHODS.map(m => `<option ${s.method===m?'selected':''}>${m}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="field"><input name="method" id="sprayMethodText" value="${esc(s.method||'')}" placeholder="Method (custom if needed)"></div>
+    <div class="field" style="margin-top:4px">
+      <label>Weather at application</label>
+      <div class="spray-weather-box">
+        ${wNow ? `Auto-filled from Open-Meteo · ${new Date(wNow.fetchedAt).toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'})}` : 'Weather not loaded — fill in manually'}
+      </div>
+      ${windWarn ? `<div class="wind-warn">⚠ Wind is ${Math.round(windNum)} km/h — check the label limits for fine droplet spray.</div>` : ''}
+      <div class="row2">
+        <div class="field"><label>Temp (°C)</label><input type="number" step="0.1" name="weatherTemp" value="${prefill.temp}"></div>
+        <div class="field"><label>Wind (km/h)</label><input type="number" step="0.1" name="weatherWind" value="${prefill.wind}"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Wind dir</label><input name="weatherWindDir" value="${esc(prefill.windDir)}" placeholder="e.g. 225"></div>
+        <div class="field"><label>Humidity (%)</label><input type="number" name="weatherHumidity" value="${prefill.humidity}"></div>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Re-entry period</label><input name="reEntryPeriod" value="${esc(s.reEntryPeriod||'')}" placeholder="e.g. 24h"></div>
+      <div class="field"><label>Withholding</label><input name="withholdingPeriod" value="${esc(s.withholdingPeriod||'')}" placeholder="e.g. 7d"></div>
+    </div>
+    <div class="field"><label>Notes</label><textarea name="notes">${esc(s.notes||'')}</textarea></div>
+    ${isEdit ? `<button type="button" class="submit" data-action="spray-delete" data-id="${s.id}" style="background:#fff;color:var(--red);border:1.5px solid var(--red);margin-top:8px">🗑 Delete this spray</button>` : ''}
+  `,
+  async d => {
+    const product = chemicals.find(x => x.id === d.productId);
+    if(!product){ toast('Pick a product'); return; }
+    const rec = {
+      id: s.id || uid('spray'),
+      date: d.date,
+      time: d.time,
+      productId: product.id,
+      snapshot: {
+        id: product.id,
+        name: product.name,
+        apvmaNo: product.apvmaNo || '',
+        batchNo: product.batchNo || '',
+        activeIngredient: product.activeIngredient || '',
+        type: product.type || 'Other',
+        stockUnit: product.stockUnit || '',
+        rateUnit: product.rateUnit || '',
+        rateAreaUnit: product.rateAreaUnit || ''
+      },
+      rate: d.rate.trim(),
+      waterVolumeLha: d.waterVolumeLha !== '' ? parseFloat(d.waterVolumeLha) : undefined,
+      totalUsed: d.totalUsed !== '' ? parseFloat(d.totalUsed) : undefined,
+      area: (d.area || d.areaSelect || '').trim(),
+      target: d.target.trim(),
+      method: (d.method || d.methodSelect || '').trim(),
+      operatorUid: s.operatorUid || currentUser?.uid || '',
+      operatorName: s.operatorName || userName || currentUser?.email || '',
+      weather: {
+        temp: d.weatherTemp !== '' ? parseFloat(d.weatherTemp) : null,
+        wind: d.weatherWind !== '' ? parseFloat(d.weatherWind) : null,
+        windDir: d.weatherWindDir || null,
+        humidity: d.weatherHumidity !== '' ? parseFloat(d.weatherHumidity) : null,
+        fetchedAt: wNow?.fetchedAt || null,
+        source: wNow ? 'Open-Meteo (auto)' : 'Manual'
+      },
+      reEntryPeriod: d.reEntryPeriod.trim(),
+      withholdingPeriod: d.withholdingPeriod.trim(),
+      notes: d.notes.trim(),
+      created: s.created || new Date().toISOString(),
+      createdBy: s.createdBy || currentUser?.uid || '',
+      editedAt: isEdit ? new Date().toISOString() : null,
+      editedBy: isEdit ? (currentUser?.uid || '') : null
+    };
+    await saveSpray(rec);
+    await loadSprays();
+    toast(isEdit ? 'Spray updated' : 'Spray logged');
+  });
+
+  // Wire selects to text inputs + product info hint
+  setTimeout(() => {
+    const areaSel = $('#sprayAreaSelect');
+    const areaTxt = $('#sprayAreaText');
+    if(areaSel && areaTxt){
+      areaSel.addEventListener('change', () => { if(areaSel.value) areaTxt.value = areaSel.value; });
+    }
+    const methodSel = $('#sprayMethodText') ? document.querySelector('[name="methodSelect"]') : null;
+    const methodTxt = $('#sprayMethodText');
+    if(methodSel && methodTxt){
+      methodSel.addEventListener('change', () => { if(methodSel.value) methodTxt.value = methodSel.value; });
+    }
+    const prodSel = document.querySelector('[name="productId"]');
+    const info = $('#sprayProductInfo');
+    const rateUnitEl = $('#sprayRateUnit');
+    const updateInfo = () => {
+      const p = chemicals.find(x => x.id === prodSel.value);
+      if(!p){ if(info) info.innerHTML = ''; if(rateUnitEl) rateUnitEl.textContent = ''; return; }
+      if(rateUnitEl) rateUnitEl.textContent = `${p.rateUnit || ''} ${p.rateAreaUnit || ''}`.trim();
+      if(info){
+        const bits = [];
+        if(p.activeIngredient) bits.push(`<b>${esc(p.activeIngredient)}</b>`);
+        if(p.apvmaNo) bits.push(`APVMA ${esc(p.apvmaNo)}`);
+        if(p.batchNo) bits.push(`Batch ${esc(p.batchNo)}`);
+        if(p.quantityOnHand !== undefined) bits.push(`On hand: ${esc(p.quantityOnHand)} ${esc(p.stockUnit||'')}`);
+        info.innerHTML = bits.length ? `<div style="background:#f0f4f0;border-radius:10px;padding:8px 12px;font-size:12px;color:var(--muted);margin-bottom:10px">${bits.join(' · ')}</div>` : '';
+      }
+    };
+    if(prodSel){
+      prodSel.addEventListener('change', updateInfo);
+      updateInfo();
+    }
+  }, 60);
+}
+
+function formEditSprayAreas(){
+  openSheet('Edit Spray Areas', `
+    <p style="font-size:12.5px;color:var(--muted);margin:0 0 12px">One per line. Used in the spray log for quick-picking areas.</p>
+    <div class="field"><label>Areas</label><textarea name="areas" style="min-height:220px">${sprayAreas.join('\n')}</textarea></div>
+  `,
+  async d => {
+    const list = d.areas.split('\n').map(x => x.trim()).filter(Boolean);
+    if(!list.length){ toast('At least one area needed'); return; }
+    sprayAreas = list;
+    await saveSprayAreas();
+    toast('Saved');
+  });
+}
+
+function formChemView(id){
+  const c = chemicals.find(x => x.id === id); if(!c) return;
+  const flags = chemStatusFlags(c);
+  const typeCls = CHEM_TYPE_CLASS[c.type] || 'p-other';
+  const relatedSprays = sprays.filter(s => s.productId === id).sort((a,b) => (b.date||'').localeCompare(a.date||'')).slice(0,10);
+  openSheet(c.name || 'Chemical', `
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">
+      <span class="pill ${typeCls}">${esc(c.type || 'Other')}</span>
+      ${flags.map(f => `<span class="${f.cls}">${esc(f.text)}</span>`).join('')}
+    </div>
+    ${c.activeIngredient ? `<div class="field"><label>Active</label><div style="font-size:14px">${esc(c.activeIngredient)}</div></div>` : ''}
+    ${c.apvmaNo ? `<div class="field"><label>APVMA</label><div style="font-size:14px">${esc(c.apvmaNo)}</div></div>` : ''}
+    ${c.batchNo ? `<div class="field"><label>Batch</label><div style="font-size:14px">${esc(c.batchNo)}</div></div>` : ''}
+    ${c.expiryDate ? `<div class="field"><label>Expiry</label><div style="font-size:14px">${esc(c.expiryDate)}</div></div>` : ''}
+    <div class="row2">
+      <div class="field"><label>On hand</label><div style="font-size:14px">${formatQty(c)}</div></div>
+      <div class="field"><label>Rate</label><div style="font-size:14px">${formatRate(c)}</div></div>
+    </div>
+    ${c.reorderThreshold ? `<div class="field"><label>Reorder below</label><div style="font-size:14px">${esc(c.reorderThreshold)} ${esc(c.stockUnit||'')}</div></div>` : ''}
+    ${c.location ? `<div class="field"><label>Location</label><div style="font-size:14px">${esc(c.location)}</div></div>` : ''}
+    ${c.supplier ? `<div class="field"><label>Supplier</label><div style="font-size:14px">${esc(c.supplier)}</div></div>` : ''}
+    ${c.notes ? `<div class="field"><label>Notes</label><div style="font-size:13.5px;white-space:pre-wrap">${esc(c.notes)}</div></div>` : ''}
+
+    <div class="card" style="background:#f7faf7;box-shadow:none;margin-top:10px">
+      <h3 style="margin-bottom:8px">Recent sprays with this product · ${relatedSprays.length}</h3>
+      ${relatedSprays.length ? relatedSprays.map(s => `<div class="item" style="padding:6px 0"><div class="item-body"><div class="item-title" style="font-size:13px">${esc(s.date)} · ${esc(s.rate||'')} ${esc(s.snapshot?.rateUnit||'')}</div><div class="item-meta"><span>${esc(s.area||'')}</span></div></div></div>`).join('') : '<div style="font-size:13px;color:var(--muted)">None logged</div>'}
+    </div>
+
+    <button type="button" class="submit" data-action="chem-edit" data-id="${c.id}" style="margin-top:14px">✏️ Edit</button>
+    <button type="button" class="submit" style="background:#fff;color:var(--green);border:1.5px solid var(--green);margin-top:8px" data-action="spray-new-for" data-chem="${c.id}">💧 Log a spray with this product</button>
+  `, () => {});
+}
+
+function formSprayView(id){
+  const s = sprays.find(x => x.id === id); if(!s) return;
+  const snap = s.snapshot || {};
+  const typeCls = CHEM_TYPE_CLASS[snap.type] || 'p-other';
+  const w = s.weather || {};
+  openSheet(snap.name || 'Spray record', `
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">
+      <span class="pill ${typeCls}">${esc(snap.type || 'Other')}</span>
+      <span class="pill p-type">${esc(s.date)}${s.time ? ' · ' + esc(s.time) : ''}</span>
+    </div>
+    <div class="field"><label>Rate</label><div style="font-size:14px">${esc(s.rate||'—')} ${esc(snap.rateUnit||'')} ${esc(snap.rateAreaUnit||'')}</div></div>
+    ${s.waterVolumeLha ? `<div class="field"><label>Water volume</label><div style="font-size:14px">${esc(s.waterVolumeLha)} L/ha</div></div>` : ''}
+    ${s.totalUsed ? `<div class="field"><label>Total used</label><div style="font-size:14px">${esc(s.totalUsed)} ${esc(snap.stockUnit||'')}</div></div>` : ''}
+    <div class="field"><label>Area</label><div style="font-size:14px">${esc(s.area||'—')}</div></div>
+    ${s.target ? `<div class="field"><label>Target</label><div style="font-size:14px">${esc(s.target)}</div></div>` : ''}
+    ${s.method ? `<div class="field"><label>Method</label><div style="font-size:14px">${esc(s.method)}</div></div>` : ''}
+    <div class="field"><label>Operator</label><div style="font-size:14px">${esc(s.operatorName||'—')}</div></div>
+
+    <div class="card" style="background:#f7faf7;box-shadow:none;margin-top:10px">
+      <h3 style="margin-bottom:8px">Weather at application</h3>
+      <div style="font-size:13.5px;line-height:1.7">
+        ${w.temp != null ? `🌡 ${esc(w.temp)}°C<br>` : ''}
+        ${w.wind != null ? `💨 ${esc(w.wind)} km/h${w.windDir ? ' · ' + esc(w.windDir) : ''}<br>` : ''}
+        ${w.humidity != null ? `💧 ${esc(w.humidity)}%<br>` : ''}
+        <span style="font-size:11.5px;color:var(--muted)">${esc(w.source || '—')}${w.fetchedAt ? ' · ' + new Date(w.fetchedAt).toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'}) : ''}</span>
+      </div>
+    </div>
+
+    ${s.reEntryPeriod ? `<div class="field"><label>Re-entry</label><div style="font-size:14px">${esc(s.reEntryPeriod)}</div></div>` : ''}
+    ${s.withholdingPeriod ? `<div class="field"><label>Withholding</label><div style="font-size:14px">${esc(s.withholdingPeriod)}</div></div>` : ''}
+    ${s.notes ? `<div class="field"><label>Notes</label><div style="font-size:13.5px;white-space:pre-wrap">${esc(s.notes)}</div></div>` : ''}
+
+    <div style="font-size:11.5px;color:var(--muted);margin-top:10px">
+      Product snapshot — captured at time of spray<br>
+      ${snap.name||''}${snap.apvmaNo ? ' · APVMA ' + esc(snap.apvmaNo) : ''}${snap.batchNo ? ' · Batch ' + esc(snap.batchNo) : ''}
+    </div>
+
+    <button type="button" class="submit" data-action="spray-edit" data-id="${s.id}" style="margin-top:14px">✏️ Edit</button>
+  `, () => {});
+}
+
+function formSprayList(){
+  const sorted = [...sprays].sort((a,b) => (b.date||'').localeCompare(a.date||''));
+  openSheet('All Sprays', `
+    <div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">${sorted.length} records</div>
+    ${sorted.length ? sorted.map(s => {
+      const snap = s.snapshot || {};
+      const typeCls = CHEM_TYPE_CLASS[snap.type] || 'p-other';
+      return `<div class="item" data-action="spray-view" data-id="${s.id}" style="cursor:pointer;padding:9px 0"><div class="item-body"><div class="item-title" style="font-size:13.5px">${esc(snap.name||'—')}</div><div class="item-meta"><span class="pill ${typeCls}">${esc(snap.type||'Other')}</span><span>${esc(s.date)}</span>${s.area?`<span>· ${esc(s.area)}</span>`:''}</div></div><span style="color:#b9c7bb;font-size:20px;line-height:1">›</span></div>`;
+    }).join('') : '<div class="empty">No sprays logged yet</div>'}
+  `, () => {});
 }
 
 function viewCalendar(){
@@ -3025,6 +3579,39 @@ document.addEventListener('click', async (e) => {
 
     case 'qr-open': window.open(SIGN_IN_QR_URL, '_blank'); break;
 
+    /* ===== CHEM ACTIONS ===== */
+    case 'chem-new': formChemical(null); break;
+    case 'chem-edit': { const c = chemicals.find(x => x.id === id); if(!c) break; formChemical(c); break; }
+    case 'chem-view': formChemView(id); break;
+    case 'chem-delete': {
+      const c = chemicals.find(x => x.id === id);
+      if(!c || !confirm(`Delete "${c.name}"?`)) break;
+      try{
+        await deleteChemical(id);
+        chemicals = chemicals.filter(x => x.id !== id);
+        closeSheet(); render(); toast('Deleted');
+      }catch(err){ toast('Delete failed'); }
+      break;
+    }
+    case 'chem-filter': chemFilter = el.dataset.filter; render(); break;
+
+    case 'spray-new': if(!chemicals.length){ toast('Add a chemical first'); break; } formSpray(null); break;
+    case 'spray-new-for': { const chemId = el.dataset.chem; const c = chemicals.find(x => x.id === chemId); if(!c) break; formSpray({ productId: c.id, snapshot: { id: c.id, name: c.name, type: c.type, rateUnit: c.rateUnit, rateAreaUnit: c.rateAreaUnit, stockUnit: c.stockUnit } }); break; }
+    case 'spray-edit': { const s = sprays.find(x => x.id === id); if(!s) break; formSpray(s); break; }
+    case 'spray-view': formSprayView(id); break;
+    case 'spray-list': formSprayList(); break;
+    case 'spray-delete': {
+      const s = sprays.find(x => x.id === id);
+      if(!s || !confirm('Delete this spray record? (soft delete)')) break;
+      try{
+        await softDeleteSpray(id);
+        sprays = sprays.filter(x => x.id !== id);
+        closeSheet(); render(); toast('Spray deleted');
+      }catch(err){ toast('Delete failed'); }
+      break;
+    }
+    case 'spray-areas-edit': formEditSprayAreas(); break;
+
     case 'pick-role': {
       const role = el.dataset.role;
       const label = {staff:'greenkeeper',committee:'ground committee',volunteer:'volunteer'}[role];
@@ -3042,6 +3629,7 @@ document.addEventListener('click', async (e) => {
         await loadTheme();
         await fsLoadAll();
         await Promise.all([loadMySignIn(), loadRainLog(), loadIrrigationLog(), loadTurfAreas()]);
+        if(userRole === 'staff') await Promise.all([loadChemicals(), loadSprays(), loadSprayAreas()]);
         fetchWeather(false).then(() => { if(activeTab === 'dash') render(); });
         selectedDay = todayISO();
         render(); startNotifyLoop(); startChatListener(); startSignInsListener();
@@ -3066,6 +3654,7 @@ document.addEventListener('click', async (e) => {
         await loadTheme();
         await fsLoadAll();
         await Promise.all([loadMySignIn(), loadRainLog(), loadIrrigationLog(), loadTurfAreas()]);
+        if(userRole === 'staff') await Promise.all([loadChemicals(), loadSprays(), loadSprayAreas()]);
         fetchWeather(false).then(() => { if(activeTab === 'dash') render(); });
         selectedDay = todayISO();
         render(); startNotifyLoop(); startChatListener(); startSignInsListener();
