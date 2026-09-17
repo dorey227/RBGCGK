@@ -22,7 +22,6 @@
   body.theme-charcoal{--green:#263238;--green2:#37474f;--lime:#78909c;--bg:#eceff1}
   body.theme-sand{--green:#5d4037;--green2:#795548;--lime:#a1887f;--bg:#f7f1ee}
   body.theme-forest{--green:#1b5e20;--green2:#33691e;--lime:#827717;--bg:#eef4ec}
-  body.theme-workshop{--green:#8b1a1a;--green2:#a52a2a;--lime:#d84315;--bg:#f7eded}
   body.density-compact{--card-pad:10px;--item-pad:7px 0}
   body.density-compact .card{padding:10px}
   body.density-compact .item{padding:7px 0}
@@ -322,6 +321,59 @@
 
   .alert-card{background:#fff8e1;border-left:4px solid var(--amber);padding:12px 14px;border-radius:12px;margin-bottom:10px;font-size:13px;line-height:1.6}
   .alert-card b{color:var(--amber)}
+
+  #reportScreen{position:fixed;inset:0;z-index:260;background:var(--bg);overflow-y:auto;padding-bottom:100px}
+  #reportScreen.hidden{display:none}
+  .rp-header{
+    background:linear-gradient(135deg,var(--green),var(--green2));
+    color:#fff;padding:14px 16px;position:sticky;top:0;z-index:3;
+    display:flex;align-items:center;gap:12px;
+    box-shadow:0 2px 12px rgba(0,0,0,.15);
+  }
+  .rp-header button{background:rgba(255,255,255,.15);border:0;color:#fff;width:36px;height:36px;border-radius:10px;font-size:18px;cursor:pointer;font-family:inherit}
+  .rp-header h2{margin:0;font-size:17px;flex:1}
+  .rp-header .rp-sub{font-size:11.5px;opacity:.85;margin-top:2px}
+  .rp-body{padding:14px;max-width:820px;margin:0 auto}
+
+  .rp-tabs{display:flex;gap:6px;overflow-x:auto;padding:2px 0 12px;scrollbar-width:none}
+  .rp-tabs::-webkit-scrollbar{display:none}
+  .rp-tab{flex:0 0 auto;background:#fff;border:1.5px solid var(--line);color:var(--muted);padding:8px 16px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
+  .rp-tab.active{background:var(--green);color:#fff;border-color:var(--green)}
+
+  .rp-section{background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  .rp-section h3{margin:0 0 12px;font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+
+  .rp-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+  .rp-summary-cell{background:#f7faf7;border-radius:10px;padding:12px;text-align:center}
+  .rp-summary-cell .lbl{font-size:10.5px;color:var(--muted);text-transform:uppercase;font-weight:700;letter-spacing:.4px}
+  .rp-summary-cell .val{font-size:22px;font-weight:800;margin-top:4px;color:var(--text)}
+  .rp-summary-cell .sub{font-size:11px;color:var(--muted);margin-top:2px}
+
+  .rp-table{width:100%;border-collapse:collapse;font-size:13px}
+  .rp-table th{text-align:left;padding:8px 6px;border-bottom:2px solid var(--line);font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:700}
+  .rp-table td{padding:9px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+  .rp-table tr:last-child td{border-bottom:0}
+  .rp-table td.num{text-align:right;font-variant-numeric:tabular-nums}
+  .rp-table .pt{font-weight:600}
+
+  .rp-record{background:#f7faf7;border-radius:12px;padding:12px;margin-bottom:8px;font-size:13px;line-height:1.6}
+  .rp-record .rh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+  .rp-record .rh-name{font-weight:700;font-size:14.5px}
+  .rp-record .rh-date{font-size:11.5px;color:var(--muted)}
+  .rp-record .rl{display:flex;gap:6px;flex-wrap:wrap;font-size:12.5px}
+  .rp-record .rl span{color:var(--muted)}
+  .rp-record .rl b{color:var(--text);font-weight:600}
+  .rp-record .rweather{font-size:11.5px;color:var(--muted);margin-top:6px;padding-top:6px;border-top:1px dashed var(--line)}
+
+  @media print{
+    body{background:#fff}
+    header, nav, .rp-header, .rp-tabs, .submit, .icon-btn, .add-btn, .sync-badge, #toast, .toast{display:none !important}
+    #reportScreen{position:static;padding:0;overflow:visible}
+    .rp-body{max-width:100%;padding:0}
+    .rp-section{box-shadow:none;border:1px solid #ddd;break-inside:avoid;page-break-inside:avoid}
+    .rp-record{background:#fff;border:1px solid #ddd}
+    .rp-table th{background:#f5f5f5}
+  }
 </style>
 </head>
 <body class="theme-ocean nav-floating density-compact">
@@ -410,6 +462,18 @@
     <button type="button" data-action="wx-refresh">↻</button>
   </div>
   <div class="wx-body" id="wxBody"></div>
+</div>
+
+<div id="reportScreen" class="hidden">
+  <div class="rp-header">
+    <button type="button" data-action="rp-close">←</button>
+    <div style="flex:1">
+      <h2>Chem Reports</h2>
+      <div class="rp-sub" id="rpHeaderSub">Ready</div>
+    </div>
+    <button type="button" data-action="rp-print">🖨️</button>
+  </div>
+  <div class="rp-body" id="rpBody"></div>
 </div>
 
 <div id="scanModal" class="hidden">
@@ -581,14 +645,16 @@ let sprays = [];
 let sprayAreas = [...DEFAULT_SPRAY_AREAS];
 let chemFilter = 'All';
 
-// Barcode scanner state
-let _scanTarget = null;      // 'spray-new' | 'chem-new'
+let _scanTarget = null;
 let _scanStream = null;
 let _scanRAF = null;
 let _scanDetector = null;
 
-// Label photo editor buffer (chemicals)
 let _editChemPhotos = null;
+
+let rpTab = 'compliance';
+let rpFrom = null;
+let rpTo = null;
 
 const _urlParams = new URLSearchParams(window.location.search);
 let qrMode = _urlParams.get('qr');
@@ -611,6 +677,13 @@ function prettyDate(s){
   const yd = new Date(); yd.setDate(yd.getDate()-1);
   if(s === iso(yd)) return 'Yesterday';
   return dt.toLocaleDateString('en-AU',{weekday:'short', day:'numeric', month:'short'});
+}
+
+function prettyDateLong(s){
+  if(!s) return '';
+  const [y,m,d] = s.split('-').map(Number);
+  const dt = new Date(y, m-1, d);
+  return dt.toLocaleDateString('en-AU',{weekday:'long', day:'numeric', month:'long', year:'numeric'});
 }
 
 function fmtTime(ts){ if(!ts) return ''; return new Date(ts).toLocaleTimeString('en-AU',{hour:'2-digit', minute:'2-digit'}); }
@@ -1157,405 +1230,279 @@ function refreshChemPhotoStrip(){
     </div>`
   ).join('');
 }
+
 /* =========================================================
-   Weather card (dashboard)
+   REPORTS — Phase 4
    ========================================================= */
-function renderWeatherCard(){
-  if(!weatherData){
-    return `
-      <div class="card" style="border-left:4px solid var(--blue);cursor:pointer" data-action="wx-open">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <h3 style="color:var(--blue);margin:0">🌤️ Weather · ${esc(WEATHER_LOCATION)}</h3>
-          <span style="font-size:11px;color:var(--muted)">Tap for detail →</span>
-        </div>
-        <div class="empty" style="padding:8px 0;font-size:13px">${weatherLoading ? 'Loading…' : 'Tap to load weather'}</div>
-      </div>`;
+function openReportScreen(){
+  const screen = $('#reportScreen');
+  if(!rpFrom){
+    const today = new Date();
+    rpFrom = iso(new Date(today.getFullYear(), 0, 1));
+    rpTo = todayISO();
   }
-  const c = weatherData.current;
-  const wx = weatherCode(c.code);
-  const bal = getWeekWaterBalance();
-  const rainLogged = getRainLogThisWeek();
-
-  return `
-    <div class="card" style="border-left:4px solid var(--blue);cursor:pointer" data-action="wx-open">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <h3 style="color:var(--blue);margin:0">🌤️ Weather · ${esc(WEATHER_LOCATION)}</h3>
-        <span style="font-size:11px;color:var(--muted)">Tap for detail →</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px">
-        <div style="font-size:44px">${wx.icon}</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:22px;font-weight:800">${Math.round(c.temp)}°C</div>
-          <div style="font-size:12.5px;color:var(--muted)">${wx.label} · ${Math.round(c.humidity)}% humidity</div>
-          <div style="font-size:12.5px;color:var(--muted)">💧 ${(c.rain||0).toFixed(1)}mm now · 💨 ${Math.round(c.wind)} km/h ${windDir(c.windDir)}</div>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
-        <div style="background:#f7faf7;border-radius:10px;padding:8px;text-align:center">
-          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:700">7d Rain</div>
-          <div style="font-size:15px;font-weight:800;color:var(--blue);margin-top:2px">${bal.rain.toFixed(1)}mm</div>
-        </div>
-        <div style="background:#f7faf7;border-radius:10px;padding:8px;text-align:center">
-          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:700">7d ET₀</div>
-          <div style="font-size:15px;font-weight:800;color:var(--amber);margin-top:2px">${bal.et.toFixed(1)}mm</div>
-        </div>
-        <div style="background:#f7faf7;border-radius:10px;padding:8px;text-align:center">
-          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:700">Deficit</div>
-          <div style="font-size:15px;font-weight:800;color:${bal.deficit > 0 ? 'var(--red)' : 'var(--green2)'};margin-top:2px">${bal.deficit > 0 ? '-' : '+'}${Math.abs(bal.deficit).toFixed(1)}mm</div>
-        </div>
-      </div>
-      ${rainLogged > 0 ? `<div style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center">💧 Logged rain this week: <b style="color:var(--blue)">${rainLogged.toFixed(1)} mm</b></div>` : ''}
-      ${bal.deficit > 0
-        ? `<div style="font-size:11.5px;color:var(--muted);margin-top:6px;text-align:center;line-height:1.5">⚠️ Turf is losing <b>${bal.deficit.toFixed(1)}mm</b> more than it's receiving this week</div>`
-        : `<div style="font-size:11.5px;color:var(--green2);margin-top:6px;text-align:center">✅ Rainfall keeping up with water loss</div>`}
-    </div>`;
-}
-
-function renderChemAlertCard(){
-  const alerts = getChemAlerts();
-  if(!alerts.length) return '';
-  const expiring = alerts.filter(a => a.flag.cls === 'chem-expiry-warn' || a.flag.cls === 'chem-expiry-bad');
-  const stocking = alerts.filter(a => a.flag.cls === 'chem-stock-warn' || a.flag.cls === 'chem-stock-bad');
-  let inner = '';
-  if(expiring.length){
-    inner += `<div style="margin-bottom:8px"><b>⚠ Expiring (${expiring.length})</b><br>${expiring.map(a => `${esc(a.chem.name)} — ${esc(a.flag.text)}`).join('<br>')}</div>`;
-  }
-  if(stocking.length){
-    inner += `<div><b>📦 Low stock (${stocking.length})</b><br>${stocking.map(a => `${esc(a.chem.name)} — ${esc(a.flag.text)}`).join('<br>')}</div>`;
-  }
-  return `<div class="alert-card" data-action="nav" data-tab="chem" style="cursor:pointer">
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <b>🧴 Chem alerts</b>
-      <span style="font-size:11px;color:var(--muted)">Tap to open →</span>
-    </div>
-    <div style="margin-top:8px;font-size:12.5px">${inner}</div>
-  </div>`;
-}
-
-async function openWeatherScreen(){
-  const screen = $('#weatherScreen');
-  const body = $('#wxBody');
-  $('#wxLocationTitle').textContent = WEATHER_LOCATION;
   screen.classList.remove('hidden');
   screen.scrollTop = 0;
   document.body.style.overflow = 'hidden';
-
-  body.innerHTML = '<div class="empty" style="padding:60px 10px"><span class="big">🌤️</span>Loading weather…</div>';
-
-  if(!weatherData){
-    await fetchWeather(false);
-  }
-  renderWeatherScreen();
-  screen.scrollTop = 0;
+  renderReportScreen();
 }
 
-function closeWeatherScreen(){
-  $('#weatherScreen').classList.add('hidden');
+function closeReportScreen(){
+  $('#reportScreen').classList.add('hidden');
   document.body.style.overflow = '';
 }
 
-function renderWeatherScreen(){
-  const body = $('#wxBody');
-  if(!weatherData){
-    body.innerHTML = '<div class="empty" style="padding:60px 10px"><span class="big">⚠️</span>Could not load weather</div>';
-    return;
-  }
+function setRpTab(t){ rpTab = t; renderReportScreen(); }
 
-  const c = weatherData.current;
-  const wx = weatherCode(c.code);
-  const d = weatherData.daily;
-  const bal = getWeekWaterBalance();
+function renderReportScreen(){
+  const body = $('#rpBody');
+  if(!body) return;
 
-  $('#wxHeaderSub').textContent = `Updated ${new Date(weatherData.fetchedAt).toLocaleTimeString('en-AU',{hour:'2-digit', minute:'2-digit'})}`;
+  $('#rpHeaderSub').textContent = `${rpFrom} → ${rpTo}`;
 
-  const currentHtml = `
-    <div class="wx-current">
-      <div style="display:flex;align-items:center;gap:18px">
-        <div style="font-size:64px">${wx.icon}</div>
-        <div>
-          <div class="wx-temp">${Math.round(c.temp)}°C</div>
-          <div class="wx-cond">${wx.label}</div>
-        </div>
+  const tabsHtml = `
+    <div class="rp-tabs">
+      <button type="button" class="rp-tab ${rpTab==='compliance'?'active':''}" data-action="rp-tab" data-tab="compliance">📋 Compliance</button>
+      <button type="button" class="rp-tab ${rpTab==='usage'?'active':''}" data-action="rp-tab" data-tab="usage">📊 Usage</button>
+      <button type="button" class="rp-tab ${rpTab==='stock'?'active':''}" data-action="rp-tab" data-tab="stock">📦 Stock</button>
+    </div>
+    <div class="rp-section">
+      <h3>Date range</h3>
+      <div class="row2">
+        <div class="field"><label>From</label><input type="date" id="rpFromInput" value="${rpFrom}"></div>
+        <div class="field"><label>To</label><input type="date" id="rpToInput" value="${rpTo}"></div>
       </div>
-      <div class="wx-meta">
-        <span>💧 ${Math.round(c.humidity)}%</span>
-        <span>💨 ${Math.round(c.wind)} km/h ${windDir(c.windDir)}</span>
-        <span>🌧 ${(c.rain||0).toFixed(1)} mm</span>
-        <span>☀️ UV ${(c.uv||0).toFixed(0)}</span>
-        <span>Feels ${Math.round(c.feelsLike)}°</span>
+      <div class="row2">
+        <button type="button" class="submit" style="background:#fff;color:var(--green);border:1.5px solid var(--green);padding:11px;font-size:13.5px" data-action="rp-quick" data-range="year">This Year</button>
+        <button type="button" class="submit" style="background:#fff;color:var(--green);border:1.5px solid var(--green);padding:11px;font-size:13.5px" data-action="rp-quick" data-range="month">This Month</button>
       </div>
     </div>`;
 
-  const hours = nextHours(12);
-  let hourlyHtml = '<div class="wx-hourly-strip">';
-  hours.forEach((h, i) => {
-    const t = new Date(h.time);
-    const label = i === 0 ? 'Now' : t.toLocaleTimeString('en-AU',{hour:'numeric'});
-    const w = weatherCode(h.code);
-    hourlyHtml += `
-      <div class="wx-hour">
-        <div class="h">${label}</div>
-        <div class="i">${w.icon}</div>
-        <div class="t">${Math.round(h.temp)}°</div>
-        ${h.rainChance > 15 ? `<div class="r">${h.rainChance}%</div>` : ''}
-      </div>`;
-  });
-  hourlyHtml += '</div>';
+  let reportHtml = '';
+  if(rpTab === 'compliance') reportHtml = reportCompliance();
+  if(rpTab === 'usage') reportHtml = reportUsage();
+  if(rpTab === 'stock') reportHtml = reportStock();
 
-  let sevenHtml = '';
-  for(let i = 0; i < Math.min(7, d.dates.length); i++){
-    const date = new Date(d.dates[i]);
-    const dayName = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : date.toLocaleDateString('en-AU',{weekday:'short', day:'numeric', month:'short'});
-    const w = weatherCode(d.codes[i]);
-    const dayData = {
-      tempMax: d.tempMax[i], tempMin: d.tempMin[i],
-      rainSum: d.rainSum[i], windMax: d.windMax[i], et0: d.et0[i]
-    };
-    const risks = diseaseRisk(dayData);
-    const dateStr = d.dates[i];
-    const morningSpray = sprayWindowForHours(dateStr, 5, 9);
-    const middaySpray  = sprayWindowForHours(dateStr, 10, 14);
+  body.innerHTML = tabsHtml + reportHtml;
 
-    sevenHtml += `
-      <div class="wx-day-card">
-        <div class="day-wx-icon">${w.icon}</div>
-        <div class="day-info">
-          <div class="day-name">${dayName}</div>
-          <div class="day-temps">${Math.round(d.tempMin[i])}° / ${Math.round(d.tempMax[i])}° · ${w.label}</div>
-          <div class="day-stats">
-            <span>💧 <b>${(d.rainSum[i]||0).toFixed(1)}mm</b></span>
-            <span>ET₀ <b>${(d.et0[i]||0).toFixed(1)}mm</b></span>
-            <span>💨 <b>${Math.round(d.windMax[i]||0)}km/h</b></span>
-          </div>
-          <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">
-            ${morningSpray ? `<span class="wx-badge ${morningSpray.cls}" title="${esc(morningSpray.reason)}">🌅 5–9am: ${morningSpray.level}</span>` : ''}
-            ${middaySpray ? `<span class="wx-badge ${middaySpray.cls}" title="${esc(middaySpray.reason)}">☀️ 10am–2pm: ${middaySpray.level}</span>` : ''}
-          </div>
-          ${risks.length ? `<div style="margin-top:4px">${risks.slice(0,2).map(r => `<span class="wx-badge ${r.cls}" style="margin-right:4px">${r.name} · ${r.level}</span>`).join('')}</div>` : ''}
-        </div>
-      </div>`;
-  }
-
-  const rainWeek = getRainLogThisWeek();
-  const rainMonth = getRainLogThisMonth();
-  const rainYear = getRainLogThisYear();
-  const recentRain = [...rainLog].sort((a,b) => (b.date||'').localeCompare(a.date||'')).slice(0, 8);
-
-  const rainLogHtml = `
-    <div class="wx-section">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <h3 style="margin:0">🌧 Rain Gauge Log</h3>
-        <button type="button" class="add-btn" style="width:32px;height:32px;font-size:18px" data-action="rain-add">+</button>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
-        <div style="background:#f7faf7;border-radius:10px;padding:10px;text-align:center">
-          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:700">This Week</div>
-          <div style="font-size:16px;font-weight:800;color:var(--blue);margin-top:2px">${rainWeek.toFixed(1)}mm</div>
-        </div>
-        <div style="background:#f7faf7;border-radius:10px;padding:10px;text-align:center">
-          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:700">This Month</div>
-          <div style="font-size:16px;font-weight:800;color:var(--blue);margin-top:2px">${rainMonth.toFixed(1)}mm</div>
-        </div>
-        <div style="background:#f7faf7;border-radius:10px;padding:10px;text-align:center">
-          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;font-weight:700">This Year</div>
-          <div style="font-size:16px;font-weight:800;color:var(--blue);margin-top:2px">${rainYear.toFixed(0)}mm</div>
-        </div>
-      </div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Recent readings</div>
-      ${recentRain.length ? recentRain.map(r => `
-        <div class="item" style="padding:8px 0">
-          <div class="item-body">
-            <div class="item-title" style="font-size:13.5px">${esc(r.date)} · <b style="color:var(--blue)">${(r.mm||0).toFixed(1)}mm</b></div>
-            <div class="item-meta">${r.recordedBy ? `By ${esc(r.recordedBy)}` : ''}${r.notes ? ` · ${esc(r.notes)}` : ''}</div>
-          </div>
-          <button class="del" data-action="rain-del" data-id="${r.id}">✕</button>
-        </div>`).join('') : '<div class="empty" style="padding:14px 0;font-size:13px">No readings logged yet</div>'}
-    </div>`;
-
-  let areasHtml = `
-    <div class="wx-section">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <h3 style="margin:0">🌱 Turf Areas & Water Need</h3>
-      </div>`;
-  turfAreas.forEach(a => {
-    const areaEt = d.et0.slice(0,7).reduce((s,v) => s + (v||0), 0) * (a.kc || 1);
-    areasHtml += `
-      <div class="area-card">
-        <div class="area-name">${esc(a.name)} <span style="font-size:11px;color:var(--muted);font-weight:500">Kc ${a.kc}</span></div>
-        <div class="area-turf">${esc(a.turfType)}${a.soil ? ` · ${esc(a.soil)}` : ''}${a.sun ? ` · ${esc(a.sun)}` : ''}</div>
-        ${a.notes ? `<div style="font-size:11.5px;color:var(--muted);margin-top:4px;font-style:italic">${esc(a.notes)}</div>` : ''}
-        <div class="area-need">
-          <span>7-day water need</span>
-          <b>${areaEt.toFixed(1)} mm</b>
-        </div>
-      </div>`;
-  });
-  areasHtml += `
-      <button type="button" class="submit" style="background:#fff;color:var(--green);border:1.5px solid var(--green);margin-top:6px" data-action="area-edit">✏️ Edit Areas</button>
-    </div>`;
-
-  let fourteenHtml = '<div class="wx-14day">';
-  for(let i = 0; i < d.dates.length; i++){
-    const date = new Date(d.dates[i]);
-    const label = i === 0 ? 'Now' : date.toLocaleDateString('en-AU',{weekday:'narrow'}) + ' ' + date.getDate();
-    const w = weatherCode(d.codes[i]);
-    fourteenHtml += `
-      <div class="wx-14d-cell">
-        <div class="d">${label}</div>
-        <div class="i">${w.icon}</div>
-        <div class="t">${Math.round(d.tempMin[i])}°/${Math.round(d.tempMax[i])}°</div>
-        ${d.rainSum[i] > 0.5 ? `<div class="r">${d.rainSum[i].toFixed(0)}mm</div>` : ''}
-      </div>`;
-  }
-  fourteenHtml += '</div>';
-
-  const balanceHtml = `
-    <div class="wx-section">
-      <h3>💧 7-Day Water Balance</h3>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-        <div style="background:#e3f2fd;border-radius:10px;padding:12px;text-align:center">
-          <div style="font-size:11px;color:var(--blue);text-transform:uppercase;font-weight:700">Forecast Rain</div>
-          <div style="font-size:22px;font-weight:800;color:var(--blue);margin-top:4px">${bal.rain.toFixed(1)}<span style="font-size:13px">mm</span></div>
-        </div>
-        <div style="background:#fff3e0;border-radius:10px;padding:12px;text-align:center">
-          <div style="font-size:11px;color:var(--amber);text-transform:uppercase;font-weight:700">ET₀ Loss</div>
-          <div style="font-size:22px;font-weight:800;color:var(--amber);margin-top:4px">${bal.et.toFixed(1)}<span style="font-size:13px">mm</span></div>
-        </div>
-      </div>
-      ${bal.deficit > 0
-        ? `<div style="background:#fdecea;border-left:4px solid var(--red);padding:10px;border-radius:8px;font-size:13px;line-height:1.5">
-             <b style="color:var(--red)">Deficit: ${bal.deficit.toFixed(1)}mm</b><br>
-             Turf needs irrigation to make up the shortfall.
-           </div>`
-        : `<div style="background:#e8f5e9;border-left:4px solid var(--green2);padding:10px;border-radius:8px;font-size:13px">
-             ✅ Rainfall is keeping up with water loss this week.
-           </div>`}
-      <button type="button" class="submit" style="background:var(--blue);margin-top:12px" data-action="wx-advice">🤖 Get AI Turf Advice</button>
-      <button type="button" class="submit" style="background:#fff;color:var(--blue);border:1.5px solid var(--blue);margin-top:8px" data-action="irrig-add">💧 Log Irrigation</button>
-      ${weatherAdvice ? `<div class="result" style="border-left-color:var(--blue);background:#e3f2fd;margin-top:14px;font-size:13.5px;line-height:1.6;white-space:pre-wrap">${esc(weatherAdvice)}</div>` : ''}
-    </div>`;
-
-  body.innerHTML = `
-    ${currentHtml}
-    <div class="wx-section">
-      <h3>Next 12 hours</h3>
-      ${hourlyHtml}
-    </div>
-    <div class="wx-section">
-      <h3>7-Day Forecast</h3>
-      ${sevenHtml}
-    </div>
-    ${rainLogHtml}
-    ${areasHtml}
-    <div class="wx-section">
-      <h3>14-Day Outlook</h3>
-      ${fourteenHtml}
-    </div>
-    ${balanceHtml}
-    <div class="wx-legend">
-      Weather by Open-Meteo · includes BoM ACCESS-G model<br>
-      ET₀ = water the turf loses to the air<br>
-      Spray windows: 5–9am (main) and 10am–2pm (winter/short days)
-    </div>
-  `;
+  setTimeout(() => {
+    const f = $('#rpFromInput');
+    const t = $('#rpToInput');
+    if(f) f.addEventListener('change', () => { rpFrom = f.value || rpFrom; renderReportScreen(); });
+    if(t) t.addEventListener('change', () => { rpTo = t.value || rpTo; renderReportScreen(); });
+  }, 40);
 }
 
-async function getWeatherAdvice(){
-  if(!weatherData){
-    toast('Weather not loaded');
-    return;
-  }
-  const overlay = $('#overlay');
-  const sheetForm = $('#sheetForm');
-  $('#sheetTitle').textContent = 'AI Turf Advice';
-  sheetForm.onsubmit = (ev) => ev.preventDefault();
-  sheetForm.innerHTML = '<div style="text-align:center;padding:24px 0"><div style="font-size:42px;margin-bottom:12px">🤖</div><div style="font-size:14px;color:var(--muted)">Analysing weather and turf impact…</div><div style="font-size:12px;color:var(--muted);margin-top:10px">3–8 seconds</div></div>';
-  overlay.classList.remove('hidden');
-  document.body.style.overflow = 'hidden';
-
-  const c = weatherData.current;
-  const d = weatherData.daily;
-  const bal = getWeekWaterBalance();
-
-  let forecastLines = '';
-  for(let i = 0; i < Math.min(7, d.dates.length); i++){
-    const date = new Date(d.dates[i]);
-    const dayLabel = i === 0 ? 'Today' : date.toLocaleDateString('en-AU',{weekday:'short', day:'numeric', month:'short'});
-    const w = weatherCode(d.codes[i]);
-    const am = sprayWindowForHours(d.dates[i], 5, 9);
-    const pm = sprayWindowForHours(d.dates[i], 10, 14);
-    forecastLines += `${dayLabel}: ${w.label}, ${Math.round(d.tempMin[i])}–${Math.round(d.tempMax[i])}°C, rain ${(d.rainSum[i]||0).toFixed(1)}mm (${d.rainProb[i]||0}% chance), ET₀ ${(d.et0[i]||0).toFixed(1)}mm, wind max ${Math.round(d.windMax[i]||0)} km/h`;
-    if(am) forecastLines += `, spray 5-9am: ${am.level} (${am.reason})`;
-    if(pm) forecastLines += `, spray 10am-2pm: ${pm.level} (${pm.reason})`;
-    forecastLines += `\n`;
-  }
-
-  const areasLines = turfAreas.map(a => `- ${a.name} (${a.turfType}, Kc ${a.kc})`).join('\n');
-  const rainLoggedWeek = getRainLogThisWeek();
-
-  const prompt = `You are a turf management expert for a golf course in South East Queensland, Australia.
-
-${ausContextBlock()}
-
-TURF AREAS (main focus is greens — TifEagle ultradwarf):
-${areasLines}
-
-Current weather:
-- Temp: ${c.temp}°C (feels ${c.feelsLike}°C)
-- Humidity: ${c.humidity}%
-- Rain now: ${c.rain}mm
-- Wind: ${c.wind} km/h from ${windDir(c.windDir)}
-- Conditions: ${weatherCode(c.code).label}
-- UV: ${c.uv}
-
-7-day forecast:
-${forecastLines}
-
-Water balance (7 days):
-- Forecast rain: ${bal.rain.toFixed(1)} mm
-- ET₀ loss: ${bal.et.toFixed(1)} mm
-- Deficit: ${bal.deficit.toFixed(1)} mm
-- Rain gauge logged this week: ${rainLoggedWeek.toFixed(1)} mm
-
-Give me concise, practical turf advice covering:
-
-1. **Irrigation** — how much water does TifEagle greens need this week? Any syringing or hand-watering needed? Consider ET₀, Kc and rainfall.
-
-2. **Disease risk** — flag risk level for Dollar Spot, Brown Patch, Pythium based on this week's temps + humidity + leaf wetness.
-
-3. **Mowing** — adjustments to height, frequency or timing for TifEagle greens.
-
-4. **Chemical / PGR** — the course sprays mostly between 5am and 9am (before golfers) and occasionally 10am–2pm on calm winter days. The forecast shows the rating for both windows. Give the specific best slot for each day where relevant.
-
-5. **Anything critical for TifEagle** — localised dry spot, scalping risk, growth flush, thatch.
-
-Be specific. Use Australian common names. Bullet points, no waffle. Around 220 words total.`;
-
-  try{
-    const res = await fetch(PROXY_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages: [
-          { role:'system', content:'You are a concise turf management assistant. Give practical, specific advice in bullet points.' },
-          { role:'user', content: prompt }
-        ]
-      })
-    });
-    if(!res.ok){ const err = await res.text().catch(() => ''); throw new Error(`Proxy ${res.status}: ${err.slice(0,120)}`); }
-    const data = await res.json();
-    weatherAdvice = data?.choices?.[0]?.message?.content || '(No response)';
-    closeSheet();
-    renderWeatherScreen();
-    toast('Advice ready ✓');
-  }catch(e){
-    console.error(e);
-    sheetForm.innerHTML = `
-      <div class="result" style="border-left-color:var(--red);background:#fdecea"><b>Could not get advice.</b><br>${esc(e.message || 'Unknown error')}</div>
-      <button type="button" class="submit" data-action="close-sheet" style="margin-top:12px">Close</button>`;
-  }
+function getSpraysInRange(){
+  return sprays.filter(s => {
+    if(!s.date) return false;
+    if(rpFrom && s.date < rpFrom) return false;
+    if(rpTo && s.date > rpTo) return false;
+    return true;
+  }).sort((a,b) => (a.date||'').localeCompare(b.date||'') || (a.time||'').localeCompare(b.time||''));
 }
 
+function reportCompliance(){
+  const list = getSpraysInRange();
+  const totalSprays = list.length;
+  const productCount = new Set(list.map(s => s.productId)).size;
+  const areaCount = new Set(list.map(s => s.area).filter(Boolean)).size;
+
+  let html = `
+    <div class="rp-section">
+      <h3>Compliance Summary</h3>
+      <div class="rp-summary">
+        <div class="rp-summary-cell"><div class="lbl">Sprays</div><div class="val">${totalSprays}</div><div class="sub">in range</div></div>
+        <div class="rp-summary-cell"><div class="lbl">Products</div><div class="val">${productCount}</div><div class="sub">unique</div></div>
+      </div>
+      <div class="rp-summary">
+        <div class="rp-summary-cell"><div class="lbl">Areas</div><div class="val">${areaCount}</div><div class="sub">treated</div></div>
+        <div class="rp-summary-cell"><div class="lbl">Range</div><div class="val" style="font-size:13px;line-height:1.3;padding-top:6px">${rpFrom}<br>${rpTo}</div><div class="sub"></div></div>
+      </div>
+    </div>`;
+
+  if(!list.length){
+    return html + `<div class="rp-section"><div class="empty"><span class="big">📋</span>No sprays logged in this range</div></div>`;
+  }
+
+  html += `<div class="rp-section"><h3>Spray Records (${list.length})</h3>`;
+  list.forEach(s => {
+    const snap = s.snapshot || {};
+    const w = s.weather || {};
+    html += `<div class="rp-record">
+      <div class="rh">
+        <span class="rh-name">${esc(snap.name || 'Unknown product')}</span>
+        <span class="rh-date">${esc(prettyDateLong(s.date))}${s.time ? ' · ' + esc(s.time) : ''}</span>
+      </div>
+      <div class="rl">
+        ${snap.type ? `<span>Type: <b>${esc(snap.type)}</b></span>` : ''}
+        ${snap.apvmaNo ? `<span>APVMA: <b>${esc(snap.apvmaNo)}</b></span>` : ''}
+        ${snap.batchNo ? `<span>Batch: <b>${esc(snap.batchNo)}</b></span>` : ''}
+      </div>
+      <div class="rl" style="margin-top:4px">
+        ${s.rate ? `<span>Rate: <b>${esc(s.rate)} ${esc(snap.rateUnit||'')}${snap.rateAreaUnit ? ' ' + esc(snap.rateAreaUnit) : ''}</b></span>` : ''}
+        ${s.waterVolumeLha ? `<span>Water vol: <b>${esc(s.waterVolumeLha)} L/ha</b></span>` : ''}
+        ${s.totalUsed ? `<span>Total used: <b>${esc(s.totalUsed)} ${esc(snap.stockUnit||'')}</b></span>` : ''}
+      </div>
+      <div class="rl" style="margin-top:4px">
+        ${s.area ? `<span>Area: <b>${esc(s.area)}</b></span>` : ''}
+        ${s.method ? `<span>Method: <b>${esc(s.method)}</b></span>` : ''}
+        ${s.target ? `<span>Target: <b>${esc(s.target)}</b></span>` : ''}
+      </div>
+      <div class="rl" style="margin-top:4px">
+        <span>Operator: <b>${esc(s.operatorName||'—')}</b></span>
+        ${s.reEntryPeriod ? `<span>Re-entry: <b>${esc(s.reEntryPeriod)}</b></span>` : ''}
+        ${s.withholdingPeriod ? `<span>Withholding: <b>${esc(s.withholdingPeriod)}</b></span>` : ''}
+      </div>
+      ${(w.temp != null || w.wind != null || w.humidity != null) ? `<div class="rweather">
+        Weather at application:
+        ${w.temp != null ? `🌡 ${esc(w.temp)}°C` : ''}
+        ${w.wind != null ? ` · 💨 ${esc(w.wind)} km/h${w.windDir ? ' ' + esc(w.windDir) : ''}` : ''}
+        ${w.humidity != null ? ` · 💧 ${esc(w.humidity)}%` : ''}
+        ${w.source ? `<br><span style="font-size:10.5px">Source: ${esc(w.source)}${w.fetchedAt ? ' · ' + new Date(w.fetchedAt).toLocaleString('en-AU') : ''}</span>` : ''}
+      </div>` : ''}
+      ${s.notes ? `<div class="rweather">Notes: ${esc(s.notes)}</div>` : ''}
+    </div>`;
+  });
+  html += `</div>`;
+  return html;
+}
+
+function reportUsage(){
+  const list = getSpraysInRange();
+  const byProduct = {};
+
+  list.forEach(s => {
+    const key = s.productId || 'unknown';
+    if(!byProduct[key]){
+      byProduct[key] = {
+        name: s.snapshot?.name || 'Unknown',
+        type: s.snapshot?.type || 'Other',
+        stockUnit: s.snapshot?.stockUnit || '',
+        count: 0,
+        totalUsed: 0,
+        areas: new Set(),
+        lastDate: null
+      };
+    }
+    const b = byProduct[key];
+    b.count++;
+    if(typeof s.totalUsed === 'number') b.totalUsed += s.totalUsed;
+    if(s.area) b.areas.add(s.area);
+    if(!b.lastDate || s.date > b.lastDate) b.lastDate = s.date;
+  });
+
+  const rows = Object.values(byProduct).sort((a,b) => b.count - a.count);
+  const totalApplications = list.length;
+
+  let html = `
+    <div class="rp-section">
+      <h3>Usage Summary</h3>
+      <div class="rp-summary">
+        <div class="rp-summary-cell"><div class="lbl">Applications</div><div class="val">${totalApplications}</div><div class="sub">in range</div></div>
+        <div class="rp-summary-cell"><div class="lbl">Products Used</div><div class="val">${rows.length}</div><div class="sub">distinct</div></div>
+      </div>
+    </div>`;
+
+  if(!rows.length){
+    return html + `<div class="rp-section"><div class="empty"><span class="big">📊</span>No usage in this range</div></div>`;
+  }
+
+  html += `<div class="rp-section"><h3>Per-Product Usage</h3><table class="rp-table">
+    <thead><tr><th>Product</th><th>Type</th><th class="num">Apps</th><th class="num">Total Used</th><th>Last</th></tr></thead><tbody>`;
+  rows.forEach(r => {
+    html += `<tr>
+      <td class="pt">${esc(r.name)}</td>
+      <td style="font-size:11.5px;color:var(--muted)">${esc(r.type)}</td>
+      <td class="num"><b>${r.count}</b></td>
+      <td class="num">${r.totalUsed > 0 ? `${r.totalUsed.toFixed(2)} ${esc(r.stockUnit)}` : '—'}</td>
+      <td style="font-size:11.5px;color:var(--muted)">${esc(r.lastDate || '—')}</td>
+    </tr>`;
+  });
+  html += `</tbody></table></div>`;
+
+  html += `<div class="rp-section"><h3>Products Used in This Range</h3>
+    <div style="font-size:12.5px;color:var(--muted);line-height:1.6">
+      ${rows.map(r => `<b>${esc(r.name)}</b> — ${r.count} application${r.count>1?'s':''}${r.areas.size ? ` across ${r.areas.size} area${r.areas.size>1?'s':''}` : ''}`).join('<br>')}
+    </div>
+  </div>`;
+  return html;
+}
+
+function reportStock(){
+  const onHand = [...chemicals].sort((a,b) => (a.name||'').localeCompare(b.name||''));
+  const low = onHand.filter(c => {
+    const flags = chemStatusFlags(c);
+    return flags.some(f => f.cls === 'chem-stock-warn' || f.cls === 'chem-stock-bad');
+  });
+  const expiring = onHand.filter(c => {
+    const flags = chemStatusFlags(c);
+    return flags.some(f => f.cls === 'chem-expiry-warn' || f.cls === 'chem-expiry-bad');
+  });
+
+  let html = `
+    <div class="rp-section">
+      <h3>Stock Summary</h3>
+      <div class="rp-summary">
+        <div class="rp-summary-cell"><div class="lbl">Total Products</div><div class="val">${onHand.length}</div><div class="sub">in the shed</div></div>
+        <div class="rp-summary-cell"><div class="lbl">Alerts</div><div class="val">${low.length + expiring.length}</div><div class="sub">${low.length} low · ${expiring.length} expiry</div></div>
+      </div>
+    </div>`;
+
+  if(!onHand.length){
+    return html + `<div class="rp-section"><div class="empty"><span class="big">📦</span>No chemicals on file</div></div>`;
+  }
+
+  html += `<div class="rp-section"><h3>On-Hand Snapshot</h3><table class="rp-table">
+    <thead><tr><th>Product</th><th>Type</th><th class="num">On Hand</th><th class="num">Reorder Below</th><th>Batch</th><th>Expiry</th></tr></thead><tbody>`;
+  onHand.forEach(c => {
+    const flags = chemStatusFlags(c);
+    const isBad = flags.some(f => f.cls.endsWith('-bad'));
+    const isWarn = flags.some(f => f.cls.endsWith('-warn'));
+    const rowStyle = isBad ? 'background:#fdecea' : (isWarn ? 'background:#fff8e1' : '');
+    html += `<tr style="${rowStyle}">
+      <td class="pt">${esc(c.name || '—')}</td>
+      <td style="font-size:11.5px;color:var(--muted)">${esc(c.type || '')}</td>
+      <td class="num">${typeof c.quantityOnHand === 'number' ? `${c.quantityOnHand} ${esc(c.stockUnit||'')}` : '—'}</td>
+      <td class="num">${typeof c.reorderThreshold === 'number' ? `${c.reorderThreshold} ${esc(c.stockUnit||'')}` : '—'}</td>
+      <td style="font-size:11.5px;color:var(--muted)">${esc(c.batchNo || '—')}</td>
+      <td style="font-size:11.5px;color:var(--muted)">${c.expiryDate ? esc(c.expiryDate) : '—'}</td>
+    </tr>`;
+  });
+  html += `</tbody></table></div>`;
+
+  if(low.length){
+    html += `<div class="rp-section"><h3>⚠ Low Stock (${low.length})</h3>
+      <div style="font-size:13px;line-height:1.7">
+        ${low.map(c => `<b>${esc(c.name)}</b> — ${typeof c.quantityOnHand === 'number' ? `${c.quantityOnHand} ${esc(c.stockUnit||'')}` : 'no qty'} (reorder below ${typeof c.reorderThreshold === 'number' ? c.reorderThreshold : '—'})`).join('<br>')}
+      </div>
+    </div>`;
+  }
+
+  if(expiring.length){
+    html += `<div class="rp-section"><h3>⚠ Expiring / Expired (${expiring.length})</h3>
+      <div style="font-size:13px;line-height:1.7">
+        ${expiring.map(c => {
+          const flags = chemStatusFlags(c);
+          const txt = flags.map(f => f.text).join(' · ');
+          return `<b>${esc(c.name)}</b> — ${esc(txt)}`;
+        }).join('<br>')}
+      </div>
+    </div>`;
+  }
+
+  html += `<div class="rp-section"><h3>Locations</h3>
+    <div style="font-size:13px;line-height:1.7">
+      ${onHand.filter(c => c.location).length ? onHand.filter(c => c.location).map(c => `<b>${esc(c.name)}</b> — ${esc(c.location)}`).join('<br>') : '<span style="color:var(--muted)">No locations recorded</span>'}
+    </div>
+  </div>`;
+
+  return html;
+}
+
+/* =========================================================
+   Theme, user role, loaders
+   ========================================================= */
 const THEMES = [
   {id:'forest',name:'Forest',green:'#1b5e20',green2:'#2e7d32',lime:'#7cb342'},
   {id:'ocean',name:'Ocean',green:'#0d47a1',green2:'#1565c0',lime:'#42a5f5'},
@@ -1955,6 +1902,7 @@ onAuthStateChanged(auth, async (user) => {
     rainLog = []; irrigationLog = []; turfAreas = [];
     chemicals = []; sprays = []; sprayAreas = [...DEFAULT_SPRAY_AREAS];
     stopBarcodeScanner();
+    closeReportScreen();
   }
 });
 
@@ -2312,6 +2260,7 @@ function viewChem(){
   let html = `
     <div class="sec-head"><h2>Chem</h2>
       <div style="display:flex;gap:6px">
+        <button class="add-btn" style="background:var(--amber)" data-action="rp-open" title="Reports">📊</button>
         <button class="add-btn" style="background:var(--green2)" data-action="spray-scan" title="Scan barcode">📷</button>
         <button class="add-btn" style="background:var(--blue)" data-action="spray-new" title="Log spray">💧</button>
         <button class="add-btn" data-action="chem-new" title="Add chemical">+</button>
@@ -2395,7 +2344,6 @@ function formChemical(existing, seed){
   const base = existing || seed || {};
   const c = { ...base };
 
-  // Seed label photo edit buffer
   _editChemPhotos = Array.isArray(c.labelPhotos) ? [...c.labelPhotos] : [];
 
   const rateAreaVal = c.rateAreaUnit || 'per ha';
@@ -3848,6 +3796,25 @@ document.addEventListener('click', async (e) => {
     }
 
     case 'qr-open': window.open(SIGN_IN_QR_URL, '_blank'); break;
+
+    /* ===== REPORTS ===== */
+    case 'rp-open': openReportScreen(); break;
+    case 'rp-close': closeReportScreen(); break;
+    case 'rp-tab': setRpTab(el.dataset.tab); break;
+    case 'rp-print': window.print(); break;
+    case 'rp-quick': {
+      const r = el.dataset.range;
+      const today = new Date();
+      if(r === 'year'){
+        rpFrom = iso(new Date(today.getFullYear(), 0, 1));
+        rpTo = todayISO();
+      } else if(r === 'month'){
+        rpFrom = iso(new Date(today.getFullYear(), today.getMonth(), 1));
+        rpTo = todayISO();
+      }
+      renderReportScreen();
+      break;
+    }
 
     /* ===== BARCODE SCAN ===== */
     case 'spray-scan': openBarcodeScanner('spray-new'); break;
