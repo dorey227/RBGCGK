@@ -309,7 +309,6 @@
   .wind-warn{background:#fff3e0;border-left:4px solid var(--amber);padding:10px;border-radius:8px;font-size:12.5px;line-height:1.5;margin-bottom:12px}
   .spray-weather-box{background:#e3f2fd;border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.6;margin-bottom:12px;border-left:4px solid var(--blue)}
 
-  /* Barcode scanner */
   #scanModal{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:500;display:flex;flex-direction:column;color:#fff}
   #scanModal.hidden{display:none}
   #scanVideo{flex:1;width:100%;object-fit:cover;background:#000}
@@ -587,6 +586,9 @@ let _scanTarget = null;      // 'spray-new' | 'chem-new'
 let _scanStream = null;
 let _scanRAF = null;
 let _scanDetector = null;
+
+// Label photo editor buffer (chemicals)
+let _editChemPhotos = null;
 
 const _urlParams = new URLSearchParams(window.location.search);
 let qrMode = _urlParams.get('qr');
@@ -1021,7 +1023,6 @@ async function deductStock(chem, amount){
   const updated = { ...chem, quantityOnHand: next, updatedAt: serverTimestamp() };
   const { id, ...data } = updated;
   await setDoc(doc(db, 'clubs', 'rbgc', 'chemicals', id), data, { merge:true });
-  // Update local array
   const idx = chemicals.findIndex(c => c.id === id);
   if(idx >= 0) chemicals[idx] = { ...chemicals[idx], quantityOnHand: next };
   return true;
@@ -1097,14 +1098,11 @@ async function handleBarcodeResult(code){
   const existing = chemicals.find(c => c.barcode === code);
 
   if(existing){
-    // Second-time scan — go straight to spray form with product pre-selected
     toast(`Matched: ${existing.name}`);
-    // Merge pre-select into a "spray seed" and open the spray form
     openSprayWithProduct(existing);
     return;
   }
 
-  // First-time scan — open Add Chemical with barcode pre-filled
   const proceed = confirm(`New barcode: ${code}\n\nNo product matches this code yet.\n\nAdd it as a new chemical now?`);
   if(proceed){
     formChemical(null, { barcode: code });
@@ -1114,7 +1112,6 @@ async function handleBarcodeResult(code){
 }
 
 function openSprayWithProduct(chem){
-  // Build a seed spray with snapshot from the product
   const seed = {
     productId: chem.id,
     snapshot: {
@@ -1129,6 +1126,37 @@ function openSprayWithProduct(chem){
   formSpray(seed);
 }
 
+/* =========================================================
+   Label photo handler for chemicals
+   ========================================================= */
+async function handleChemPhoto(inputEl){
+  const file = inputEl.files?.[0]; if(!file) return;
+  try{
+    toast('Compressing…');
+    const url = await compressImage(file, 900, 0.7);
+    if(!Array.isArray(_editChemPhotos)) _editChemPhotos = [];
+    _editChemPhotos.push(url);
+    refreshChemPhotoStrip();
+    toast('Photo added');
+    inputEl.value = '';
+  }catch(e){ console.warn(e); toast('Failed'); inputEl.value=''; }
+}
+
+function refreshChemPhotoStrip(){
+  const strip = document.getElementById('chemPhotoStrip');
+  if(!strip) return;
+  const photos = _editChemPhotos || [];
+  if(!photos.length){
+    strip.innerHTML = '<div style="font-size:12.5px;color:var(--muted);padding:6px 0">No photos yet</div>';
+    return;
+  }
+  strip.innerHTML = photos.map((p, i) =>
+    `<div style="position:relative;flex:0 0 auto">
+      <img src="${p}" style="width:80px;height:80px;border-radius:10px;object-fit:cover;display:block;cursor:zoom-in" data-action="view-photo" data-src="${p}">
+      <button type="button" data-action="chem-photo-remove" data-idx="${i}" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:var(--red);color:#fff;border:2px solid #fff;font-size:12px;line-height:1;cursor:pointer;padding:0">✕</button>
+    </div>`
+  ).join('');
+}
 /* =========================================================
    Weather card (dashboard)
    ========================================================= */
@@ -2327,7 +2355,9 @@ function viewChem(){
 function chemRow(c){
   const typeCls = CHEM_TYPE_CLASS[c.type] || 'p-other';
   const flags = chemStatusFlags(c);
+  const thumb = (Array.isArray(c.labelPhotos) && c.labelPhotos.length) ? c.labelPhotos[0] : null;
   return `<div class="item" data-action="chem-view" data-id="${c.id}" style="cursor:pointer">
+    ${thumb ? `<img src="${thumb}" style="width:52px;height:52px;border-radius:10px;object-fit:cover;flex:0 0 52px">` : ''}
     <div class="item-body">
       <div class="item-title">${esc(c.name || 'Unnamed product')}</div>
       <div class="item-meta">
@@ -2365,7 +2395,16 @@ function formChemical(existing, seed){
   const base = existing || seed || {};
   const c = { ...base };
 
+  // Seed label photo edit buffer
+  _editChemPhotos = Array.isArray(c.labelPhotos) ? [...c.labelPhotos] : [];
+
   const rateAreaVal = c.rateAreaUnit || 'per ha';
+  const photoStripHtml = (_editChemPhotos.length ? _editChemPhotos.map((p, i) =>
+    `<div style="position:relative;flex:0 0 auto">
+      <img src="${p}" style="width:80px;height:80px;border-radius:10px;object-fit:cover;display:block;cursor:zoom-in" data-action="view-photo" data-src="${p}">
+      <button type="button" data-action="chem-photo-remove" data-idx="${i}" style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:var(--red);color:#fff;border:2px solid #fff;font-size:12px;line-height:1;cursor:pointer;padding:0">✕</button>
+    </div>`).join('') : '<div style="font-size:12.5px;color:var(--muted);padding:6px 0">No photos yet</div>');
+
   openSheet(isEdit ? 'Edit Chemical' : 'Add Chemical', `
     <div class="field"><label>Product name *</label><input name="name" required value="${esc(c.name||'')}" placeholder="e.g. Banner MAXX"></div>
     <div class="row2">
@@ -2373,6 +2412,16 @@ function formChemical(existing, seed){
       <div class="field"><label>Batch No.</label><input name="batchNo" value="${esc(c.batchNo||'')}"></div>
     </div>
     <div class="field"><label>Barcode</label><input name="barcode" value="${esc(c.barcode||'')}" placeholder="Scan or type barcode" inputmode="numeric"></div>
+    <div class="field">
+      <label>Label photos (${_editChemPhotos.length})</label>
+      <div id="chemPhotoStrip" style="display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px">${photoStripHtml}</div>
+      <div class="row2" style="margin-top:4px">
+        <button type="button" data-action="chem-photo-camera" style="padding:11px;border-radius:11px;border:1.5px solid var(--line);background:#fff;font-weight:600;cursor:pointer;font-family:inherit;font-size:13.5px">📷 Take Photo</button>
+        <button type="button" data-action="chem-photo-gallery" style="padding:11px;border-radius:11px;border:1.5px solid var(--line);background:#fff;font-weight:600;cursor:pointer;font-family:inherit;font-size:13.5px">🖼 From Gallery</button>
+      </div>
+      <input type="file" id="chemPhotoCamera" accept="image/*" capture="environment" style="display:none">
+      <input type="file" id="chemPhotoGallery" accept="image/*" style="display:none">
+    </div>
     <div class="field"><label>Active ingredient</label><input name="activeIngredient" value="${esc(c.activeIngredient||'')}" placeholder="e.g. Propiconazole 250 g/L"></div>
     <div class="field"><label>Type</label><select name="type">${CHEM_TYPES.map(t => `<option ${c.type===t?'selected':''}>${t}</option>`).join('')}</select></div>
     <div class="row3">
@@ -2410,9 +2459,11 @@ function formChemical(existing, seed){
       location: d.location.trim(),
       supplier: d.supplier.trim(),
       notes: d.notes.trim(),
+      labelPhotos: Array.isArray(_editChemPhotos) ? _editChemPhotos : [],
       created: c.created || new Date().toISOString(),
       createdBy: c.createdBy || currentUser?.uid || ''
     };
+    _editChemPhotos = null;
     await saveChemical(rec);
     await loadChemicals();
     toast(isEdit ? 'Updated' : 'Chemical added');
@@ -2443,7 +2494,6 @@ function formSpray(existing){
 
   const t = todayISO();
 
-  // If a product is pre-selected (e.g. from a scan), grab its last spray to hint at rate/water volume
   const preselected = chemicals.find(x => x.id === snap.id);
   const lastSpray = preselected ? getLastSprayForProduct(preselected.id) : null;
   const rateHint = !s.rate && lastSpray?.rate ? lastSpray.rate : '';
@@ -2549,7 +2599,6 @@ function formSpray(existing){
     };
     await saveSpray(rec);
 
-    // Auto-deduct stock (new sprays only)
     if(!isEdit && rec.totalUsed && product && typeof product.quantityOnHand === 'number'){
       try{
         await deductStock(product, rec.totalUsed);
@@ -2625,11 +2674,20 @@ function formChemView(id){
   const flags = chemStatusFlags(c);
   const typeCls = CHEM_TYPE_CLASS[c.type] || 'p-other';
   const relatedSprays = sprays.filter(s => s.productId === id).sort((a,b) => (b.date||'').localeCompare(a.date||'')).slice(0,10);
+  const photos = Array.isArray(c.labelPhotos) ? c.labelPhotos : [];
   openSheet(c.name || 'Chemical', `
     <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">
       <span class="pill ${typeCls}">${esc(c.type || 'Other')}</span>
       ${flags.map(f => `<span class="${f.cls}">${esc(f.text)}</span>`).join('')}
     </div>
+    ${photos.length ? `
+      <div class="field">
+        <label>Label photos (${photos.length})</label>
+        <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px">
+          ${photos.map(p => `<img src="${p}" style="flex:0 0 auto;height:120px;border-radius:12px;object-fit:cover;cursor:zoom-in" data-action="view-photo" data-src="${p}">`).join('')}
+        </div>
+      </div>
+    ` : ''}
     ${c.activeIngredient ? `<div class="field"><label>Active</label><div style="font-size:14px">${esc(c.activeIngredient)}</div></div>` : ''}
     ${c.apvmaNo ? `<div class="field"><label>APVMA</label><div style="font-size:14px">${esc(c.apvmaNo)}</div></div>` : ''}
     ${c.batchNo ? `<div class="field"><label>Batch</label><div style="font-size:14px">${esc(c.batchNo)}</div></div>` : ''}
@@ -3810,6 +3868,16 @@ document.addEventListener('click', async (e) => {
     case 'chem-new': formChemical(null); break;
     case 'chem-edit': { const c = chemicals.find(x => x.id === id); if(!c) break; formChemical(c); break; }
     case 'chem-view': formChemView(id); break;
+    case 'chem-photo-camera': $('#chemPhotoCamera')?.click(); break;
+    case 'chem-photo-gallery': $('#chemPhotoGallery')?.click(); break;
+    case 'chem-photo-remove': {
+      if(!Array.isArray(_editChemPhotos)) break;
+      const idx = parseInt(el.dataset.idx);
+      if(isNaN(idx)) break;
+      _editChemPhotos.splice(idx, 1);
+      refreshChemPhotoStrip();
+      break;
+    }
     case 'chem-delete': {
       const c = chemicals.find(x => x.id === id);
       if(!c || !confirm(`Delete "${c.name}"?`)) break;
@@ -4026,6 +4094,7 @@ document.addEventListener('click', async (e) => {
 });
 
 document.addEventListener('change', (e) => {
+  if(e.target.id === 'chemPhotoCamera' || e.target.id === 'chemPhotoGallery') handleChemPhoto(e.target);
   if(e.target.id === 'plantInputCamera' || e.target.id === 'plantInputGallery') handlePlantPhoto(e.target);
   if(e.target.id === 'importDocCamera' || e.target.id === 'importDocGallery') handleDocPhoto(e.target);
   if(e.target.id === 'editPhotoCamera' || e.target.id === 'editPhotoGallery') handleEditPhoto(e.target);
