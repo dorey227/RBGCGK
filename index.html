@@ -300,7 +300,6 @@
   .area-card .area-need{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);font-size:12.5px;display:flex;justify-content:space-between}
   .area-card .area-need b{color:var(--green);font-size:14px}
 
-  /* Chem-specific */
   .chem-chip-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
   .chem-unit-chip{background:#f0f4f0;border-radius:8px;padding:3px 8px;font-size:11px;font-weight:700;color:var(--muted)}
   .chem-expiry-warn{background:#fff3e0;color:var(--amber);border-radius:8px;padding:3px 8px;font-size:11px;font-weight:700}
@@ -309,6 +308,21 @@
   .chem-stock-bad{background:#fdecea;color:var(--red);border-radius:8px;padding:3px 8px;font-size:11px;font-weight:700}
   .wind-warn{background:#fff3e0;border-left:4px solid var(--amber);padding:10px;border-radius:8px;font-size:12.5px;line-height:1.5;margin-bottom:12px}
   .spray-weather-box{background:#e3f2fd;border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.6;margin-bottom:12px;border-left:4px solid var(--blue)}
+
+  /* Barcode scanner */
+  #scanModal{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:500;display:flex;flex-direction:column;color:#fff}
+  #scanModal.hidden{display:none}
+  #scanVideo{flex:1;width:100%;object-fit:cover;background:#000}
+  .scan-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+  .scan-frame{width:70%;max-width:340px;aspect-ratio:1.6/1;border:3px solid rgba(255,255,255,.85);border-radius:14px;box-shadow:0 0 0 9999px rgba(0,0,0,.45)}
+  .scan-hint{position:absolute;bottom:120px;left:0;right:0;text-align:center;font-size:14px;padding:0 24px;line-height:1.5;color:rgba(255,255,255,.9)}
+  .scan-bar{padding:16px 16px calc(24px + env(safe-area-inset-bottom));display:flex;gap:10px;background:#111;position:relative;z-index:2}
+  .scan-bar button{flex:1;padding:14px;border-radius:12px;border:0;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer}
+  .scan-bar .cancel{background:#333;color:#fff}
+  .scan-bar .manual{background:var(--green);color:#fff}
+
+  .alert-card{background:#fff8e1;border-left:4px solid var(--amber);padding:12px 14px;border-radius:12px;margin-bottom:10px;font-size:13px;line-height:1.6}
+  .alert-card b{color:var(--amber)}
 </style>
 </head>
 <body class="theme-ocean nav-floating density-compact">
@@ -397,6 +411,16 @@
     <button type="button" data-action="wx-refresh">↻</button>
   </div>
   <div class="wx-body" id="wxBody"></div>
+</div>
+
+<div id="scanModal" class="hidden">
+  <video id="scanVideo" autoplay muted playsinline></video>
+  <div class="scan-overlay"><div class="scan-frame"></div></div>
+  <div class="scan-hint" id="scanHint">Point at the barcode on the bottle…</div>
+  <div class="scan-bar">
+    <button type="button" class="cancel" data-action="scan-cancel">Cancel</button>
+    <button type="button" class="manual" data-action="scan-manual">Enter manually</button>
+  </div>
 </div>
 
 <div class="overlay hidden" id="overlay">
@@ -553,11 +577,16 @@ let rainLog = [];
 let irrigationLog = [];
 let turfAreas = [];
 
-// Chem state
 let chemicals = [];
 let sprays = [];
 let sprayAreas = [...DEFAULT_SPRAY_AREAS];
 let chemFilter = 'All';
+
+// Barcode scanner state
+let _scanTarget = null;      // 'spray-new' | 'chem-new'
+let _scanStream = null;
+let _scanRAF = null;
+let _scanDetector = null;
 
 const _urlParams = new URLSearchParams(window.location.search);
 let qrMode = _urlParams.get('qr');
@@ -867,7 +896,7 @@ async function saveTurfAreas(){
 }
 
 /* =========================================================
-   CHEM LOADING + SAVING (club-wide, staff-only)
+   CHEM LOADING + SAVING
    ========================================================= */
 async function loadChemicals(){
   try{
@@ -932,7 +961,6 @@ async function saveSprayAreas(){
    ========================================================= */
 function chemStatusFlags(chem){
   const flags = [];
-  // Expiry
   if(chem.expiryDate){
     const today = todayISO();
     if(chem.expiryDate < today) flags.push({ cls:'chem-expiry-bad', text:`Expired ${prettyDate(chem.expiryDate)}` });
@@ -941,7 +969,6 @@ function chemStatusFlags(chem){
       if(days <= 30) flags.push({ cls:'chem-expiry-warn', text:`Expires in ${days}d` });
     }
   }
-  // Stock
   if(typeof chem.quantityOnHand === 'number' && typeof chem.reorderThreshold === 'number' && chem.reorderThreshold > 0){
     if(chem.quantityOnHand <= 0) flags.push({ cls:'chem-stock-bad', text:'Out of stock' });
     else if(chem.quantityOnHand <= chem.reorderThreshold) flags.push({ cls:'chem-stock-warn', text:'Low stock' });
@@ -970,6 +997,136 @@ function getCurrentHourWeather(){
     fetchedAt: weatherData.fetchedAt,
     source: 'Open-Meteo (auto)'
   };
+}
+
+function getChemAlerts(){
+  const alerts = [];
+  chemicals.forEach(c => {
+    const flags = chemStatusFlags(c);
+    flags.forEach(f => alerts.push({ chem:c, flag:f }));
+  });
+  return alerts;
+}
+
+function getLastSprayForProduct(productId){
+  const list = sprays.filter(s => s.productId === productId && !s.deletedAt);
+  list.sort((a,b) => (b.date||'').localeCompare(a.date||''));
+  return list[0] || null;
+}
+
+async function deductStock(chem, amount){
+  if(typeof amount !== 'number' || !isFinite(amount) || amount <= 0) return false;
+  if(typeof chem.quantityOnHand !== 'number') return false;
+  const next = Math.max(0, Math.round((chem.quantityOnHand - amount) * 100) / 100);
+  const updated = { ...chem, quantityOnHand: next, updatedAt: serverTimestamp() };
+  const { id, ...data } = updated;
+  await setDoc(doc(db, 'clubs', 'rbgc', 'chemicals', id), data, { merge:true });
+  // Update local array
+  const idx = chemicals.findIndex(c => c.id === id);
+  if(idx >= 0) chemicals[idx] = { ...chemicals[idx], quantityOnHand: next };
+  return true;
+}
+
+/* =========================================================
+   Barcode scanner
+   ========================================================= */
+async function openBarcodeScanner(target){
+  _scanTarget = target;
+  const modal = $('#scanModal');
+  const video = $('#scanVideo');
+  const hint = $('#scanHint');
+
+  if(!('BarcodeDetector' in window)){
+    hint.textContent = 'Barcode scanning not supported on this browser. Tap "Enter manually".';
+    modal.classList.remove('hidden');
+    return;
+  }
+
+  modal.classList.remove('hidden');
+  hint.textContent = 'Point at the barcode on the bottle…';
+
+  try{
+    _scanDetector = new BarcodeDetector({ formats:['ean_13','ean_8','upc_a','upc_e','code_128','code_39','codabar','itf'] });
+  }catch(e){
+    _scanDetector = new BarcodeDetector();
+  }
+
+  try{
+    _scanStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }
+    });
+    video.srcObject = _scanStream;
+    await video.play();
+  }catch(e){
+    console.error('Camera failed', e);
+    hint.textContent = 'Camera unavailable. Tap "Enter manually".';
+    return;
+  }
+
+  const loop = async () => {
+    if(!_scanStream) return;
+    try{
+      const codes = await _scanDetector.detect(video);
+      if(codes && codes.length){
+        const code = codes[0].rawValue;
+        stopBarcodeScanner();
+        handleBarcodeResult(code);
+        return;
+      }
+    }catch(e){}
+    _scanRAF = requestAnimationFrame(loop);
+  };
+  _scanRAF = requestAnimationFrame(loop);
+}
+
+function stopBarcodeScanner(){
+  const modal = $('#scanModal');
+  modal.classList.add('hidden');
+  if(_scanRAF){ cancelAnimationFrame(_scanRAF); _scanRAF = null; }
+  if(_scanStream){
+    try{ _scanStream.getTracks().forEach(t => t.stop()); }catch(e){}
+    _scanStream = null;
+  }
+  const video = $('#scanVideo');
+  if(video) video.srcObject = null;
+  _scanDetector = null;
+}
+
+async function handleBarcodeResult(code){
+  if(!code) return;
+  const existing = chemicals.find(c => c.barcode === code);
+
+  if(existing){
+    // Second-time scan — go straight to spray form with product pre-selected
+    toast(`Matched: ${existing.name}`);
+    // Merge pre-select into a "spray seed" and open the spray form
+    openSprayWithProduct(existing);
+    return;
+  }
+
+  // First-time scan — open Add Chemical with barcode pre-filled
+  const proceed = confirm(`New barcode: ${code}\n\nNo product matches this code yet.\n\nAdd it as a new chemical now?`);
+  if(proceed){
+    formChemical(null, { barcode: code });
+  } else {
+    toast('Scan cancelled');
+  }
+}
+
+function openSprayWithProduct(chem){
+  // Build a seed spray with snapshot from the product
+  const seed = {
+    productId: chem.id,
+    snapshot: {
+      id: chem.id,
+      name: chem.name,
+      type: chem.type,
+      rateUnit: chem.rateUnit,
+      rateAreaUnit: chem.rateAreaUnit,
+      stockUnit: chem.stockUnit
+    }
+  };
+  formSpray(seed);
 }
 
 /* =========================================================
@@ -1024,6 +1181,27 @@ function renderWeatherCard(){
         ? `<div style="font-size:11.5px;color:var(--muted);margin-top:6px;text-align:center;line-height:1.5">⚠️ Turf is losing <b>${bal.deficit.toFixed(1)}mm</b> more than it's receiving this week</div>`
         : `<div style="font-size:11.5px;color:var(--green2);margin-top:6px;text-align:center">✅ Rainfall keeping up with water loss</div>`}
     </div>`;
+}
+
+function renderChemAlertCard(){
+  const alerts = getChemAlerts();
+  if(!alerts.length) return '';
+  const expiring = alerts.filter(a => a.flag.cls === 'chem-expiry-warn' || a.flag.cls === 'chem-expiry-bad');
+  const stocking = alerts.filter(a => a.flag.cls === 'chem-stock-warn' || a.flag.cls === 'chem-stock-bad');
+  let inner = '';
+  if(expiring.length){
+    inner += `<div style="margin-bottom:8px"><b>⚠ Expiring (${expiring.length})</b><br>${expiring.map(a => `${esc(a.chem.name)} — ${esc(a.flag.text)}`).join('<br>')}</div>`;
+  }
+  if(stocking.length){
+    inner += `<div><b>📦 Low stock (${stocking.length})</b><br>${stocking.map(a => `${esc(a.chem.name)} — ${esc(a.flag.text)}`).join('<br>')}</div>`;
+  }
+  return `<div class="alert-card" data-action="nav" data-tab="chem" style="cursor:pointer">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <b>🧴 Chem alerts</b>
+      <span style="font-size:11px;color:var(--muted)">Tap to open →</span>
+    </div>
+    <div style="margin-top:8px;font-size:12.5px">${inner}</div>
+  </div>`;
 }
 
 async function openWeatherScreen(){
@@ -1748,6 +1926,7 @@ onAuthStateChanged(auth, async (user) => {
     weatherData = null; weatherAdvice = null;
     rainLog = []; irrigationLog = []; turfAreas = [];
     chemicals = []; sprays = []; sprayAreas = [...DEFAULT_SPRAY_AREAS];
+    stopBarcodeScanner();
   }
 });
 
@@ -2018,6 +2197,7 @@ function viewDash(){
   const weekProgram = getThisWeekProgram();
 
   let html = `${renderWeatherCard()}`;
+  html += renderChemAlertCard();
 
   if(overdue > 0){
     html += `<div class="card" style="border-left:4px solid var(--red)"><h3 style="color:var(--red)">⚠ ${overdue} overdue job${overdue>1?'s':''}</h3></div>`;
@@ -2104,6 +2284,7 @@ function viewChem(){
   let html = `
     <div class="sec-head"><h2>Chem</h2>
       <div style="display:flex;gap:6px">
+        <button class="add-btn" style="background:var(--green2)" data-action="spray-scan" title="Scan barcode">📷</button>
         <button class="add-btn" style="background:var(--blue)" data-action="spray-new" title="Log spray">💧</button>
         <button class="add-btn" data-action="chem-new" title="Add chemical">+</button>
       </div>
@@ -2153,6 +2334,7 @@ function chemRow(c){
         <span class="pill ${typeCls}">${esc(c.type || 'Other')}</span>
         ${c.quantityOnHand !== undefined ? `<span>${formatQty(c)}</span>` : ''}
         ${c.rateUnit ? `<span class="chem-unit-chip">${formatRate(c)}</span>` : ''}
+        ${c.barcode ? `<span style="font-size:11px;color:var(--muted)">🏷 ${esc(c.barcode)}</span>` : ''}
       </div>
       ${flags.length ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">${flags.map(f => `<span class="${f.cls}">${esc(f.text)}</span>`).join('')}</div>` : ''}
       ${c.activeIngredient ? `<div style="font-size:11.5px;color:var(--muted);margin-top:4px">${esc(c.activeIngredient)}</div>` : ''}
@@ -2178,12 +2360,11 @@ function sprayRow(s, compact){
   </div>`;
 }
 
-/* =========================================================
-   CHEM FORMS
-   ========================================================= */
-function formChemical(existing){
+function formChemical(existing, seed){
   const isEdit = !!existing;
-  const c = existing || {};
+  const base = existing || seed || {};
+  const c = { ...base };
+
   const rateAreaVal = c.rateAreaUnit || 'per ha';
   openSheet(isEdit ? 'Edit Chemical' : 'Add Chemical', `
     <div class="field"><label>Product name *</label><input name="name" required value="${esc(c.name||'')}" placeholder="e.g. Banner MAXX"></div>
@@ -2191,6 +2372,7 @@ function formChemical(existing){
       <div class="field"><label>APVMA No.</label><input name="apvmaNo" value="${esc(c.apvmaNo||'')}" placeholder="e.g. 56789"></div>
       <div class="field"><label>Batch No.</label><input name="batchNo" value="${esc(c.batchNo||'')}"></div>
     </div>
+    <div class="field"><label>Barcode</label><input name="barcode" value="${esc(c.barcode||'')}" placeholder="Scan or type barcode" inputmode="numeric"></div>
     <div class="field"><label>Active ingredient</label><input name="activeIngredient" value="${esc(c.activeIngredient||'')}" placeholder="e.g. Propiconazole 250 g/L"></div>
     <div class="field"><label>Type</label><select name="type">${CHEM_TYPES.map(t => `<option ${c.type===t?'selected':''}>${t}</option>`).join('')}</select></div>
     <div class="row3">
@@ -2216,6 +2398,7 @@ function formChemical(existing){
       name: d.name.trim(),
       apvmaNo: d.apvmaNo.trim(),
       batchNo: d.batchNo.trim(),
+      barcode: d.barcode.trim(),
       activeIngredient: d.activeIngredient.trim(),
       type: d.type,
       stockUnit: d.stockUnit,
@@ -2241,7 +2424,6 @@ function formSpray(existing){
   const s = existing || {};
   const snap = s.snapshot || {};
 
-  // Compute weather
   const wNow = getCurrentHourWeather();
   const prefill = {
     temp: s.weather?.temp ?? wNow?.temp ?? '',
@@ -2261,18 +2443,28 @@ function formSpray(existing){
 
   const t = todayISO();
 
+  // If a product is pre-selected (e.g. from a scan), grab its last spray to hint at rate/water volume
+  const preselected = chemicals.find(x => x.id === snap.id);
+  const lastSpray = preselected ? getLastSprayForProduct(preselected.id) : null;
+  const rateHint = !s.rate && lastSpray?.rate ? lastSpray.rate : '';
+  const waterHint = s.waterVolumeLha ?? lastSpray?.waterVolumeLha ?? '';
+
   openSheet(isEdit ? 'Edit Spray' : 'New Spray', `
     <div class="row2">
       <div class="field"><label>Date *</label><input type="date" name="date" value="${s.date || t}" required></div>
       <div class="field"><label>Time</label><input type="time" name="time" value="${s.time || new Date().toTimeString().slice(0,5)}"></div>
     </div>
-    <div class="field"><label>Product *</label><select name="productId" required>${productOptions}</select></div>
+    <div class="field">
+      <label>Product *</label>
+      <select name="productId" required>${productOptions}</select>
+      <button type="button" class="submit" data-action="spray-scan-inline" style="background:#fff;color:var(--green2);border:1.5px solid var(--green2);padding:9px;font-size:13px;margin-top:6px">📷 Scan barcode to pick product</button>
+    </div>
     <div id="sprayProductInfo"></div>
     <div class="row2">
-      <div class="field"><label>Rate</label><input name="rate" id="sprayRate" value="${esc(s.rate||'')}" placeholder="e.g. 2.5"><span id="sprayRateUnit" style="font-size:11px;color:var(--muted);margin-top:4px;display:block"></span></div>
-      <div class="field"><label>Water volume (L/ha)</label><input type="number" step="0.1" name="waterVolumeLha" value="${s.waterVolumeLha ?? ''}" placeholder="e.g. 150"></div>
+      <div class="field"><label>Rate</label><input name="rate" id="sprayRate" value="${esc(s.rate||'')}" placeholder="${rateHint ? 'Last: ' + esc(rateHint) : 'e.g. 2.5'}"><span id="sprayRateUnit" style="font-size:11px;color:var(--muted);margin-top:4px;display:block"></span></div>
+      <div class="field"><label>Water volume (L/ha)</label><input type="number" step="0.1" name="waterVolumeLha" value="${waterHint || ''}" placeholder="${lastSpray?.waterVolumeLha ? 'Last: ' + lastSpray.waterVolumeLha : 'e.g. 150'}"></div>
     </div>
-    <div class="field"><label>Total used</label><input type="number" step="0.01" name="totalUsed" value="${s.totalUsed ?? ''}" placeholder="Total in product's stock unit"></div>
+    <div class="field"><label>Total used</label><input type="number" step="0.01" name="totalUsed" value="${s.totalUsed ?? ''}" placeholder="Total in product's stock unit"><span style="font-size:11px;color:var(--muted);margin-top:4px;display:block">Auto-deducts from stock on save</span></div>
     <div class="field"><label>Area *</label>
       <select name="areaSelect" id="sprayAreaSelect" style="margin-bottom:6px">
         <option value="">— pick a preset —</option>
@@ -2356,18 +2548,37 @@ function formSpray(existing){
       editedBy: isEdit ? (currentUser?.uid || '') : null
     };
     await saveSpray(rec);
+
+    // Auto-deduct stock (new sprays only)
+    if(!isEdit && rec.totalUsed && product && typeof product.quantityOnHand === 'number'){
+      try{
+        await deductStock(product, rec.totalUsed);
+        const remaining = chemicals.find(x => x.id === product.id)?.quantityOnHand ?? 0;
+        if(remaining <= 0){
+          toast(`Spray saved · ${product.name} now out of stock`);
+        } else if(typeof product.reorderThreshold === 'number' && remaining <= product.reorderThreshold){
+          toast(`Spray saved · ${product.name} low (${remaining} ${product.stockUnit||''})`);
+        } else {
+          toast(`Spray saved · ${remaining} ${product.stockUnit||''} left`);
+        }
+      }catch(e){
+        console.warn('Stock deduct failed', e);
+        toast('Spray saved · stock deduct failed');
+      }
+    } else {
+      toast(isEdit ? 'Spray updated' : 'Spray logged');
+    }
+
     await loadSprays();
-    toast(isEdit ? 'Spray updated' : 'Spray logged');
   });
 
-  // Wire selects to text inputs + product info hint
   setTimeout(() => {
     const areaSel = $('#sprayAreaSelect');
     const areaTxt = $('#sprayAreaText');
     if(areaSel && areaTxt){
       areaSel.addEventListener('change', () => { if(areaSel.value) areaTxt.value = areaSel.value; });
     }
-    const methodSel = $('#sprayMethodText') ? document.querySelector('[name="methodSelect"]') : null;
+    const methodSel = document.querySelector('[name="methodSelect"]');
     const methodTxt = $('#sprayMethodText');
     if(methodSel && methodTxt){
       methodSel.addEventListener('change', () => { if(methodSel.value) methodTxt.value = methodSel.value; });
@@ -2422,6 +2633,7 @@ function formChemView(id){
     ${c.activeIngredient ? `<div class="field"><label>Active</label><div style="font-size:14px">${esc(c.activeIngredient)}</div></div>` : ''}
     ${c.apvmaNo ? `<div class="field"><label>APVMA</label><div style="font-size:14px">${esc(c.apvmaNo)}</div></div>` : ''}
     ${c.batchNo ? `<div class="field"><label>Batch</label><div style="font-size:14px">${esc(c.batchNo)}</div></div>` : ''}
+    ${c.barcode ? `<div class="field"><label>Barcode</label><div style="font-size:14px">${esc(c.barcode)}</div></div>` : ''}
     ${c.expiryDate ? `<div class="field"><label>Expiry</label><div style="font-size:14px">${esc(c.expiryDate)}</div></div>` : ''}
     <div class="row2">
       <div class="field"><label>On hand</label><div style="font-size:14px">${formatQty(c)}</div></div>
@@ -3579,6 +3791,21 @@ document.addEventListener('click', async (e) => {
 
     case 'qr-open': window.open(SIGN_IN_QR_URL, '_blank'); break;
 
+    /* ===== BARCODE SCAN ===== */
+    case 'spray-scan': openBarcodeScanner('spray-new'); break;
+    case 'scan-cancel': stopBarcodeScanner(); break;
+    case 'scan-manual': {
+      stopBarcodeScanner();
+      const code = prompt('Enter barcode manually:');
+      if(code) handleBarcodeResult(code.trim());
+      break;
+    }
+    case 'spray-scan-inline': {
+      closeSheet();
+      setTimeout(() => openBarcodeScanner('spray-new'), 200);
+      break;
+    }
+
     /* ===== CHEM ACTIONS ===== */
     case 'chem-new': formChemical(null); break;
     case 'chem-edit': { const c = chemicals.find(x => x.id === id); if(!c) break; formChemical(c); break; }
@@ -3596,7 +3823,7 @@ document.addEventListener('click', async (e) => {
     case 'chem-filter': chemFilter = el.dataset.filter; render(); break;
 
     case 'spray-new': if(!chemicals.length){ toast('Add a chemical first'); break; } formSpray(null); break;
-    case 'spray-new-for': { const chemId = el.dataset.chem; const c = chemicals.find(x => x.id === chemId); if(!c) break; formSpray({ productId: c.id, snapshot: { id: c.id, name: c.name, type: c.type, rateUnit: c.rateUnit, rateAreaUnit: c.rateAreaUnit, stockUnit: c.stockUnit } }); break; }
+    case 'spray-new-for': { const chemId = el.dataset.chem; const c = chemicals.find(x => x.id === chemId); if(!c) break; openSprayWithProduct(c); break; }
     case 'spray-edit': { const s = sprays.find(x => x.id === id); if(!s) break; formSpray(s); break; }
     case 'spray-view': formSprayView(id); break;
     case 'spray-list': formSprayList(); break;
