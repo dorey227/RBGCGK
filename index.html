@@ -387,6 +387,16 @@
   .pg-week-label{font-size:12px;font-weight:700;color:var(--green2);text-transform:uppercase;letter-spacing:.4px}
   .pg-week-actions{display:flex;gap:2px}
 
+  /* ============ PLANT PHOTO QUEUE ============ */
+  .plant-photo-strip{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:none}
+  .plant-photo-strip::-webkit-scrollbar{display:none}
+  .plant-photo-thumb{position:relative;flex:0 0 auto}
+  .plant-photo-thumb img{width:96px;height:96px;border-radius:12px;object-fit:cover;display:block;cursor:zoom-in}
+  .plant-photo-thumb button{position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:50%;background:var(--red);color:#fff;border:2px solid #fff;font-size:13px;line-height:1;cursor:pointer;padding:0;font-family:inherit}
+  .plant-photo-hint{font-size:12px;color:var(--muted);text-align:center;margin:2px 0 6px}
+  .plant-banner{background:#e3f2fd;border-left:4px solid var(--blue);padding:10px 12px;border-radius:10px;font-size:13px;line-height:1.5;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  .plant-banner button{background:var(--blue);color:#fff;border:0;padding:8px 14px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;flex:0 0 auto}
+
   @media print{
     body{background:#fff}
     header, nav, .rp-header, .rp-tabs, .submit, .icon-btn, .add-btn, .sync-badge, #toast, .toast, .pg-header .pg-print-hide{display:none !important}
@@ -614,9 +624,9 @@ Use Australian common names (Couch not Bermuda, Nutgrass not Nutsedge, Winter Gr
 Product recommendations must be APVMA-registered. Use metric rates (g/m², mL/100 m², L/ha, kg/ha).`;
 }
 
-const PLANT_PROMPT = `You are a turf management assistant for golf courses in South East Queensland, Australia.\n\n${ausContextBlock()}\n\nIdentify what you see and respond ONLY with valid JSON:\n{"name":"Common name in Australian usage","botanicalName":"Botanical name or 'Unknown'","category":"Weed"|"Disease"|"Pest"|"Desirable Turf"|"Unknown","confidence":0-100,"description":"2-3 sentences","action":"Recommended action for a Queensland golf course","products":"Relevant APVMA-registered products or 'None'","safety":"Any safety notes or 'None'"}\n\nIf unsure, use "Unknown" and confidence below 50. Never invent botanical names. Respond with JSON only.`;
+const PLANT_PROMPT = `You are a turf management assistant for golf courses in South East Queensland, Australia.\n\n${ausContextBlock()}\n\nYou will be shown ONE OR MORE photos of the same plant, weed, disease, pest or turf symptom — taken from different angles or distances. Consider ALL photos together when making your identification. The extra angles are provided to improve accuracy.\n\nIdentify what you see and respond ONLY with valid JSON:\n{"name":"Common name in Australian usage","botanicalName":"Botanical name or 'Unknown'","category":"Weed"|"Disease"|"Pest"|"Desirable Turf"|"Unknown","confidence":0-100,"description":"2-3 sentences","action":"Recommended action for a Queensland golf course","products":"Relevant APVMA-registered products or 'None'","safety":"Any safety notes or 'None'"}\n\nIf unsure, use "Unknown" and confidence below 50. Never invent botanical names. Respond with JSON only.`;
 
-const REIDENTIFY_PROMPT = `You are a turf management expert for golf courses in South East Queensland, Australia.\n\n${ausContextBlock()}\n\nGive 2-3 possible identifications ranked from most to least likely. Prioritise species known to occur in South East Queensland.\n\nRespond ONLY with valid JSON:\n{"results":[{"name":"Common name","botanicalName":"Botanical name or 'Unknown'","category":"Weed"|"Disease"|"Pest"|"Desirable Turf"|"Unknown","confidence":0-100,"description":"2-3 sentences","action":"Recommended action","products":"Products or 'None'","safety":"Safety notes or 'None'"}]}\n\nAlways return between 2 and 3 results. Never fewer than 2.`;
+const REIDENTIFY_PROMPT = `You are a turf management expert for golf courses in South East Queensland, Australia.\n\n${ausContextBlock()}\n\nYou will be shown ONE OR MORE photos of the same plant, weed, disease or pest — taken from different angles or distances. Consider ALL photos together.\n\nGive 2-3 possible identifications ranked from most to least likely. Prioritise species known to occur in South East Queensland.\n\nRespond ONLY with valid JSON:\n{"results":[{"name":"Common name","botanicalName":"Botanical name or 'Unknown'","category":"Weed"|"Disease"|"Pest"|"Desirable Turf"|"Unknown","confidence":0-100,"description":"2-3 sentences","action":"Recommended action","products":"Products or 'None'","safety":"Safety notes or 'None'"}]}\n\nAlways return between 2 and 3 results. Never fewer than 2.`;
 
 function getDocExtractPrompt(){
   const y = new Date().getFullYear();
@@ -690,6 +700,12 @@ let _editChemPhotos = null;
 let rpTab = 'compliance';
 let rpFrom = null;
 let rpTo = null;
+
+/* ============ PHASE 5 — Plant multi-photo state ============ */
+const PLANT_MAX_PHOTOS = 4;
+let _plantPhotoQueue = [];       // in-flight capture queue (data URLs)
+let _plantPhotoQueueDirty = false; // true if queue changed since last identify
+let _plantLastResult = null;     // last AI result for the current in-flight capture
 
 const _urlParams = new URLSearchParams(window.location.search);
 let qrMode = _urlParams.get('qr');
@@ -2581,6 +2597,7 @@ onAuthStateChanged(auth, async (user) => {
     stopBarcodeScanner();
     closeReportScreen();
     closeProgramScreen();
+    _plantPhotoQueue = []; _plantPhotoQueueDirty = false; _plantLastResult = null;
   }
 });
 
@@ -3363,6 +3380,9 @@ function evItem(e){
   return `<div class="item"><div class="tick ${e.done?'on':''}" data-action="toggle-event" data-id="${e.id}">${e.done?'✓':''}</div><div class="item-body"><div class="item-title ${e.done?'done':''}">${esc(e.title)}</div><div class="item-meta"><span class="pill p-type">${EVENT_LABEL[e.type] || e.type}</span><span>${prettyDate(e.date)}</span></div>${e.notes ? `<div class="item-note">${esc(e.notes)}</div>` : ''}</div><button class="del" data-action="del-event" data-id="${e.id}">✕</button></div>`;
 }
 
+/* =========================================================
+   PLANT ID — Phase 5 (multi-photo)
+   ========================================================= */
 function viewPlant(){
   const history = [...(state.plantIds || [])].sort((a,b) => (b.created||'').localeCompare(a.created||''));
   const todayCount = history.filter(p => (p.created||'').slice(0,10) === todayISO()).length;
@@ -3372,16 +3392,32 @@ function viewPlant(){
     return p.category === plantFilter;
   });
 
+  const q = _plantPhotoQueue;
+  const canAdd = q.length < PLANT_MAX_PHOTOS;
+  const stripHtml = q.length
+    ? `<div class="plant-photo-strip">${q.map((p, i) => `
+        <div class="plant-photo-thumb">
+          <img src="${p}" data-action="view-photo" data-src="${p}" alt="">
+          <button type="button" data-action="plant-remove-queued" data-idx="${i}" title="Remove">✕</button>
+        </div>`).join('')}</div>`
+    : '';
+
   return `
     <div class="sec-head"><h2>Plant ID</h2><span style="font-size:11px;color:var(--muted);font-weight:600">${todayCount}/20 today</span></div>
-    <div class="card" style="text-align:center;padding:22px 16px">
-      <div style="font-size:40px;margin-bottom:8px">🌿</div>
-      <h3 style="text-transform:none;font-size:15px;color:var(--text);margin-bottom:6px">Identify a plant, weed, disease or pest</h3>
-      <p style="font-size:13px;color:var(--muted);margin:0 0 18px">Take a clear photo — fill the frame, good light, focus on leaves or symptoms.</p>
-      <button type="button" class="submit" style="background:var(--green);padding:14px;font-size:15px;margin-bottom:8px" data-action="plant-camera">📷 Take Photo</button>
-      <button type="button" class="submit" style="background:#fff;color:var(--green);border:1.5px solid var(--green);padding:13px;font-size:14px" data-action="plant-gallery">🖼 Choose from Gallery</button>
+    <div class="card" style="padding:22px 16px">
+      <div style="text-align:center">
+        <div style="font-size:40px;margin-bottom:8px">🌿</div>
+        <h3 style="text-transform:none;font-size:15px;color:var(--text);margin-bottom:6px">Identify a plant, weed, disease or pest</h3>
+        <p style="font-size:13px;color:var(--muted);margin:0 0 14px">Add up to ${PLANT_MAX_PHOTOS} photos from different angles to improve accuracy. Good light, fill the frame, focus on leaves or symptoms.</p>
+      </div>
+      ${stripHtml}
+      <div class="plant-photo-hint">${q.length ? `${q.length} of ${PLANT_MAX_PHOTOS} photos` : 'No photos yet'}</div>
+      <button type="button" class="submit" style="${canAdd?'':'opacity:.5'}background:var(--green);padding:14px;font-size:15px;margin-bottom:8px" data-action="plant-add-camera" ${canAdd?'':'disabled'}>📷 Take Photo</button>
+      <button type="button" class="submit" style="${canAdd?'':'opacity:.5'}background:#fff;color:var(--green);border:1.5px solid var(--green);padding:13px;font-size:14px" data-action="plant-add-gallery" ${canAdd?'':'disabled'}>🖼 Choose from Gallery</button>
+      ${q.length ? `<button type="button" class="submit" style="background:var(--blue);padding:14px;font-size:15px;margin-top:8px" data-action="plant-identify-now">🔍 Identify ${q.length === 1 ? '' : '(' + q.length + ' photos)'}</button>` : ''}
+      ${q.length ? `<button type="button" class="submit" style="background:#eef3ee;color:var(--muted);padding:11px;font-size:13.5px;margin-top:6px" data-action="plant-clear-queue">✕ Clear photos</button>` : ''}
       <input type="file" id="plantInputCamera" accept="image/*" capture="environment" style="display:none">
-      <input type="file" id="plantInputGallery" accept="image/*" style="display:none">
+      <input type="file" id="plantInputGallery" accept="image/*" multiple style="display:none">
     </div>
     <div class="sec-head"><h2>Plant Records</h2><span style="font-size:11px;color:var(--muted);font-weight:600">${filtered.length}${plantFilter !== 'All' ? ` of ${history.length}` : ''}</span></div>
     <div class="filter-bar">${['All','Plant','Weed','Pest','Disease'].map(f => `<button class="filter-chip ${plantFilter===f?'active':''}" data-action="plant-filter" data-filter="${f}">${f}</button>`).join('')}</div>
@@ -3538,74 +3574,165 @@ async function compressImage(file, maxSize = 900, quality = 0.75){
   });
 }
 
+/* Phase 5 — camera adds ONE photo to queue */
 async function handlePlantPhoto(inputEl){
   const file = inputEl.files?.[0]; if(!file) return;
+  if(_plantPhotoQueue.length >= PLANT_MAX_PHOTOS){
+    toast(`Max ${PLANT_MAX_PHOTOS} photos`);
+    inputEl.value = '';
+    return;
+  }
   const todayCount = (state.plantIds||[]).filter(p => (p.created||'').slice(0,10) === todayISO()).length;
   if(todayCount >= 20){ toast('Daily limit reached (20)'); inputEl.value = ''; return; }
   try{
-    toast('Compressing photo…');
+    toast('Compressing…');
     const dataUrl = await compressImage(file);
-    openPlantSheet(dataUrl, null, true);
-    const result = await identifyPlant(dataUrl);
-    openPlantSheet(dataUrl, result, false);
+    _plantPhotoQueue.push(dataUrl);
+    _plantPhotoQueueDirty = true;
     inputEl.value = '';
+    render();
+    toast(`Photo added (${_plantPhotoQueue.length}/${PLANT_MAX_PHOTOS})`);
   }catch(e){
     console.error(e);
-    openPlantSheet(null, null, false, e.message || 'Unknown error');
     inputEl.value = '';
+    toast('Photo failed');
   }
 }
 
-async function identifyPlant(dataUrl){
-  const base64 = dataUrl.split(',')[1];
+/* Phase 5 — gallery adds UP TO remaining slots, in one go */
+async function handlePlantGallery(inputEl){
+  const files = Array.from(inputEl.files || []);
+  inputEl.value = '';
+  if(!files.length) return;
+  const todayCount = (state.plantIds||[]).filter(p => (p.created||'').slice(0,10) === todayISO()).length;
+  if(todayCount >= 20){ toast('Daily limit reached (20)'); return; }
+  const remaining = PLANT_MAX_PHOTOS - _plantPhotoQueue.length;
+  if(remaining <= 0){ toast(`Max ${PLANT_MAX_PHOTOS} photos`); return; }
+  const take = files.slice(0, remaining);
+  if(files.length > remaining) toast(`Only first ${remaining} added (max ${PLANT_MAX_PHOTOS})`);
+  try{
+    toast(`Compressing ${take.length} photo${take.length>1?'s':''}…`);
+    for(const f of take){
+      const url = await compressImage(f);
+      _plantPhotoQueue.push(url);
+    }
+    _plantPhotoQueueDirty = true;
+    render();
+    toast(`Added ${take.length} photo${take.length>1?'s':''}`);
+  }catch(e){
+    console.error(e);
+    toast('Some photos failed');
+  }
+}
+
+async function identifyPlantMultiple(dataUrls){
+  const parts = [{type:'text', text: dataUrls.length > 1
+    ? `Identify this. ${dataUrls.length} photos of the same plant attached — use all angles.`
+    : 'Identify this.'}];
+  for(const dataUrl of dataUrls){
+    const base64 = dataUrl.split(',')[1];
+    parts.push({type:'image_url', image_url:{url:`data:image/jpeg;base64,${base64}`}});
+  }
   const res = await fetch(PROXY_URL, {
     method: 'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ messages: [
       {role:'system', content:PLANT_PROMPT},
-      {role:'user', content:[
-        {type:'text', text:'Identify this.'},
-        {type:'image_url', image_url:{url:`data:image/jpeg;base64,${base64}`}}
-      ]}
+      {role:'user', content:parts}
     ]})
   });
   if(!res.ok){ const err = await res.text().catch(() => ''); throw new Error(`Proxy ${res.status}: ${err.slice(0,120)}`); }
   const data = await res.json();
   const raw = data?.choices?.[0]?.message?.content || '';
-  const clean = raw.replace(/^```json\s*|\s*```$/g, '').trim();
+  const clean = raw.replace(/^```json\s*|```$/g, '').trim();
   try{ return JSON.parse(clean); }catch(e){ throw new Error('AI returned unexpected format'); }
 }
 
-function openPlantSheet(dataUrl, result, loading, errorMsg, plantId){
+/* Called from the Identify button */
+async function runIdentifyFromQueue(){
+  if(!_plantPhotoQueue.length){ toast('Add at least one photo'); return; }
+  const snapshot = [..._plantPhotoQueue];
+  openPlantSheet(snapshot, null, true);   // loading view with all queued photos
+  try{
+    const result = await identifyPlantMultiple(snapshot);
+    _plantLastResult = result;
+    _plantPhotoQueueDirty = false;
+    openPlantSheet(snapshot, result, false);
+  }catch(e){
+    console.error(e);
+    openPlantSheet(snapshot, null, false, e.message || 'Unknown error');
+  }
+}
+
+/* Called from the result sheet when the user taps Re-analyse after adding/removing photos */
+async function runReanalyseFromResult(plantId){
+  // plantId null → in-flight new plant; string → existing saved plant
+  if(plantId){
+    // Saved plant: re-analyse against the photos stored on the record
+    await reidentifyPlant(plantId);
+    return;
+  }
+  if(!_plantPhotoQueue.length){ toast('No photos'); return; }
+  const snapshot = [..._plantPhotoQueue];
+  openPlantSheet(snapshot, null, true);
+  try{
+    const result = await identifyPlantMultiple(snapshot);
+    _plantLastResult = result;
+    _plantPhotoQueueDirty = false;
+    openPlantSheet(snapshot, result, false);
+  }catch(e){
+    console.error(e);
+    openPlantSheet(snapshot, null, false, e.message || 'Unknown error');
+  }
+}
+
+/* The result sheet. Accepts either an array of photos or a single data URL. */
+function openPlantSheet(photosOrDataUrl, result, loading, errorMsg, plantId){
   const overlay = $('#overlay'); const sheetForm = $('#sheetForm');
   $('#sheetTitle').textContent = loading ? 'Identifying…' : 'Identification';
   sheetForm.onsubmit = (ev) => ev.preventDefault();
 
+  const photos = Array.isArray(photosOrDataUrl)
+    ? photosOrDataUrl
+    : (photosOrDataUrl ? [photosOrDataUrl] : []);
+
   if(loading){
-    sheetForm.innerHTML = `<div style="text-align:center;padding:12px 0 24px"><img src="${dataUrl}" style="width:100%;max-width:280px;border-radius:14px;margin-bottom:16px;opacity:.85"><div style="font-size:38px;margin:8px 0">🔍</div><div style="font-size:14px;color:var(--muted)">Analysing species, symptoms and treatments…</div></div>`;
+    const preview = photos[0] || '';
+    sheetForm.innerHTML = `<div style="text-align:center;padding:12px 0 24px">${preview ? `<img src="${preview}" style="width:100%;max-width:280px;border-radius:14px;margin-bottom:16px;opacity:.85">` : ''}<div style="font-size:38px;margin:8px 0">🔍</div><div style="font-size:14px;color:var(--muted)">Analysing ${photos.length} photo${photos.length>1?'s':''}…</div></div>`;
     overlay.classList.remove('hidden'); document.body.style.overflow='hidden'; return;
   }
 
   const plant = plantId ? state.plantIds.find(p => p.id === plantId) : null;
   if(!result && !plant){
-    sheetForm.innerHTML = `${dataUrl?`<img src="${dataUrl}" style="width:100%;border-radius:14px;margin-bottom:16px">`:''}<div class="result" style="border-left-color:var(--red);background:#fdecea"><b>Could not identify.</b><br>${esc(errorMsg||'')}</div><button type="button" class="submit" data-action="close-sheet" style="margin-top:12px">Close</button>`;
+    sheetForm.innerHTML = `${photos[0]?`<img src="${photos[0]}" style="width:100%;border-radius:14px;margin-bottom:16px">`:''}<div class="result" style="border-left-color:var(--red);background:#fdecea"><b>Could not identify.</b><br>${esc(errorMsg||'')}</div><button type="button" class="submit" data-action="close-sheet" style="margin-top:12px">Close</button>`;
     overlay.classList.remove('hidden'); document.body.style.overflow='hidden'; return;
   }
 
   const d = plant ? {name:plant.name, botanicalName:plant.botanicalName, category:plant.category, confidence:plant.confidence, description:plant.description, action:plant.action, products:plant.products, safety:plant.safety} : result;
-  const photos = plant ? ((plant.photos && plant.photos.length) ? plant.photos : (plant.thumb ? [plant.thumb] : [])) : (dataUrl ? [dataUrl] : []);
+  const galleryPhotos = plant
+    ? ((plant.photos && plant.photos.length) ? plant.photos : (plant.thumb ? [plant.thumb] : []))
+    : photos;
   const catClass = {'Weed':'p-high','Disease':'p-high','Pest':'p-med','Desirable Turf':'p-low','Unknown':'p-area'}[d.category] || 'p-area';
 
   let photosHtml = '';
-  if(photos.length === 1){ photosHtml = `<img src="${photos[0]}" style="width:100%;border-radius:14px;margin-bottom:14px;cursor:zoom-in" data-action="view-photo" data-src="${photos[0]}">`; }
-  else if(photos.length > 1){
-    photosHtml = `<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;margin-bottom:8px">${photos.map(p => `<img src="${p}" style="flex:0 0 auto;height:150px;border-radius:12px;object-fit:cover" data-action="view-photo" data-src="${p}">`).join('')}</div>`;
+  if(galleryPhotos.length === 1){
+    photosHtml = `<img src="${galleryPhotos[0]}" style="width:100%;border-radius:14px;margin-bottom:14px;cursor:zoom-in" data-action="view-photo" data-src="${galleryPhotos[0]}">`;
+  } else if(galleryPhotos.length > 1){
+    photosHtml = `<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;margin-bottom:8px">${galleryPhotos.map((p, i) => `<div style="position:relative;flex:0 0 auto"><img src="${p}" style="height:150px;border-radius:12px;object-fit:cover;cursor:zoom-in;display:block" data-action="view-photo" data-src="${p}"><span style="position:absolute;top:6px;left:6px;background:rgba(0,0,0,.55);color:#fff;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:20px">${i+1}/${galleryPhotos.length}</span></div>`).join('')}</div>`;
+  }
+
+  // Banner shown when photos have changed since the last AI result (Q1 → Option B)
+  let bannerHtml = '';
+  if(!plantId && _plantPhotoQueueDirty && _plantLastResult){
+    bannerHtml = `<div class="plant-banner">📸 Photo set changed — old answer below. Re-analyse to use all angles?<button type="button" data-action="plant-reanalyse">🔍 Re-analyse</button></div>`;
   }
 
   sheetForm.innerHTML = `
     ${photosHtml}
+    ${bannerHtml}
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
       <span class="pill ${catClass}">${esc(d.category||'Unknown')}</span>
       <span style="font-size:12px;color:var(--muted);font-weight:600">${d.confidence||0}% confident</span>
+      ${galleryPhotos.length > 1 ? `<span style="font-size:11.5px;color:var(--muted)">· ${galleryPhotos.length} angles</span>` : ''}
     </div>
     <h2 style="margin:4px 0 2px;font-size:22px;color:var(--green)">${esc(d.name||'Unknown')}</h2>
     <div style="font-style:italic;color:var(--muted);font-size:13.5px;margin-bottom:14px">${esc(d.botanicalName||'Unknown')}</div>
@@ -3625,6 +3752,7 @@ function openPlantSheet(dataUrl, result, loading, errorMsg, plantId){
       <button type="button" class="submit" data-action="manual-name" data-id="${plantId}" style="background:#fff;color:var(--amber);border:1.5px solid var(--amber);padding:12px;font-size:14px;margin-top:8px">🏷 I know the name — fill in</button>
       <button type="button" class="submit" data-action="delete-plant-detail" data-id="${plantId}" style="background:#fff;color:var(--red);border:1.5px solid var(--red);padding:12px;font-size:14px;margin-top:8px">🗑 Delete this plant</button>
     ` : `
+      <button type="button" class="submit" data-action="plant-add-angle" style="background:#fff;color:var(--blue);border:1.5px solid var(--blue);padding:12px;font-size:14px;margin-top:8px" ${_plantPhotoQueue.length >= PLANT_MAX_PHOTOS ? 'disabled style="opacity:.5;background:#fff;color:var(--blue);border:1.5px solid var(--blue);padding:12px;font-size:14px;margin-top:8px"' : ''}>➕ Add another angle (${_plantPhotoQueue.length}/${PLANT_MAX_PHOTOS})</button>
       <button type="button" class="submit" data-action="fix-plant-name-fresh" style="background:#fff;color:var(--amber);border:1.5px solid var(--amber);padding:12px;font-size:14px;margin-top:8px">✏️ Wrong name? Fix it</button>
       <div class="row2" style="margin-top:8px">
         <button type="button" class="submit" data-action="close-sheet" style="background:#eef3ee;color:var(--text);padding:12px;font-size:14px">Discard</button>
@@ -3633,7 +3761,7 @@ function openPlantSheet(dataUrl, result, loading, errorMsg, plantId){
     `}
     <div id="plantSaveData" style="display:none">${esc(JSON.stringify(d))}</div>`;
   overlay.classList.remove('hidden'); document.body.style.overflow='hidden';
-  _plantPhotoData = dataUrl;
+  _plantPhotoData = galleryPhotos[0] || null;
 }
 
 function openFixNameForm(currentResult){
@@ -3665,9 +3793,10 @@ async function refillFreshPlant(cn, bn){
     const raw = data?.choices?.[0]?.message?.content || '';
     const clean = raw.replace(/^```json\s*|```$/g, '').trim();
     const parsed = JSON.parse(clean);
-    const dataUrl = window._freshPlantDataUrl || _plantPhotoData;
-    window._freshPlantDataUrl = null;
-    openPlantSheet(dataUrl, parsed, false);
+    // Use the current queue as the photo set for this in-flight plant
+    const photos = [..._plantPhotoQueue];
+    _plantLastResult = parsed;
+    openPlantSheet(photos, parsed, false);
     toast('Updated — review and save');
   }catch(e){
     sheetForm.innerHTML = `<div class="result" style="border-left-color:var(--red);background:#fdecea"><b>Failed.</b><br>${esc(e.message)}</div><div class="row2" style="margin-top:12px"><button type="button" class="submit" data-action="fix-plant-name-fresh" style="background:#eef3ee;color:var(--text)">Try again</button><button type="button" class="submit" data-action="close-sheet">Close</button></div>`;
@@ -3745,7 +3874,7 @@ function openPlantEditForm(plantId){
         <button type="button" data-action="edit-add-gallery" style="padding:11px;border-radius:11px;border:1.5px solid var(--line);background:#fff;font-weight:600;cursor:pointer;font-family:inherit;font-size:13.5px">🖼 From Gallery</button>
       </div>
       <input type="file" id="editPhotoCamera" accept="image/*" capture="environment" style="display:none">
-      <input type="file" id="editPhotoGallery" accept="image/*" style="display:none">
+      <input type="file" id="editPhotoGallery" accept="image/*" multiple style="display:none">
     </div>
     <div class="field"><label>Common name</label><input name="name" value="${esc(plant.name||'')}" required></div>
     <div class="field"><label>Botanical name</label><input name="botanicalName" value="${esc(plant.botanicalName||'')}"></div>
@@ -3769,12 +3898,14 @@ function refreshEditPhotoStrip(){
 }
 
 async function handleEditPhoto(inputEl){
-  const file = inputEl.files?.[0]; if(!file) return;
+  const files = Array.from(inputEl.files || []); if(!files.length) return;
   try{
-    toast('Compressing…');
-    const url = await compressImage(file);
+    toast(files.length > 1 ? `Compressing ${files.length}…` : 'Compressing…');
     window._editPhotos = window._editPhotos || [];
-    window._editPhotos.push(url);
+    for(const f of files){
+      const url = await compressImage(f);
+      window._editPhotos.push(url);
+    }
     inputEl.value = '';
     refreshEditPhotoStrip();
     toast('Photo added');
@@ -3801,10 +3932,10 @@ async function reidentifyPlant(plantId){
   const overlay = $('#overlay'); const sheetForm = $('#sheetForm');
   $('#sheetTitle').textContent = 'Re-identifying…';
   sheetForm.onsubmit = (ev) => ev.preventDefault();
-  sheetForm.innerHTML = `<div style="text-align:center;padding:20px 0"><img src="${photos[0]}" style="width:100%;max-width:240px;border-radius:14px;margin-bottom:16px;opacity:.85"><div style="font-size:38px;margin:8px 0">🔍</div><div style="font-size:14px;color:var(--muted)">Analysing…</div></div>`;
+  sheetForm.innerHTML = `<div style="text-align:center;padding:20px 0"><img src="${photos[0]}" style="width:100%;max-width:240px;border-radius:14px;margin-bottom:16px;opacity:.85"><div style="font-size:38px;margin:8px 0">🔍</div><div style="font-size:14px;color:var(--muted)">Analysing ${photos.length} photo${photos.length>1?'s':''}…</div></div>`;
   overlay.classList.remove('hidden'); document.body.style.overflow='hidden';
   try{
-    const content = [{type:'text', text: photos.length > 1 ? 'Identify. Multiple photos attached. Give 2-3 possibilities.' : 'Identify this. Give 2-3 possibilities.'}, ...photos.map(p => ({type:'image_url', image_url:{url:p}}))];
+    const content = [{type:'text', text: photos.length > 1 ? `Identify. ${photos.length} photos attached. Give 2-3 possibilities.` : 'Identify this. Give 2-3 possibilities.'}, ...photos.map(p => ({type:'image_url', image_url:{url:p}}))];
     const res = await fetch(PROXY_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({messages:[{role:'system', content:REIDENTIFY_PROMPT},{role:'user', content}]})});
     if(!res.ok) throw new Error(`Proxy ${res.status}`);
     const data = await res.json();
@@ -4287,242 +4418,43 @@ document.addEventListener('click', async (e) => {
       break;
     }
 
-    case 'pick-theme': appTheme.preset = el.dataset.theme; applyTheme(); await saveTheme(); formData(); break;
-    case 'pick-density': appTheme.density = el.dataset.density; applyTheme(); await saveTheme(); formData(); break;
-    case 'pick-nav': appTheme.navStyle = el.dataset.nav; applyTheme(); await saveTheme(); formData(); break;
-    case 'bg-camera': $('#bgPhotoCamera')?.click(); break;
-    case 'bg-gallery': $('#bgPhotoGallery')?.click(); break;
-    case 'remove-bg-photo': appTheme.bgPhoto = null; applyTheme(); await saveTheme(); formData(); toast('Background removed'); break;
-
-    case 'signin-today': try{ await signInNow(); toast(`Signed in at ${fmtTime(mySignInToday.inAt)}`); render(); }catch(e){ toast('Failed'); } break;
-    case 'signout-today': if(!confirm('Sign out?')) break; try{ await signOutNow(); toast(`Signed out`); render(); }catch(e){ toast('Failed'); } break;
-
-    case 'chat-send': {
-      const i = $('#chatInput'); if(!i) break;
-      const t = i.value.trim(); if(!t) break;
-      i.value = '';
-      try{ await sendChatMessage(t, null); }catch(e){ toast('Failed'); }
+    /* ===== PHASE 5 — PLANT MULTI-PHOTO ===== */
+    case 'plant-add-camera': {
+      if(_plantPhotoQueue.length >= PLANT_MAX_PHOTOS){ toast(`Max ${PLANT_MAX_PHOTOS} photos`); break; }
+      $('#plantInputCamera').click();
       break;
     }
-    case 'chat-photo': openSheet('Send Photo', `<button type="button" class="submit" data-action="chat-photo-camera" style="padding:14px;font-size:15px;margin-bottom:8px">📷 Take Photo</button><button type="button" class="submit" style="background:#fff;color:var(--green);border:1.5px solid var(--green);padding:13px;font-size:14px" data-action="chat-photo-gallery">🖼 From Gallery</button>`, () => {}); break;
-    case 'chat-photo-camera': closeSheet(); setTimeout(() => $('#chatPhotoCamera')?.click(), 150); break;
-    case 'chat-photo-gallery': closeSheet(); setTimeout(() => $('#chatPhotoGallery')?.click(), 150); break;
-    case 'chat-delete': if(!confirm('Delete?')) break; try{ await deleteChatMessage(id); }catch(e){ toast('Failed'); } break;
-
-    case 'chat-send-plant': {
-      const pid = el.dataset.plant;
-      const input = $('#chatInput'); if(!input) break;
-      const txt = input.value.trim(); if(!txt) break;
-      const plant = state.plantIds.find(p => p.id === pid);
-      const chat = state.plantChats.find(c => c.plantId === pid);
-      if(!plant || !chat) break;
-      input.disabled = true; input.value = '';
-      chat.messages.push({role:'user', content:txt, ts:Date.now()});
-      const msgsEl = $('#chatMessages');
-      if(msgsEl){
-        msgsEl.innerHTML += chatBubble({role:'user', content:txt});
-        msgsEl.innerHTML += `<div id="ti"><div style="padding:9px 13px;border-radius:15px;background:#eef3ee;color:var(--muted);font-size:13px;font-style:italic;display:inline-block">Thinking…</div></div>`;
-        scrollChatBottom();
-      }
-      try{
-        const reply = await askAboutPlant(plant, chat.messages);
-        chat.messages.push({role:'assistant', content:reply, ts:Date.now()});
-        await fsSave('plantChats', chat);
-        renderPlantChat(plant, chat);
-      }catch(err){
-        const ti = $('#ti'); if(ti) ti.remove();
-        if(msgsEl){ msgsEl.innerHTML += `<div style="text-align:center;color:var(--red);font-size:12.5px;padding:8px">⚠ ${esc(err.message)}</div>`; scrollChatBottom(); }
-        if(input) input.disabled = false;
-        await fsSave('plantChats', chat);
-      }
+    case 'plant-add-gallery': {
+      if(_plantPhotoQueue.length >= PLANT_MAX_PHOTOS){ toast(`Max ${PLANT_MAX_PHOTOS} photos`); break; }
+      $('#plantInputGallery').click();
       break;
     }
-
-    case 'qr-open': window.open(SIGN_IN_QR_URL, '_blank'); break;
-
-    /* ===== REPORTS ===== */
-    case 'rp-open': openReportScreen(); break;
-    case 'rp-close': closeReportScreen(); break;
-    case 'rp-tab': setRpTab(el.dataset.tab); break;
-    case 'rp-print': window.print(); break;
-    case 'rp-quick': {
-      const r = el.dataset.range;
-      const today = new Date();
-      if(r === 'year'){
-        rpFrom = iso(new Date(today.getFullYear(), 0, 1));
-        rpTo = todayISO();
-      } else if(r === 'month'){
-        rpFrom = iso(new Date(today.getFullYear(), today.getMonth(), 1));
-        rpTo = todayISO();
-      }
-      renderReportScreen();
-      break;
-    }
-
-    /* ===== BARCODE SCAN ===== */
-    case 'spray-scan': openBarcodeScanner('spray-new'); break;
-    case 'scan-cancel': stopBarcodeScanner(); break;
-    case 'scan-manual': {
-      stopBarcodeScanner();
-      const code = prompt('Enter barcode manually:');
-      if(code) handleBarcodeResult(code.trim());
-      break;
-    }
-    case 'spray-scan-inline': {
-      closeSheet();
-      setTimeout(() => openBarcodeScanner('spray-new'), 200);
-      break;
-    }
-
-    /* ===== CHEM ACTIONS ===== */
-    case 'chem-new': formChemical(null); break;
-    case 'chem-edit': { const c = chemicals.find(x => x.id === id); if(!c) break; formChemical(c); break; }
-    case 'chem-view': formChemView(id); break;
-    case 'chem-photo-camera': $('#chemPhotoCamera')?.click(); break;
-    case 'chem-photo-gallery': $('#chemPhotoGallery')?.click(); break;
-    case 'chem-photo-remove': {
-      if(!Array.isArray(_editChemPhotos)) break;
+    case 'plant-remove-queued': {
       const idx = parseInt(el.dataset.idx);
       if(isNaN(idx)) break;
-      _editChemPhotos.splice(idx, 1);
-      refreshChemPhotoStrip();
-      break;
-    }
-    case 'chem-delete': {
-      const c = chemicals.find(x => x.id === id);
-      if(!c || !confirm(`Delete "${c.name}"?`)) break;
-      try{
-        await deleteChemical(id);
-        chemicals = chemicals.filter(x => x.id !== id);
-        closeSheet(); render(); toast('Deleted');
-      }catch(err){ toast('Delete failed'); }
-      break;
-    }
-    case 'chem-filter': chemFilter = el.dataset.filter; render(); break;
-
-    case 'spray-new': if(!chemicals.length){ toast('Add a chemical first'); break; } formSpray(null); break;
-    case 'spray-new-for': { const chemId = el.dataset.chem; const c = chemicals.find(x => x.id === chemId); if(!c) break; openSprayWithProduct(c); break; }
-    case 'spray-edit': { const s = sprays.find(x => x.id === id); if(!s) break; formSpray(s); break; }
-    case 'spray-view': formSprayView(id); break;
-    case 'spray-list': formSprayList(); break;
-    case 'spray-delete': {
-      const s = sprays.find(x => x.id === id);
-      if(!s || !confirm('Delete this spray record? (soft delete)')) break;
-      try{
-        await softDeleteSpray(id);
-        sprays = sprays.filter(x => x.id !== id);
-        closeSheet(); render(); toast('Spray deleted');
-      }catch(err){ toast('Delete failed'); }
-      break;
-    }
-    case 'spray-areas-edit': formEditSprayAreas(); break;
-
-    case 'pick-role': {
-      const role = el.dataset.role;
-      const label = {staff:'greenkeeper',committee:'ground committee',volunteer:'volunteer'}[role];
-      let name = '';
-      while(!name){
-        const i = prompt(`What's your name?\n\nSigning in as: ${label}`);
-        if(i === null){ await signOut(auth); return; }
-        name = i.trim();
-      }
-      await saveUserRole(role, name, '');
-      await publishMembershipIndex(role, userApproved, name);
-      if(userApproved){
-        $('#roleScreen').classList.add('hidden');
-        appRoot.classList.remove('hidden');
-        await loadTheme();
-        await fsLoadAll();
-        await Promise.all([loadMySignIn(), loadRainLog(), loadIrrigationLog(), loadTurfAreas()]);
-        if(userRole === 'staff') await Promise.all([loadChemicals(), loadSprays(), loadSprayAreas()]);
-        fetchWeather(false).then(() => { if(activeTab === 'dash') render(); });
-        selectedDay = todayISO();
-        render(); startNotifyLoop(); startChatListener(); startSignInsListener();
-        if(qrMode) await handleQrAction();
-        toast('Welcome!');
-      } else {
-        $('#roleScreen').classList.add('hidden');
-        $('#pendingScreen').classList.remove('hidden');
-        $('#pendingEmail').textContent = currentUser?.email || '';
-        $('#pendingRole').textContent = userRole || '—';
-        toast('Waiting for approval');
-      }
-      break;
-    }
-
-    case 'refresh-approval': {
-      const hasRole = await loadUserRole();
-      if(hasRole && userApproved){
-        toast('Approved! 🎉');
-        $('#pendingScreen').classList.add('hidden');
-        appRoot.classList.remove('hidden');
-        await loadTheme();
-        await fsLoadAll();
-        await Promise.all([loadMySignIn(), loadRainLog(), loadIrrigationLog(), loadTurfAreas()]);
-        if(userRole === 'staff') await Promise.all([loadChemicals(), loadSprays(), loadSprayAreas()]);
-        fetchWeather(false).then(() => { if(activeTab === 'dash') render(); });
-        selectedDay = todayISO();
-        render(); startNotifyLoop(); startChatListener(); startSignInsListener();
-        if(qrMode) await handleQrAction();
-      } else toast('Still waiting');
-      break;
-    }
-
-    case 'team-approve': {
-      const uid_ = el.dataset.uid;
-      const role = el.dataset.role || 'volunteer';
-      if(!uid_ || !confirm('Approve?')) break;
-      try{ await approveUser(uid_, role); await setDoc(doc(db,'clubs','rbgc','members',uid_), {approved:true, approvedAt:serverTimestamp()}, {merge:true}); toast('Approved'); render(); }catch(e){ toast('Failed'); }
-      break;
-    }
-    case 'team-reject': {
-      const uid_ = el.dataset.uid;
-      if(!uid_ || !confirm('Reject?')) break;
-      try{ await rejectUser(uid_); await deleteDoc(doc(db,'clubs','rbgc','members',uid_)); toast('Rejected'); render(); }catch(e){ toast('Failed'); }
-      break;
-    }
-
-    case 'save-conditions':
-      state.courseStatus = $('#dashStatus').value;
-      state.weather = $('#dashWeather').value.trim();
-      await fsSaveSettings();
-      toast('Saved');
-      break;
-
-    case 'add-job': formJob(); break;
-    case 'toggle-job': { const j = state.jobs.find(x => x.id === id); if(!j) return; j.status = j.status === 'done' ? 'todo' : j.status === 'todo' ? 'doing' : 'done'; render(); await fsSave('jobs', j); break; }
-    case 'del-job': state.jobs = state.jobs.filter(x => x.id !== id); render(); await fsDelete('jobs', id); toast('Deleted'); break;
-
-    case 'cal-prev': calCursor.setMonth(calCursor.getMonth()-1); render(); break;
-    case 'cal-next': calCursor.setMonth(calCursor.getMonth()+1); render(); break;
-    case 'cal-today': calCursor = new Date(); selectedDay = todayISO(); render(); break;
-    case 'cal-day': selectedDay = (selectedDay === el.dataset.date) ? null : el.dataset.date; render(); break;
-
-    case 'add-event': formEvent(el.dataset.date); break;
-    case 'toggle-event': { const ev = state.events.find(x => x.id === id); if(!ev) return; ev.done = !ev.done; render(); await fsSave('events', ev); break; }
-    case 'del-event': state.events = state.events.filter(x => x.id !== id); render(); await fsDelete('events', id); toast('Deleted'); break;
-
-    case 'import-doc': openSheet('Import from document', `<p style="font-size:13.5px;color:var(--muted);margin:0 0 14px">Snap a yearly program, tournament list or renovation schedule. AI will extract events.</p><button type="button" class="submit" data-action="import-camera" style="padding:14px;font-size:15px;margin-bottom:8px">📷 Take Photo</button><button type="button" class="submit" style="background:#fff;color:var(--green);border:1.5px solid var(--green);padding:13px;font-size:14px" data-action="import-gallery">🖼 From Gallery</button>`, () => {}); break;
-    case 'import-camera': closeSheet(); setTimeout(() => $('#importDocCamera')?.click(), 150); break;
-    case 'import-gallery': closeSheet(); setTimeout(() => $('#importDocGallery')?.click(), 150); break;
-    case 'import-toggle-all': { const all = window._pendingImport || []; const any = all.some(e => e._checked); all.forEach(e => e._checked = !any); const l = $('#importList'); if(l) l.innerHTML = all.map((e, i) => importRow(e, i)).join(''); const c = $('#importCount'); if(c) c.textContent = all.filter(e => e._checked).length; break; }
-    case 'import-confirm': { const all = window._pendingImport || []; const add = all.filter(e => e._checked); if(!add.length){ toast('Nothing selected'); break; } closeSheet(); setSyncStatus('⏳ Saving'); for(const x of add){ const ev = {id:uid('e'), title:x.title.trim(), date:x.date, type:EVENT_TYPES.includes(x.type) ? x.type : 'agronomy', notes:(x.notes || '').trim(), done:false}; state.events.push(ev); await fsSave('events', ev); } setSyncStatus('☁️ Synced'); window._pendingImport = null; activeTab = 'calendar'; render(); toast(`Added ${add.length}`); break; }
-
-    case 'toggle-program': {
-      e.stopPropagation();
-      const mid = el.dataset.month;
-      const wk = parseInt(el.dataset.week);
-      const iid = el.dataset.item;
-      const m = state.program.find(x => x.id === mid);
-      if(!m) return;
-      const w = (m.weeks||[]).find(x => x.week === wk);
-      if(!w) return;
-      const it = (w.items||[]).find(i => i.id === iid);
-      if(!it) return;
-      it.done = !it.done;
+      _plantPhotoQueue.splice(idx, 1);
+      _plantPhotoQueueDirty = true;
       render();
-      if(!$('#programScreen').classList.contains('hidden')) renderProgramScreen();
-      await fsSave('program', m);
+      break;
+    }
+    case 'plant-clear-queue': {
+      if(!_plantPhotoQueue.length) break;
+      if(!confirm('Clear all photos?')) break;
+      _plantPhotoQueue = [];
+      _plantPhotoQueueDirty = false;
+      _plantLastResult = null;
+      render();
+      break;
+    }
+    case 'plant-identify-now': await runIdentifyFromQueue(); break;
+    case 'plant-reanalyse': await runReanalyseFromResult(null); break;
+    case 'plant-add-angle': {
+      // Close the result sheet, keep the queue, re-open camera
+      closeSheet();
+      setTimeout(() => {
+        if(_plantPhotoQueue.length >= PLANT_MAX_PHOTOS){ toast(`Max ${PLANT_MAX_PHOTOS} photos`); return; }
+        $('#plantInputCamera').click();
+      }, 220);
       break;
     }
 
@@ -4538,7 +4470,6 @@ document.addEventListener('click', async (e) => {
     case 'fix-plant-name-fresh': {
       const dl = $('#plantSaveData');
       let cr = null; try{ cr = JSON.parse(dl.textContent); }catch(e){}
-      window._freshPlantDataUrl = _plantPhotoData;
       openFixNameForm(cr);
       break;
     }
@@ -4556,11 +4487,16 @@ document.addEventListener('click', async (e) => {
       const dl = $('#plantSaveData');
       if(!dl){ window._plantSaving = false; break; }
       let result; try{ result = JSON.parse(dl.textContent); }catch(e){ window._plantSaving = false; break; }
-      const photo = _plantPhotoData;
-      const rec = { id:uid('pl'), name:result.name || 'Unknown', botanicalName:result.botanicalName || 'Unknown', category:result.category || 'Unknown', confidence:result.confidence || 0, description:result.description || '', action:result.action || '', products:result.products || '', safety:result.safety || '', photos:photo ? [photo] : [], thumb:photo || null, created:new Date().toISOString() };
+      // Phase 5 — save all photos from the queue
+      const photos = [..._plantPhotoQueue];
+      const thumb = photos[0] || null;
+      const rec = { id:uid('pl'), name:result.name || 'Unknown', botanicalName:result.botanicalName || 'Unknown', category:result.category || 'Unknown', confidence:result.confidence || 0, description:result.description || '', action:result.action || '', products:result.products || '', safety:result.safety || '', photos, thumb, created:new Date().toISOString() };
       closeSheet();
       activeTab = 'plant';
       state.plantIds.push(rec);
+      _plantPhotoQueue = [];
+      _plantPhotoQueueDirty = false;
+      _plantLastResult = null;
       render();
       toast('Saving…');
       try{
@@ -4608,7 +4544,8 @@ document.addEventListener('click', async (e) => {
 
 document.addEventListener('change', (e) => {
   if(e.target.id === 'chemPhotoCamera' || e.target.id === 'chemPhotoGallery') handleChemPhoto(e.target);
-  if(e.target.id === 'plantInputCamera' || e.target.id === 'plantInputGallery') handlePlantPhoto(e.target);
+  if(e.target.id === 'plantInputCamera') handlePlantPhoto(e.target);
+  if(e.target.id === 'plantInputGallery') handlePlantGallery(e.target);
   if(e.target.id === 'importDocCamera' || e.target.id === 'importDocGallery') handleDocPhoto(e.target);
   if(e.target.id === 'editPhotoCamera' || e.target.id === 'editPhotoGallery') handleEditPhoto(e.target);
   if(e.target.id === 'programDocCamera' || e.target.id === 'programDocGallery') handleProgramPhoto(e.target);
