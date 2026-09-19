@@ -1,3 +1,12 @@
+<script>
+window.onerror = function(msg, url, line, col){
+  var bar = document.createElement('div');
+  bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#c62828;color:#fff;padding:10px;font-size:12px;font-family:monospace;white-space:pre-wrap';
+  bar.textContent = 'JS ERROR: ' + msg + ' @ line ' + line + ':' + col;
+  document.body.appendChild(bar);
+  setTimeout(function(){ bar.remove(); }, 15000);
+};
+</script>
 <!DOCTYPE html>
 <html lang="en">
 <head>
