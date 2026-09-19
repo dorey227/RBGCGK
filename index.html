@@ -1,12 +1,3 @@
-<script>
-window.onerror = function(msg, url, line, col){
-  var bar = document.createElement('div');
-  bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#c62828;color:#fff;padding:10px;font-size:12px;font-family:monospace;white-space:pre-wrap';
-  bar.textContent = 'JS ERROR: ' + msg + ' @ line ' + line + ':' + col;
-  document.body.appendChild(bar);
-  setTimeout(function(){ bar.remove(); }, 15000);
-};
-</script>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -374,12 +365,34 @@ window.onerror = function(msg, url, line, col){
   .rp-record .rl b{color:var(--text);font-weight:600}
   .rp-record .rweather{font-size:11.5px;color:var(--muted);margin-top:6px;padding-top:6px;border-top:1px dashed var(--line)}
 
+  /* ============ APPLICATION PROGRAM OVERLAY ============ */
+  #programScreen{position:fixed;inset:0;z-index:260;background:var(--bg);overflow-y:auto;padding-bottom:100px}
+  #programScreen.hidden{display:none}
+  .pg-header{
+    background:linear-gradient(135deg,var(--green),var(--green2));
+    color:#fff;padding:14px 16px;position:sticky;top:0;z-index:3;
+    display:flex;align-items:center;gap:12px;
+    box-shadow:0 2px 12px rgba(0,0,0,.15);
+  }
+  .pg-header button{background:rgba(255,255,255,.15);border:0;color:#fff;width:36px;height:36px;border-radius:10px;font-size:18px;cursor:pointer;font-family:inherit}
+  .pg-header h2{margin:0;font-size:17px;flex:1}
+  .pg-header .pg-sub{font-size:11.5px;opacity:.85;margin-top:2px}
+  .pg-body{padding:14px;max-width:820px;margin:0 auto}
+
+  .pg-card{background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  .pg-month-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap}
+  .pg-month-head h3{margin:0;font-size:16px;text-transform:none;letter-spacing:0;color:var(--text)}
+  .pg-progress{font-size:11px;color:var(--muted);font-weight:700}
+  .pg-week-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:6px}
+  .pg-week-label{font-size:12px;font-weight:700;color:var(--green2);text-transform:uppercase;letter-spacing:.4px}
+  .pg-week-actions{display:flex;gap:2px}
+
   @media print{
     body{background:#fff}
-    header, nav, .rp-header, .rp-tabs, .submit, .icon-btn, .add-btn, .sync-badge, #toast, .toast{display:none !important}
-    #reportScreen{position:static;padding:0;overflow:visible}
-    .rp-body{max-width:100%;padding:0}
-    .rp-section{box-shadow:none;border:1px solid #ddd;break-inside:avoid;page-break-inside:avoid}
+    header, nav, .rp-header, .rp-tabs, .submit, .icon-btn, .add-btn, .sync-badge, #toast, .toast, .pg-header .pg-print-hide{display:none !important}
+    #reportScreen, #programScreen{position:static;padding:0;overflow:visible}
+    .rp-body, .pg-body{max-width:100%;padding:0}
+    .rp-section, .pg-card{box-shadow:none;border:1px solid #ddd;break-inside:avoid;page-break-inside:avoid}
     .rp-record{background:#fff;border:1px solid #ddd}
     .rp-table th{background:#f5f5f5}
   }
@@ -483,6 +496,19 @@ window.onerror = function(msg, url, line, col){
     <button type="button" data-action="rp-print">🖨️</button>
   </div>
   <div class="rp-body" id="rpBody"></div>
+</div>
+
+<div id="programScreen" class="hidden">
+  <div class="pg-header">
+    <button type="button" data-action="pg-close">←</button>
+    <div style="flex:1">
+      <h2>Application Program</h2>
+      <div class="pg-sub" id="pgHeaderSub">Ready</div>
+    </div>
+    <button type="button" class="pg-print-hide" data-action="pg-import" title="Import from photo" style="width:auto;padding:0 12px;font-weight:700">📄</button>
+    <button type="button" data-action="pg-print">🖨️</button>
+  </div>
+  <div class="pg-body" id="pgBody"></div>
 </div>
 
 <div id="scanModal" class="hidden">
@@ -1643,6 +1669,248 @@ Be specific. Use Australian common names. Bullet points, no waffle. Around 220 w
 }
 
 /* =========================================================
+   APPLICATION PROGRAM OVERLAY
+   ========================================================= */
+async function openProgramScreen(){
+  const screen = $('#programScreen');
+  screen.classList.remove('hidden');
+  screen.scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+  renderProgramScreen();
+  screen.scrollTop = 0;
+}
+
+function closeProgramScreen(){
+  $('#programScreen').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+function renderProgramScreen(){
+  const body = $('#pgBody');
+  if(!body) return;
+
+  const sorted = [...(state.program || [])].sort((a,b) => {
+    const aS = a.weeks?.[0]?.weekStart || '9999';
+    const bS = b.weeks?.[0]?.weekStart || '9999';
+    return aS.localeCompare(bS);
+  });
+
+  const thisWeek = getThisWeekProgram();
+  const doneThisWeek = thisWeek.filter(p => p.done).length;
+  $('#pgHeaderSub').textContent = state.program.length
+    ? `${sorted.length} month${sorted.length>1?'s':''} · ${doneThisWeek}/${thisWeek.length} applied this week`
+    : 'No program yet';
+
+  let html = `
+    <div class="pg-card">
+      <div class="sec-head" style="margin:0 0 6px">
+        <h3 style="margin:0;color:var(--muted);font-size:12px">Program Controls</h3>
+      </div>
+      <div class="row2">
+        <button type="button" class="submit" style="margin:0;padding:11px;font-size:14px" data-action="pg-add-month">+ Add Month</button>
+        <button type="button" class="submit" style="margin:0;padding:11px;font-size:14px;background:var(--blue)" data-action="pg-import">📄 Import Photo</button>
+      </div>
+    </div>`;
+
+  if(!sorted.length){
+    html += `<div class="pg-card"><div class="empty"><span class="big">🧪</span>No program yet. Tap Add Month or Import Photo to begin.</div></div>`;
+    body.innerHTML = html;
+    return;
+  }
+
+  sorted.forEach(month => {
+    const done = (month.weeks||[]).reduce((n,w) => n + (w.items||[]).filter(i => i.done).length, 0);
+    const total = (month.weeks||[]).reduce((n,w) => n + (w.items||[]).length, 0);
+    html += `<div class="pg-card">
+      <div class="pg-month-head">
+        <h3>${esc(month.month)}</h3>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span class="pg-progress">${done}/${total} applied</span>
+          <button class="del" data-action="pg-edit-month" data-id="${month.id}" style="font-size:15px;color:var(--blue)">✏️</button>
+        </div>
+      </div>`;
+
+    const weeks = [...(month.weeks||[])].sort((a,b) => (a.weekStart||'').localeCompare(b.weekStart||'') || (a.week - b.week));
+    weeks.forEach(wk => {
+      const wDone = (wk.items||[]).filter(i => i.done).length;
+      const wTotal = (wk.items||[]).length;
+      html += `<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line)">
+        <div class="pg-week-head">
+          <div class="pg-week-label">Week ${wk.week}${wk.weekStart ? ` · ${prettyDate(wk.weekStart)}` : ''} <span style="color:var(--muted);font-weight:500;text-transform:none;letter-spacing:0;font-size:11px">${wDone}/${wTotal}</span></div>
+          <div class="pg-week-actions">
+            <button class="del" data-action="pg-add-item" data-month="${month.id}" data-week="${wk.week}" style="font-size:15px;color:var(--green2)">＋</button>
+            <button class="del" data-action="pg-edit-week" data-month="${month.id}" data-week="${wk.week}" style="font-size:14px;color:var(--blue)">✏️</button>
+          </div>
+        </div>`;
+      if(!(wk.items||[]).length){
+        html += `<div style="font-size:12.5px;color:var(--muted);padding:6px 0">No applications yet.</div>`;
+      } else {
+        wk.items.forEach(item => {
+          html += `<div class="item" style="padding:8px 0">
+            <div class="tick ${item.done?'on':''}" data-action="toggle-program" data-month="${month.id}" data-week="${wk.week}" data-item="${item.id}">${item.done?'✓':''}</div>
+            <div class="item-body" data-action="pg-edit-item" data-month="${month.id}" data-week="${wk.week}" data-item="${item.id}" style="cursor:pointer">
+              <div class="item-title ${item.done?'done':''}" style="font-size:13.5px">${esc(item.product)}</div>
+              <div class="item-meta"><span class="pill p-type">${esc(item.rate)}</span></div>
+            </div>
+          </div>`;
+        });
+      }
+      html += `</div>`;
+    });
+    html += `</div>`;
+  });
+
+  html += `<button type="button" class="submit" data-action="pg-delete-all" style="background:#fff;color:var(--red);border:1.5px solid var(--red);padding:13px;font-size:14px;margin-top:8px;margin-bottom:20px">🗑 Delete entire program</button>`;
+
+  body.innerHTML = html;
+}
+
+function pgFindProgramItem(monthId, weekNum, itemId){
+  const month = state.program.find(m => m.id === monthId);
+  if(!month) return null;
+  const week = (month.weeks || []).find(w => w.week === weekNum);
+  if(!week) return null;
+  const item = (week.items || []).find(i => i.id === itemId);
+  return item ? {month, week, item} : null;
+}
+
+function getAllProgramProducts(){
+  const set = new Set();
+  (state.program || []).forEach(m => (m.weeks || []).forEach(w => (w.items || []).forEach(i => i.product && set.add(i.product))));
+  return [...set].sort();
+}
+
+function getProgramItemsForDate(dateStr){
+  const out = [];
+  (state.program || []).forEach(month => {
+    (month.weeks || []).forEach(wk => {
+      if(wk.weekStart === dateStr){
+        (wk.items || []).forEach(item => {
+          out.push({monthId:month.id, monthName:month.month, week:wk.week, product:item.product, rate:item.rate, done:!!item.done, itemId:item.id});
+        });
+      }
+    });
+  });
+  return out;
+}
+
+function getThisWeekProgram(){
+  const today = new Date();
+  const day = (today.getDay() + 6) % 7;
+  const monday = new Date(today); monday.setDate(today.getDate() - day);
+  const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6);
+  const startStr = iso(monday), endStr = iso(sunday);
+  const out = [];
+  (state.program || []).forEach(month => {
+    (month.weeks || []).forEach(wk => {
+      if(wk.weekStart >= startStr && wk.weekStart <= endStr){
+        (wk.items || []).forEach(item => {
+          out.push({monthId:month.id, monthName:month.month, week:wk.week, weekStart:wk.weekStart, product:item.product, rate:item.rate, done:!!item.done, itemId:item.id});
+        });
+      }
+    });
+  });
+  return out;
+}
+
+function formAddProgramMonth(){
+  openSheet('Add Month', `
+    <div class="field"><label>Month name *</label><input name="month" required placeholder="e.g. July 2026"></div>`,
+  async d => { const month = {id:uid('pm'), month:d.month.trim(), weeks:[]}; state.program.push(month); await fsSave('program', month); toast('Added'); });
+}
+
+function formEditProgramMonth(monthId){
+  const month = state.program.find(m => m.id === monthId); if(!month) return;
+  openSheet('Edit Month', `
+    <div class="field"><label>Month name</label><input name="month" value="${esc(month.month)}" required></div>
+    <button type="submit" class="submit">💾 Save</button>
+    <button type="button" class="submit" data-action="pg-delete-month" data-id="${monthId}" style="background:#fff;color:var(--red);border:1.5px solid var(--red);margin-top:8px">🗑 Delete month</button>`,
+  async d => { month.month = d.month.trim(); await fsSave('program', month); toast('Updated'); });
+}
+
+function formEditProgramWeek(monthId, weekNum){
+  const month = state.program.find(m => m.id === monthId); if(!month) return;
+  const week = (month.weeks||[]).find(w => w.week === weekNum); if(!week) return;
+  openSheet('Edit Week', `
+    <div class="row2">
+      <div class="field"><label>Week #</label><input type="number" name="week" min="1" max="10" value="${week.week}"></div>
+      <div class="field"><label>Start date</label><input type="date" name="weekStart" value="${week.weekStart||''}"></div>
+    </div>
+    <button type="submit" class="submit">💾 Save</button>
+    <button type="button" class="submit" data-action="pg-delete-week" data-month="${monthId}" data-week="${weekNum}" style="background:#fff;color:var(--red);border:1.5px solid var(--red);margin-top:8px">🗑 Delete week</button>`,
+  async d => { week.week = parseInt(d.week) || week.week; if(d.weekStart) week.weekStart = d.weekStart; await fsSave('program', month); toast('Updated'); });
+}
+
+function formAddProgramItem(monthId, weekNum){
+  const month = state.program.find(m => m.id === monthId); if(!month) return;
+  const week = (month.weeks||[]).find(w => w.week === weekNum); if(!week) return;
+  openSheet('Add Application', `
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">${esc(month.month)} · Week ${week.week}</div>
+    <div class="field"><label>Product *</label><input name="product" required list="programProducts2"><datalist id="programProducts2">${getAllProgramProducts().map(p => `<option value="${esc(p)}">`).join('')}</datalist></div>
+    <div class="field"><label>Rate</label><input name="rate"></div>`,
+  async d => { week.items = week.items || []; week.items.push({id:uid('pi'), product:d.product.trim(), rate:d.rate.trim()||'—', done:false}); await fsSave('program', month); toast('Added'); });
+}
+
+function formEditProgramItem(monthId, weekNum, itemId){
+  const f = pgFindProgramItem(monthId, weekNum, itemId); if(!f) return;
+  const {month, week, item} = f;
+  openSheet('Edit Application', `
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">${esc(month.month)} · Week ${week.week}</div>
+    <div class="field"><label>Product</label><input name="product" value="${esc(item.product)}" required list="programProducts"><datalist id="programProducts">${getAllProgramProducts().map(p => `<option value="${esc(p)}">`).join('')}</datalist></div>
+    <div class="field"><label>Rate</label><input name="rate" value="${esc(item.rate)}"></div>
+    <button type="submit" class="submit">💾 Save</button>
+    <button type="button" class="submit" data-action="pg-delete-item" data-month="${monthId}" data-week="${weekNum}" data-item="${itemId}" style="background:#fff;color:var(--red);border:1.5px solid var(--red);margin-top:8px">🗑 Delete</button>`,
+  async d => { item.product = d.product.trim(); item.rate = d.rate.trim(); await fsSave('program', month); toast('Updated'); });
+}
+
+async function handleProgramPhoto(inputEl){
+  const file = inputEl.files?.[0]; if(!file) return;
+  try{
+    toast('Reading program…');
+    const url = await compressImage(file, 1400, 0.8);
+    openSheet('Reading program…', `<div style="text-align:center;padding:16px 0 24px"><img src="${url}" style="width:100%;max-width:280px;border-radius:14px;margin-bottom:16px"><div style="font-size:38px;margin:8px 0">🧪</div><div style="font-size:14px;color:var(--muted)">Extracting…</div></div>`, () => {});
+    const base64 = url.split(',')[1];
+    const res = await fetch(PROXY_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({messages:[{role:'system', content:getProgramImportPrompt()},{role:'user', content:[{type:'text', text:'Extract program.'},{type:'image_url', image_url:{url:`data:image/jpeg;base64,${base64}`}}]}]})});
+    if(!res.ok) throw new Error(`Proxy ${res.status}`);
+    const data = await res.json();
+    const raw = data?.choices?.[0]?.message?.content || '';
+    const clean = raw.replace(/^```json\s*|```$/g, '').trim();
+    const parsed = JSON.parse(clean);
+    const months = Array.isArray(parsed.months) ? parsed.months : [];
+    inputEl.value = '';
+    openProgramImportSheet(months, url);
+  }catch(e){ console.error(e); inputEl.value = ''; closeSheet(); toast('Import failed'); }
+}
+
+function openProgramImportSheet(months, dataUrl){
+  const overlay = $('#overlay'); const sheetForm = $('#sheetForm');
+  const total = months.reduce((n,m) => n + (m.weeks||[]).reduce((k,w) => k + (w.items||[]).length, 0), 0);
+  $('#sheetTitle').textContent = months.length ? `${months.length} month(s), ${total} item(s)` : 'Nothing found';
+  sheetForm.onsubmit = (ev) => ev.preventDefault();
+  if(!months.length){
+    sheetForm.innerHTML = `<div class="result" style="border-left-color:var(--amber);background:#fff8e1">Could not read program.</div><button type="button" class="submit" data-action="close-sheet" style="margin-top:12px">Close</button>`;
+    overlay.classList.remove('hidden'); document.body.style.overflow='hidden'; return;
+  }
+  window._pendingProgram = months;
+  let preview = '';
+  months.forEach(m => {
+    preview += `<div style="margin-bottom:14px"><div style="font-weight:700;font-size:14.5px;color:var(--green2);margin-bottom:6px">${esc(m.month||'Untitled')}</div>`;
+    (m.weeks||[]).forEach(w => {
+      preview += `<div style="padding-left:8px;border-left:2px solid var(--line);margin-bottom:8px"><div style="font-size:12px;color:var(--muted);font-weight:600;margin-bottom:4px">Week ${w.week}${w.weekStart?` · ${w.weekStart}`:''}</div>`;
+      (w.items||[]).forEach(i => { preview += `<div style="font-size:13px;padding:2px 0">• ${esc(i.product)} <span style="color:var(--muted)">${esc(i.rate||'')}</span></div>`; });
+      preview += `</div>`;
+    });
+    preview += `</div>`;
+  });
+  sheetForm.innerHTML = `
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px">Review and tap Add.</div>
+    <div style="max-height:50vh;overflow-y:auto;background:#f7faf7;border-radius:12px;padding:14px;margin-bottom:14px">${preview}</div>
+    <button type="button" class="submit" data-action="pg-import-confirm">✅ Add to Program</button>
+    <button type="button" class="submit" style="background:#eef3ee;color:var(--text);margin-top:8px" data-action="close-sheet">Cancel</button>`;
+  overlay.classList.remove('hidden'); document.body.style.overflow='hidden';
+}
+
+/* =========================================================
    REPORTS — Phase 4
    ========================================================= */
 function openReportScreen(){
@@ -2285,11 +2553,9 @@ onAuthStateChanged(auth, async (user) => {
       if(!state.events.length && !state.jobs.length){
         state.events = seedEvents();
         state.jobs = seedJobs();
-        state.program = seedProgram();
         await Promise.all([
           ...state.jobs.map(j => fsSave('jobs', j)),
-          ...state.events.map(e => fsSave('events', e)),
-          ...state.program.map(p => fsSave('program', p))
+          ...state.events.map(e => fsSave('events', e))
         ]);
       }
     }
@@ -2314,6 +2580,7 @@ onAuthStateChanged(auth, async (user) => {
     chemicals = []; sprays = []; sprayAreas = [...DEFAULT_SPRAY_AREAS];
     stopBarcodeScanner();
     closeReportScreen();
+    closeProgramScreen();
   }
 });
 
@@ -2361,32 +2628,6 @@ function seedJobs(){
   ];
 }
 
-function seedProgram(){
-  const y = new Date().getFullYear();
-  return [
-    { id:'p_jul', month:'July '+y, weeks:[
-      { week:1, weekStart:y+'-07-06', items:[{id:'p_jul_1_1',product:'Gypsum',rate:'500kg',done:false},{id:'p_jul_1_2',product:'LiquiMaxx K 12-0-20',rate:'20L',done:false},{id:'p_jul_1_3',product:'Supa Humus',rate:'10L',done:false}]},
-      { week:2, weekStart:y+'-07-13', items:[{id:'p_jul_2_1',product:'Organic Plus',rate:'20L',done:false},{id:'p_jul_2_2',product:'Supa Stand Phos',rate:'20L',done:false},{id:'p_jul_2_3',product:'Moca',rate:'10L',done:false}]},
-      { week:3, weekStart:y+'-07-20', items:[{id:'p_jul_3_1',product:'Nitro-Iron Adv',rate:'20L',done:false},{id:'p_jul_3_2',product:'Resilience',rate:'10L',done:false}]},
-      { week:4, weekStart:y+'-07-27', items:[{id:'p_jul_4_1',product:'HydroForce Ultra',rate:'12.5L',done:false},{id:'p_jul_4_2',product:'Grocal MGB',rate:'20L',done:false}]}
-    ]},
-    { id:'p_aug', month:'August '+y, weeks:[
-      { week:1, weekStart:y+'-08-03', items:[{id:'p_aug_1_1',product:'Gypsum',rate:'500kg',done:false},{id:'p_aug_1_2',product:'SoluPak 28-3-13',rate:'40kg',done:false},{id:'p_aug_1_3',product:'Supa Humus',rate:'10L',done:false}]},
-      { week:2, weekStart:y+'-08-10', items:[{id:'p_aug_2_1',product:'Agador',rate:'2L',done:false},{id:'p_aug_2_2',product:'Organic Plus',rate:'20L',done:false},{id:'p_aug_2_3',product:'Supa Stand Phos',rate:'20L',done:false},{id:'p_aug_2_4',product:'Moca',rate:'10L',done:false}]},
-      { week:3, weekStart:y+'-08-17', items:[{id:'p_aug_3_1',product:'Nitro-Iron Adv',rate:'20L',done:false},{id:'p_aug_3_2',product:'Resilience',rate:'10L',done:false}]},
-      { week:4, weekStart:y+'-08-24', items:[{id:'p_aug_4_1',product:'HydroForce Ultra',rate:'12.5L',done:false},{id:'p_aug_4_2',product:'Grocal MGB',rate:'20L',done:false}]},
-      { week:5, weekStart:y+'-08-31', items:[{id:'p_aug_5_1',product:'Evolution Adv',rate:'2.2L',done:false},{id:'p_aug_5_2',product:'Drop-Zone',rate:'10L',done:false}]}
-    ]},
-    { id:'p_jan', month:'January '+(y+1), weeks:[
-      { week:1, weekStart:(y+1)+'-01-05', items:[{id:'p_jan_1_1',product:'Gypsum',rate:'500kg',done:false},{id:'p_jan_1_2',product:'SoluPak 28-3-13',rate:'40kg',done:false}]},
-      { week:2, weekStart:(y+1)+'-01-12', items:[{id:'p_jan_2_1',product:'Rumbler',rate:'3.4L',done:false},{id:'p_jan_2_2',product:'Organic Plus',rate:'20L',done:false},{id:'p_jan_2_3',product:'Supa Stand Phos',rate:'20L',done:false}]},
-      { week:3, weekStart:(y+1)+'-01-19', items:[{id:'p_jan_3_1',product:'Nitro-Iron Adv',rate:'20L',done:false},{id:'p_jan_3_2',product:'Resilience',rate:'10L',done:false}]},
-      { week:4, weekStart:(y+1)+'-01-26', items:[{id:'p_jan_4_1',product:'HydroForce Ultra',rate:'12.5L',done:false},{id:'p_jan_4_2',product:'Microlife',rate:'3L',done:false}]},
-      { week:5, weekStart:(y+1)+'-01-31', items:[{id:'p_jan_5_1',product:'Signature',rate:'12.5kg',done:false},{id:'p_jan_5_2',product:'Drop-Zone',rate:'10L',done:false}]}
-    ]}
-  ];
-}
-
 function render(){
   const v = $('#view');
   if(!v) return;
@@ -2400,7 +2641,6 @@ function render(){
   if(activeTab === 'jobs') v.innerHTML = viewJobs();
   if(activeTab === 'chem') v.innerHTML = viewChem();
   if(activeTab === 'calendar') v.innerHTML = viewCalendar();
-  if(activeTab === 'program') v.innerHTML = viewProgram();
   if(activeTab === 'plant') v.innerHTML = viewPlant();
   if(activeTab === 'learn') v.innerHTML = viewLearn();
   if(activeTab === 'chat'){ v.innerHTML = viewChat(); renderChatMessages(); }
@@ -2408,62 +2648,13 @@ function render(){
     v.innerHTML = '<div class="empty" style="padding:40px"><span class="big">👥</span>Loading team…</div>';
     viewTeam().then(html => { v.innerHTML = html; }).catch(e => { console.error(e); v.innerHTML = '<div class="empty">Could not load team</div>'; });
   }
-  const effectiveTab = activeTab === 'program' ? 'dash' : activeTab;
   $$('nav button').forEach(b => {
     const t = b.dataset.tab;
     b.style.display = tabsForRole.includes(t) ? '' : 'none';
-    b.classList.toggle('active', t === effectiveTab);
+    b.classList.toggle('active', t === activeTab);
   });
   const sub = $('#headSub');
   if(sub) sub.textContent = new Date().toLocaleDateString('en-AU',{weekday:'long', day:'numeric', month:'long'});
-}
-
-function findProgramItem(monthId, weekNum, itemId){
-  const month = state.program.find(m => m.id === monthId);
-  if(!month) return null;
-  const week = (month.weeks || []).find(w => w.week === weekNum);
-  if(!week) return null;
-  const item = (week.items || []).find(i => i.id === itemId);
-  return item ? {month, week, item} : null;
-}
-
-function getAllProgramProducts(){
-  const set = new Set();
-  (state.program || []).forEach(m => (m.weeks || []).forEach(w => (w.items || []).forEach(i => i.product && set.add(i.product))));
-  return [...set].sort();
-}
-
-function getProgramItemsForDate(dateStr){
-  const out = [];
-  (state.program || []).forEach(month => {
-    (month.weeks || []).forEach(wk => {
-      if(wk.weekStart === dateStr){
-        (wk.items || []).forEach(item => {
-          out.push({monthId:month.id, monthName:month.month, week:wk.week, product:item.product, rate:item.rate, done:!!item.done, itemId:item.id});
-        });
-      }
-    });
-  });
-  return out;
-}
-
-function getThisWeekProgram(){
-  const today = new Date();
-  const day = (today.getDay() + 6) % 7;
-  const monday = new Date(today); monday.setDate(today.getDate() - day);
-  const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6);
-  const startStr = iso(monday), endStr = iso(sunday);
-  const out = [];
-  (state.program || []).forEach(month => {
-    (month.weeks || []).forEach(wk => {
-      if(wk.weekStart >= startStr && wk.weekStart <= endStr){
-        (wk.items || []).forEach(item => {
-          out.push({monthId:month.id, monthName:month.month, week:wk.week, weekStart:wk.weekStart, product:item.product, rate:item.rate, done:!!item.done, itemId:item.id});
-        });
-      }
-    });
-  });
-  return out;
 }
 
 function buildReminders(){
@@ -2552,6 +2743,30 @@ function signInCardHtml(){
   return `<div class="qr-signin-card"><h3>⚪ Not signed in</h3><div class="big">Ready to help?</div><div class="sub">Tap below or scan the QR code at the shed</div><button type="button" class="qr-signin-btn" data-action="signin-today">✅ Sign in now</button></div>`;
 }
 
+function renderProgramHomeCard(){
+  const thisWeek = getThisWeekProgram();
+  const done = thisWeek.filter(p => p.done).length;
+  const total = thisWeek.length;
+  const hasProgram = (state.program || []).length > 0;
+  let subtitle;
+  if(!hasProgram){
+    subtitle = 'No program yet — tap to import';
+  } else if(total === 0){
+    subtitle = 'Nothing scheduled this week';
+  } else {
+    subtitle = `${done}/${total} applied this week`;
+  }
+  return `<div class="card" style="border-left:4px solid var(--green);cursor:pointer" data-action="pg-open">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="min-width:0">
+        <h3 style="margin:0;color:var(--green);text-transform:none;letter-spacing:0;font-size:15px">🧪 Application Program</h3>
+        <div style="font-size:12.5px;color:var(--muted);margin-top:4px">${esc(subtitle)}</div>
+      </div>
+      <span style="font-size:11px;color:var(--muted);white-space:nowrap;padding-left:10px">Open →</span>
+    </div>
+  </div>`;
+}
+
 function viewDash(){
   const t = todayISO();
   if(userRole === 'volunteer'){
@@ -2581,9 +2796,9 @@ function viewDash(){
   const overdue = state.jobs.filter(j => j.status !== 'done' && j.due && j.due < t).length;
   const upcoming = state.events.filter(e => e.date >= t).sort((a,b) => a.date.localeCompare(b.date)).slice(0,6);
   const reminders = buildReminders();
-  const weekProgram = getThisWeekProgram();
 
   let html = `${renderWeatherCard()}`;
+  html += renderProgramHomeCard();
   html += renderChemAlertCard();
 
   if(overdue > 0){
@@ -2604,28 +2819,6 @@ function viewDash(){
       html += `<div style="font-size:12px;font-weight:700;color:var(--green2);text-transform:uppercase;margin:10px 0 4px">This Week</div>`;
       html += reminders.week.map(r => reminderRow(r, 'p-low')).join('');
     }
-    html += `</div>`;
-  }
-
-  if(weekProgram.length){
-    const doneCount = weekProgram.filter(p => p.done).length;
-    html += `<div class="card" style="border-left:4px solid var(--green);cursor:pointer" data-action="open-program">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <h3 style="margin:0;color:var(--green)">🧪 This Week's Applications</h3>
-        <span style="font-size:11px;color:var(--muted)">${doneCount}/${weekProgram.length} applied · Tap to open →</span>
-      </div>`;
-    weekProgram.forEach(p => {
-      html += `<div class="item" style="padding:8px 0">
-        <div class="tick ${p.done?'on':''}" data-action="toggle-program" data-month="${p.monthId}" data-week="${p.week}" data-item="${p.itemId}">${p.done?'✓':''}</div>
-        <div class="item-body">
-          <div class="item-title ${p.done?'done':''}" style="font-size:13.5px">${esc(p.product)}</div>
-          <div class="item-meta">
-            <span class="pill p-type">${esc(p.rate)}</span>
-            <span>${esc(p.monthName)} · Week ${p.week}</span>
-          </div>
-        </div>
-      </div>`;
-    });
     html += `</div>`;
   }
 
@@ -3170,36 +3363,6 @@ function evItem(e){
   return `<div class="item"><div class="tick ${e.done?'on':''}" data-action="toggle-event" data-id="${e.id}">${e.done?'✓':''}</div><div class="item-body"><div class="item-title ${e.done?'done':''}">${esc(e.title)}</div><div class="item-meta"><span class="pill p-type">${EVENT_LABEL[e.type] || e.type}</span><span>${prettyDate(e.date)}</span></div>${e.notes ? `<div class="item-note">${esc(e.notes)}</div>` : ''}</div><button class="del" data-action="del-event" data-id="${e.id}">✕</button></div>`;
 }
 
-function viewProgram(){
-  let html = `<div class="sec-head"><h2>Nutrition Program</h2><div style="display:flex;gap:6px"><button class="add-btn" style="background:var(--blue)" data-action="import-program">📄</button><button class="add-btn" data-action="add-program-month">+</button></div></div>`;
-  html += `<input type="file" id="programDocCamera" accept="image/*" capture="environment" style="display:none"><input type="file" id="programDocGallery" accept="image/*" style="display:none">`;
-
-  if(!state.program.length){
-    return html + `<div class="card"><div class="empty"><span class="big">🧪</span>No program yet. Tap 📄 to import or + to add a month.</div></div>`;
-  }
-
-  const sorted = [...state.program].sort((a,b) => {
-    const aS = a.weeks?.[0]?.weekStart || '9999';
-    const bS = b.weeks?.[0]?.weekStart || '9999';
-    return aS.localeCompare(bS);
-  });
-
-  sorted.forEach(month => {
-    const done = (month.weeks||[]).reduce((n,w) => n + (w.items||[]).filter(i => i.done).length, 0);
-    const total = (month.weeks||[]).reduce((n,w) => n + (w.items||[]).length, 0);
-    html += `<div class="card"><div class="sec-head" style="margin-bottom:6px"><h2 style="font-size:16px">${esc(month.month)}</h2><div style="display:flex;gap:6px;align-items:center"><span style="font-size:11px;color:var(--muted);font-weight:600">${done}/${total} applied</span><button class="del" data-action="edit-program-month" data-id="${month.id}" style="font-size:14px;color:var(--blue)">✏️</button></div></div>`;
-    (month.weeks || []).forEach(wk => {
-      html += `<div style="margin-top:12px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="font-size:12px;font-weight:700;color:var(--green2);text-transform:uppercase">Week ${wk.week}${wk.weekStart ? ` · ${prettyDate(wk.weekStart)}` : ''}</div><div style="display:flex;gap:4px"><button class="del" data-action="add-program-item" data-month="${month.id}" data-week="${wk.week}" style="font-size:14px;color:var(--green2)">＋</button><button class="del" data-action="edit-program-week" data-month="${month.id}" data-week="${wk.week}" style="font-size:14px;color:var(--blue)">✏️</button></div></div>${(wk.items||[]).map(item => `<div class="item" style="padding:8px 0"><div class="tick ${item.done?'on':''}" data-action="toggle-program" data-month="${month.id}" data-week="${wk.week}" data-item="${item.id}">${item.done?'✓':''}</div><div class="item-body" data-action="edit-program-item" data-month="${month.id}" data-week="${wk.week}" data-item="${item.id}" style="cursor:pointer"><div class="item-title ${item.done?'done':''}" style="font-size:13.5px">${esc(item.product)}</div><div class="item-meta"><span>Rate: ${esc(item.rate)}</span></div></div></div>`).join('')}</div>`;
-    });
-    html += `</div>`;
-  });
-
-  if(sorted.length){
-    html += `<button type="button" class="submit" data-action="delete-all-program" style="background:#fff;color:var(--red);border:1.5px solid var(--red);padding:13px;font-size:14px;margin-top:8px;margin-bottom:20px">🗑 Delete entire program</button>`;
-  }
-  return html;
-}
-
 function viewPlant(){
   const history = [...(state.plantIds || [])].sort((a,b) => (b.created||'').localeCompare(a.created||''));
   const todayCount = history.filter(p => (p.created||'').slice(0,10) === todayISO()).length;
@@ -3721,103 +3884,6 @@ async function askAboutPlant(plant, history){
   return data?.choices?.[0]?.message?.content || '(No response)';
 }
 
-function formEditProgramItem(monthId, weekNum, itemId){
-  const f = findProgramItem(monthId, weekNum, itemId); if(!f) return;
-  const {month, week, item} = f;
-  openSheet('Edit Application', `
-    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">${esc(month.month)} · Week ${week.week}</div>
-    <div class="field"><label>Product</label><input name="product" value="${esc(item.product)}" required list="programProducts"><datalist id="programProducts">${getAllProgramProducts().map(p => `<option value="${esc(p)}">`).join('')}</datalist></div>
-    <div class="field"><label>Rate</label><input name="rate" value="${esc(item.rate)}"></div>
-    <button type="submit" class="submit">💾 Save</button>
-    <button type="button" class="submit" data-action="delete-program-item" data-month="${monthId}" data-week="${weekNum}" data-item="${itemId}" style="background:#fff;color:var(--red);border:1.5px solid var(--red);margin-top:8px">🗑 Delete</button>`,
-  async d => { item.product = d.product.trim(); item.rate = d.rate.trim(); await fsSave('program', month); toast('Updated'); });
-}
-
-function formAddProgramItem(monthId, weekNum){
-  const month = state.program.find(m => m.id === monthId); if(!month) return;
-  const week = (month.weeks||[]).find(w => w.week === weekNum); if(!week) return;
-  openSheet('Add Application', `
-    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">${esc(month.month)} · Week ${week.week}</div>
-    <div class="field"><label>Product *</label><input name="product" required list="programProducts2"><datalist id="programProducts2">${getAllProgramProducts().map(p => `<option value="${esc(p)}">`).join('')}</datalist></div>
-    <div class="field"><label>Rate</label><input name="rate"></div>`,
-  async d => { week.items = week.items || []; week.items.push({id:uid('pi'), product:d.product.trim(), rate:d.rate.trim()||'—', done:false}); await fsSave('program', month); toast('Added'); });
-}
-
-function formEditProgramWeek(monthId, weekNum){
-  const month = state.program.find(m => m.id === monthId); if(!month) return;
-  const week = (month.weeks||[]).find(w => w.week === weekNum); if(!week) return;
-  openSheet('Edit Week', `
-    <div class="row2">
-      <div class="field"><label>Week #</label><input type="number" name="week" min="1" max="10" value="${week.week}"></div>
-      <div class="field"><label>Start date</label><input type="date" name="weekStart" value="${week.weekStart||''}"></div>
-    </div>
-    <button type="submit" class="submit">💾 Save</button>
-    <button type="button" class="submit" data-action="delete-program-week" data-month="${monthId}" data-week="${weekNum}" style="background:#fff;color:var(--red);border:1.5px solid var(--red);margin-top:8px">🗑 Delete week</button>`,
-  async d => { week.week = parseInt(d.week) || week.week; if(d.weekStart) week.weekStart = d.weekStart; await fsSave('program', month); toast('Updated'); });
-}
-
-function formAddProgramMonth(){
-  openSheet('Add Month', `
-    <div class="field"><label>Month name *</label><input name="month" required placeholder="e.g. July 2026"></div>`,
-  async d => { const month = {id:uid('pm'), month:d.month.trim(), weeks:[]}; state.program.push(month); await fsSave('program', month); toast('Added'); });
-}
-
-function formEditProgramMonth(monthId){
-  const month = state.program.find(m => m.id === monthId); if(!month) return;
-  openSheet('Edit Month', `
-    <div class="field"><label>Month name</label><input name="month" value="${esc(month.month)}" required></div>
-    <button type="submit" class="submit">💾 Save</button>
-    <button type="button" class="submit" data-action="delete-program-month" data-id="${monthId}" style="background:#fff;color:var(--red);border:1.5px solid var(--red);margin-top:8px">🗑 Delete month</button>`,
-  async d => { month.month = d.month.trim(); await fsSave('program', month); toast('Updated'); });
-}
-
-async function handleProgramPhoto(inputEl){
-  const file = inputEl.files?.[0]; if(!file) return;
-  try{
-    toast('Reading program…');
-    const url = await compressImage(file, 1400, 0.8);
-    openSheet('Reading program…', `<div style="text-align:center;padding:16px 0 24px"><img src="${url}" style="width:100%;max-width:280px;border-radius:14px;margin-bottom:16px"><div style="font-size:38px;margin:8px 0">🧪</div><div style="font-size:14px;color:var(--muted)">Extracting…</div></div>`, () => {});
-    const base64 = url.split(',')[1];
-    const res = await fetch(PROXY_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({messages:[{role:'system', content:getProgramImportPrompt()},{role:'user', content:[{type:'text', text:'Extract program.'},{type:'image_url', image_url:{url:`data:image/jpeg;base64,${base64}`}}]}]})});
-    if(!res.ok) throw new Error(`Proxy ${res.status}`);
-    const data = await res.json();
-    const raw = data?.choices?.[0]?.message?.content || '';
-    const clean = raw.replace(/^```json\s*|```$/g, '').trim();
-    const parsed = JSON.parse(clean);
-    const months = Array.isArray(parsed.months) ? parsed.months : [];
-    inputEl.value = '';
-    openProgramImportSheet(months, url);
-  }catch(e){ console.error(e); inputEl.value = ''; closeSheet(); toast('Import failed'); }
-}
-
-function openProgramImportSheet(months, dataUrl){
-  const overlay = $('#overlay'); const sheetForm = $('#sheetForm');
-  const total = months.reduce((n,m) => n + (m.weeks||[]).reduce((k,w) => k + (w.items||[]).length, 0), 0);
-  $('#sheetTitle').textContent = months.length ? `${months.length} month(s), ${total} item(s)` : 'Nothing found';
-  sheetForm.onsubmit = (ev) => ev.preventDefault();
-  if(!months.length){
-    sheetForm.innerHTML = `<div class="result" style="border-left-color:var(--amber);background:#fff8e1">Could not read program.</div><button type="button" class="submit" data-action="close-sheet" style="margin-top:12px">Close</button>`;
-    overlay.classList.remove('hidden'); document.body.style.overflow='hidden'; return;
-  }
-  window._pendingProgram = months;
-  let preview = '';
-  months.forEach(m => {
-    preview += `<div style="margin-bottom:14px"><div style="font-weight:700;font-size:14.5px;color:var(--green2);margin-bottom:6px">${esc(m.month||'Untitled')}</div>`;
-    (m.weeks||[]).forEach(w => {
-      preview += `<div style="padding-left:8px;border-left:2px solid var(--line);margin-bottom:8px"><div style="font-size:12px;color:var(--muted);font-weight:600;margin-bottom:4px">Week ${w.week}${w.weekStart?` · ${w.weekStart}`:''}</div>`;
-      (w.items||[]).forEach(i => { preview += `<div style="font-size:13px;padding:2px 0">• ${esc(i.product)} <span style="color:var(--muted)">${esc(i.rate||'')}</span></div>`; });
-      preview += `</div>`;
-    });
-    preview += `</div>`;
-  });
-  sheetForm.innerHTML = `
-    <div style="font-size:13px;color:var(--muted);margin-bottom:14px">Review and tap Add.</div>
-    <div style="max-height:50vh;overflow-y:auto;background:#f7faf7;border-radius:12px;padding:14px;margin-bottom:14px">${preview}</div>
-    <button type="button" class="submit" data-action="import-program-confirm">✅ Add to Program</button>
-    <button type="button" class="submit" style="background:#eef3ee;color:var(--text);margin-top:8px" data-action="close-sheet">Cancel</button>`;
-  overlay.classList.remove('hidden'); document.body.style.overflow='hidden';
-}
-
 async function handleDocPhoto(inputEl){
   const file = inputEl.files?.[0]; if(!file) return;
   try{
@@ -3926,6 +3992,7 @@ function openSheet(title, fieldsHtml, onSubmit){
     await onSubmit(data);
     closeSheet();
     render();
+    if(!$('#programScreen').classList.contains('hidden')) renderProgramScreen();
   };
 }
 function closeSheet(){ overlay.classList.add('hidden'); document.body.style.overflow = ''; }
@@ -4125,12 +4192,6 @@ document.addEventListener('click', async (e) => {
   switch(a){
     case 'nav': activeTab = el.dataset.tab; closeSheet(); render(); break;
 
-    case 'open-program':
-      activeTab = 'program';
-      closeSheet();
-      render();
-      break;
-
     case 'wx-open': await openWeatherScreen(); break;
     case 'wx-close': closeWeatherScreen(); break;
     case 'wx-refresh': {
@@ -4154,6 +4215,77 @@ document.addEventListener('click', async (e) => {
     }
     case 'irrig-add': formIrrigation(); break;
     case 'area-edit': formEditAreas(); break;
+
+    /* ===== APPLICATION PROGRAM ===== */
+    case 'pg-open': await openProgramScreen(); break;
+    case 'pg-close': closeProgramScreen(); break;
+    case 'pg-print': window.print(); break;
+    case 'pg-add-month': formAddProgramMonth(); break;
+    case 'pg-edit-month': formEditProgramMonth(id); break;
+    case 'pg-delete-month': {
+      const m = state.program.find(x => x.id === id);
+      if(!m || !confirm(`Delete ${m.month}?`)) break;
+      state.program = state.program.filter(x => x.id !== id);
+      closeSheet(); renderProgramScreen(); render();
+      await fsDelete('program', id);
+      toast('Deleted');
+      break;
+    }
+    case 'pg-delete-all': {
+      if(!confirm('Delete ENTIRE program?')) break;
+      if(!confirm('Really sure?')) break;
+      setSyncStatus('⏳');
+      for(const m of [...state.program]){ try{ await fsDelete('program', m.id); }catch(e){} }
+      state.program = [];
+      setSyncStatus('☁️');
+      renderProgramScreen(); render();
+      toast('Program deleted');
+      break;
+    }
+    case 'pg-edit-week': formEditProgramWeek(el.dataset.month, parseInt(el.dataset.week)); break;
+    case 'pg-delete-week': {
+      const mid = el.dataset.month; const wk = parseInt(el.dataset.week);
+      const m = state.program.find(x => x.id === mid);
+      if(!m || !confirm(`Delete Week ${wk}?`)) break;
+      m.weeks = (m.weeks || []).filter(w => w.week !== wk);
+      closeSheet(); renderProgramScreen(); render();
+      await fsSave('program', m);
+      toast('Deleted');
+      break;
+    }
+    case 'pg-add-item': formAddProgramItem(el.dataset.month, parseInt(el.dataset.week)); break;
+    case 'pg-edit-item': e.stopPropagation(); formEditProgramItem(el.dataset.month, parseInt(el.dataset.week), el.dataset.item); break;
+    case 'pg-delete-item': {
+      const mid = el.dataset.month; const wk = parseInt(el.dataset.week); const iid = el.dataset.item;
+      const m = state.program.find(x => x.id === mid);
+      if(!m) break;
+      const w = (m.weeks||[]).find(x => x.week === wk);
+      if(!w || !confirm('Delete?')) break;
+      w.items = (w.items||[]).filter(i => i.id !== iid);
+      closeSheet(); renderProgramScreen(); render();
+      await fsSave('program', m);
+      toast('Deleted');
+      break;
+    }
+    case 'pg-import': openSheet('Import Program', `<p style="font-size:13.5px;color:var(--muted);margin:0 0 14px">Snap your nutrition program document. AI reads months, weeks, products.</p><button type="button" class="submit" data-action="pg-import-camera" style="padding:14px;font-size:15px;margin-bottom:8px">📷 Take Photo</button><button type="button" class="submit" style="background:#fff;color:var(--green);border:1.5px solid var(--green);padding:13px;font-size:14px" data-action="pg-import-gallery">🖼 From Gallery</button>`, () => {}); break;
+    case 'pg-import-camera': closeSheet(); setTimeout(() => $('#programDocCamera')?.click(), 150); break;
+    case 'pg-import-gallery': closeSheet(); setTimeout(() => $('#programDocGallery')?.click(), 150); break;
+    case 'pg-import-confirm': {
+      const ms = window._pendingProgram || [];
+      if(!ms.length){ toast('Nothing'); break; }
+      closeSheet();
+      setSyncStatus('⏳');
+      for(const m of ms){
+        const mm = {id:uid('pm'), month:m.month || 'Untitled', weeks:(m.weeks || []).map(w => ({week:w.week || 1, weekStart:w.weekStart || todayISO(), items:(w.items || []).map(i => ({id:uid('pi'), product:i.product || 'Unknown', rate:i.rate || '—', done:false}))}))};
+        state.program.push(mm);
+        await fsSave('program', mm);
+      }
+      setSyncStatus('☁️');
+      window._pendingProgram = null;
+      renderProgramScreen(); render();
+      toast(`Added ${ms.length}`);
+      break;
+    }
 
     case 'pick-theme': appTheme.preset = el.dataset.theme; applyTheme(); await saveTheme(); formData(); break;
     case 'pick-density': appTheme.density = el.dataset.density; applyTheme(); await saveTheme(); formData(); break;
@@ -4376,20 +4508,23 @@ document.addEventListener('click', async (e) => {
     case 'import-toggle-all': { const all = window._pendingImport || []; const any = all.some(e => e._checked); all.forEach(e => e._checked = !any); const l = $('#importList'); if(l) l.innerHTML = all.map((e, i) => importRow(e, i)).join(''); const c = $('#importCount'); if(c) c.textContent = all.filter(e => e._checked).length; break; }
     case 'import-confirm': { const all = window._pendingImport || []; const add = all.filter(e => e._checked); if(!add.length){ toast('Nothing selected'); break; } closeSheet(); setSyncStatus('⏳ Saving'); for(const x of add){ const ev = {id:uid('e'), title:x.title.trim(), date:x.date, type:EVENT_TYPES.includes(x.type) ? x.type : 'agronomy', notes:(x.notes || '').trim(), done:false}; state.events.push(ev); await fsSave('events', ev); } setSyncStatus('☁️ Synced'); window._pendingImport = null; activeTab = 'calendar'; render(); toast(`Added ${add.length}`); break; }
 
-    case 'add-program-month': formAddProgramMonth(); break;
-    case 'edit-program-month': formEditProgramMonth(id); break;
-    case 'delete-program-month': { const m = state.program.find(x => x.id === id); if(!m || !confirm(`Delete ${m.month}?`)) break; state.program = state.program.filter(x => x.id !== id); closeSheet(); render(); await fsDelete('program', id); toast('Deleted'); break; }
-    case 'delete-all-program': { if(!confirm('Delete ENTIRE program?')) break; if(!confirm('Really sure?')) break; closeSheet(); setSyncStatus('⏳'); for(const m of [...state.program]){ try{ await fsDelete('program', m.id); }catch(e){} } state.program = []; setSyncStatus('☁️'); render(); toast('Program deleted'); break; }
-    case 'edit-program-week': formEditProgramWeek(el.dataset.month, parseInt(el.dataset.week)); break;
-    case 'delete-program-week': { const mid = el.dataset.month; const wk = parseInt(el.dataset.week); const m = state.program.find(x => x.id === mid); if(!m || !confirm(`Delete Week ${wk}?`)) break; m.weeks = (m.weeks || []).filter(w => w.week !== wk); closeSheet(); render(); await fsSave('program', m); toast('Deleted'); break; }
-    case 'add-program-item': formAddProgramItem(el.dataset.month, parseInt(el.dataset.week)); break;
-    case 'edit-program-item': e.stopPropagation(); formEditProgramItem(el.dataset.month, parseInt(el.dataset.week), el.dataset.item); break;
-    case 'delete-program-item': { const mid = el.dataset.month; const wk = parseInt(el.dataset.week); const iid = el.dataset.item; const m = state.program.find(x => x.id === mid); if(!m) break; const w = (m.weeks||[]).find(x => x.week === wk); if(!w || !confirm('Delete?')) break; w.items = (w.items||[]).filter(i => i.id !== iid); closeSheet(); render(); await fsSave('program', m); toast('Deleted'); break; }
-    case 'toggle-program': { e.stopPropagation(); const mid = el.dataset.month; const wk = parseInt(el.dataset.week); const iid = el.dataset.item; const m = state.program.find(x => x.id === mid); if(!m) return; const w = (m.weeks||[]).find(x => x.week === wk); if(!w) return; const it = (w.items||[]).find(i => i.id === iid); if(!it) return; it.done = !it.done; render(); await fsSave('program', m); break; }
-    case 'import-program': openSheet('Import Program', `<p style="font-size:13.5px;color:var(--muted);margin:0 0 14px">Snap your nutrition program document. AI reads months, weeks, products.</p><button type="button" class="submit" data-action="import-program-camera" style="padding:14px;font-size:15px;margin-bottom:8px">📷 Take Photo</button><button type="button" class="submit" style="background:#fff;color:var(--green);border:1.5px solid var(--green);padding:13px;font-size:14px" data-action="import-program-gallery">🖼 From Gallery</button>`, () => {}); break;
-    case 'import-program-camera': closeSheet(); setTimeout(() => $('#programDocCamera')?.click(), 150); break;
-    case 'import-program-gallery': closeSheet(); setTimeout(() => $('#programDocGallery')?.click(), 150); break;
-    case 'import-program-confirm': { const ms = window._pendingProgram || []; if(!ms.length){ toast('Nothing'); break; } closeSheet(); setSyncStatus('⏳'); for(const m of ms){ const mm = {id:uid('pm'), month:m.month || 'Untitled', weeks:(m.weeks || []).map(w => ({week:w.week || 1, weekStart:w.weekStart || todayISO(), items:(w.items || []).map(i => ({id:uid('pi'), product:i.product || 'Unknown', rate:i.rate || '—', done:false}))}))}; state.program.push(mm); await fsSave('program', mm); } setSyncStatus('☁️'); window._pendingProgram = null; render(); toast(`Added ${ms.length}`); break; }
+    case 'toggle-program': {
+      e.stopPropagation();
+      const mid = el.dataset.month;
+      const wk = parseInt(el.dataset.week);
+      const iid = el.dataset.item;
+      const m = state.program.find(x => x.id === mid);
+      if(!m) return;
+      const w = (m.weeks||[]).find(x => x.week === wk);
+      if(!w) return;
+      const it = (w.items||[]).find(i => i.id === iid);
+      if(!it) return;
+      it.done = !it.done;
+      render();
+      if(!$('#programScreen').classList.contains('hidden')) renderProgramScreen();
+      await fsSave('program', m);
+      break;
+    }
 
     case 'plant-camera': $('#plantInputCamera').click(); break;
     case 'plant-gallery': $('#plantInputGallery').click(); break;
