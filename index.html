@@ -365,7 +365,6 @@
   .rp-record .rl b{color:var(--text);font-weight:600}
   .rp-record .rweather{font-size:11.5px;color:var(--muted);margin-top:6px;padding-top:6px;border-top:1px dashed var(--line)}
 
-  /* ============ APPLICATION PROGRAM OVERLAY ============ */
   #programScreen{position:fixed;inset:0;z-index:260;background:var(--bg);overflow-y:auto;padding-bottom:100px}
   #programScreen.hidden{display:none}
   .pg-header{
@@ -387,7 +386,6 @@
   .pg-week-label{font-size:12px;font-weight:700;color:var(--green2);text-transform:uppercase;letter-spacing:.4px}
   .pg-week-actions{display:flex;gap:2px}
 
-  /* ============ PLANT PHOTO QUEUE ============ */
   .plant-photo-strip{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 10px;scrollbar-width:none}
   .plant-photo-strip::-webkit-scrollbar{display:none}
   .plant-photo-thumb{position:relative;flex:0 0 auto}
@@ -396,6 +394,15 @@
   .plant-photo-hint{font-size:12px;color:var(--muted);text-align:center;margin:2px 0 6px}
   .plant-banner{background:#e3f2fd;border-left:4px solid var(--blue);padding:10px 12px;border-radius:10px;font-size:13px;line-height:1.5;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
   .plant-banner button{background:var(--blue);color:#fff;border:0;padding:8px 14px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;flex:0 0 auto}
+
+  /* ============ PHASE 6 — Plant chat upgrades ============ */
+  .chat-photo-chip{background:#f0f4f0;border:1px dashed #b9c7bb;border-radius:10px;padding:8px 12px;font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:6px;margin-top:6px}
+  .chat-photo-thumb{max-width:240px;border-radius:10px;margin-bottom:6px;cursor:zoom-in;display:block}
+  .chat-msg-actions{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+  .chat-mini-btn{background:#fff;border:1.5px solid var(--line);color:var(--text);border-radius:9px;padding:6px 10px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1.2;display:inline-flex;align-items:center;gap:4px}
+  .chat-mini-btn:active{background:#eef3ee}
+  .chat-mini-btn.save{border-color:var(--green2);color:var(--green2)}
+  .chat-mini-btn.save-note{border-color:var(--blue);color:var(--blue)}
 
   @media print{
     body{background:#fff}
@@ -549,8 +556,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
   getFirestore, collection, doc, getDocs, setDoc, deleteDoc,
-  enableIndexedDbPersistence, serverTimestamp,
-  onSnapshot, query, orderBy, limit
+  serverTimestamp, onSnapshot, query, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import {
   getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider,
@@ -572,10 +578,6 @@ const fbApp = initializeApp(firebaseConfig);
 const db = getFirestore(fbApp);
 const auth = getAuth(fbApp);
 setPersistence(auth, browserLocalPersistence).catch(()=>{});
-enableIndexedDbPersistence(db).catch(err => {
-  if(err.code === 'failed-precondition') console.warn('Offline cache: multiple tabs');
-  else if(err.code === 'unimplemented') console.warn('Offline cache: not supported');
-});
 
 const PROXY_URL = 'https://rbgcgk.vercel.app/api/proxy';
 
@@ -701,11 +703,18 @@ let rpTab = 'compliance';
 let rpFrom = null;
 let rpTo = null;
 
-/* ============ PHASE 5 — Plant multi-photo state ============ */
 const PLANT_MAX_PHOTOS = 4;
-let _plantPhotoQueue = [];       // in-flight capture queue (data URLs)
-let _plantPhotoQueueDirty = false; // true if queue changed since last identify
-let _plantLastResult = null;     // last AI result for the current in-flight capture
+let _plantPhotoQueue = [];
+let _plantPhotoQueueDirty = false;
+let _plantLastResult = null;
+
+/* ============ PHASE 6 — Plant chat state ============ */
+let _activePlantChatId = null;       // chat doc id currently open in the sheet
+let _activePlantId = null;           // plant id currently open in the sheet
+const CHAT_PHOTO_DB = 'rbgc_gk_chat';
+const CHAT_PHOTO_STORE = 'photos';
+let _chatPhotoDbPromise = null;
+const COMBINED_PHOTO_CAP = 8;        // 4 ID + 4 chat-saved
 
 const _urlParams = new URLSearchParams(window.location.search);
 let qrMode = _urlParams.get('qr');
@@ -756,6 +765,56 @@ function setSyncStatus(txt, isErr){
   if(!b) return;
   b.textContent = txt;
   b.style.background = isErr ? 'rgba(198,40,40,.35)' : 'rgba(255,255,255,.15)';
+}
+
+/* ============ PHASE 6 — IndexedDB helpers ============ */
+function openChatPhotoDb(){
+  if(_chatPhotoDbPromise) return _chatPhotoDbPromise;
+  _chatPhotoDbPromise = new Promise((resolve, reject) => {
+    if(!('indexedDB' in window)){ reject(new Error('IndexedDB not supported')); return; }
+    const req = indexedDB.open(CHAT_PHOTO_DB, 1);
+    req.onupgradeneeded = (e) => {
+      const dbx = e.target.result;
+      if(!dbx.objectStoreNames.contains(CHAT_PHOTO_STORE)){
+        dbx.createObjectStore(CHAT_PHOTO_STORE, { keyPath: 'id' });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error || new Error('IndexedDB open failed'));
+  });
+  return _chatPhotoDbPromise;
+}
+
+async function putChatPhoto(id, dataUrl){
+  const dbx = await openChatPhotoDb();
+  return new Promise((resolve, reject) => {
+    const tx = dbx.transaction(CHAT_PHOTO_STORE, 'readwrite');
+    tx.objectStore(CHAT_PHOTO_STORE).put({ id, dataUrl, savedAt: Date.now() });
+    tx.oncomplete = () => resolve(true);
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function getChatPhoto(id){
+  if(!id) return null;
+  const dbx = await openChatPhotoDb();
+  return new Promise((resolve, reject) => {
+    const tx = dbx.transaction(CHAT_PHOTO_STORE, 'readonly');
+    const req = tx.objectStore(CHAT_PHOTO_STORE).get(id);
+    req.onsuccess = () => resolve(req.result ? req.result.dataUrl : null);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function delChatPhoto(id){
+  if(!id) return;
+  const dbx = await openChatPhotoDb();
+  return new Promise((resolve) => {
+    const tx = dbx.transaction(CHAT_PHOTO_STORE, 'readwrite');
+    tx.objectStore(CHAT_PHOTO_STORE).delete(id);
+    tx.oncomplete = () => resolve(true);
+    tx.onerror = () => resolve(false);
+  });
 }
 
 function weatherCode(code){
@@ -1021,9 +1080,6 @@ async function saveTurfAreas(){
   }, { merge:true });
 }
 
-/* =========================================================
-   CHEM LOADING + SAVING
-   ========================================================= */
 async function loadChemicals(){
   try{
     const snap = await getDocs(collection(db, 'clubs', 'rbgc', 'chemicals'));
@@ -1082,9 +1138,6 @@ async function saveSprayAreas(){
   }, { merge:true });
 }
 
-/* =========================================================
-   Chem helpers
-   ========================================================= */
 function chemStatusFlags(chem){
   const flags = [];
   if(chem.expiryDate){
@@ -1152,9 +1205,6 @@ async function deductStock(chem, amount){
   return true;
 }
 
-/* =========================================================
-   Barcode scanner
-   ========================================================= */
 async function openBarcodeScanner(target){
   _scanTarget = target;
   const modal = $('#scanModal');
@@ -1250,9 +1300,6 @@ function openSprayWithProduct(chem){
   formSpray(seed);
 }
 
-/* =========================================================
-   Label photo handler for chemicals
-   ========================================================= */
 async function handleChemPhoto(inputEl){
   const file = inputEl.files?.[0]; if(!file) return;
   try{
@@ -1282,9 +1329,6 @@ function refreshChemPhotoStrip(){
   ).join('');
 }
 
-/* =========================================================
-   Weather card (dashboard)
-   ========================================================= */
 function renderWeatherCard(){
   if(!weatherData){
     return `
@@ -1357,9 +1401,6 @@ function renderChemAlertCard(){
   </div>`;
 }
 
-/* =========================================================
-   Weather full screen
-   ========================================================= */
 async function openWeatherScreen(){
   const screen = $('#weatherScreen');
   const body = $('#wxBody');
@@ -1684,9 +1725,6 @@ Be specific. Use Australian common names. Bullet points, no waffle. Around 220 w
   }
 }
 
-/* =========================================================
-   APPLICATION PROGRAM OVERLAY
-   ========================================================= */
 async function openProgramScreen(){
   const screen = $('#programScreen');
   screen.classList.remove('hidden');
@@ -1926,9 +1964,6 @@ function openProgramImportSheet(months, dataUrl){
   overlay.classList.remove('hidden'); document.body.style.overflow='hidden';
 }
 
-/* =========================================================
-   REPORTS — Phase 4
-   ========================================================= */
 function openReportScreen(){
   const screen = $('#reportScreen');
   if(!rpFrom){
@@ -2195,9 +2230,6 @@ function reportStock(){
   return html;
 }
 
-/* =========================================================
-   Theme, user role, loaders
-   ========================================================= */
 const THEMES = [
   {id:'forest',name:'Forest',green:'#1b5e20',green2:'#2e7d32',lime:'#7cb342'},
   {id:'ocean',name:'Ocean',green:'#0d47a1',green2:'#1565c0',lime:'#42a5f5'},
@@ -2870,9 +2902,6 @@ function jobItem(j){
   return `<div class="item"><div class="tick ${done?'on':''}" data-action="toggle-job" data-id="${j.id}">${done?'✓':''}</div><div class="item-body"><div class="item-title ${done?'done':''}">${esc(j.title)}</div><div class="item-meta">${j.area ? `<span class="pill p-area">${esc(j.area)}</span>` : ''}${j.type ? `<span class="pill p-type">${esc(j.type)}</span>` : ''}${j.priority ? `<span class="pill p-${j.priority.toLowerCase()}">${esc(j.priority)}</span>` : ''}${overdue ? `<span class="pill p-overdue">Overdue</span>` : ''}${j.due ? `<span>${prettyDate(j.due)}</span>` : ''}${j.assignee ? `<span>· ${esc(j.assignee)}</span>` : ''}</div>${j.notes ? `<div class="item-note">${esc(j.notes)}</div>` : ''}</div><button class="del" data-action="del-job" data-id="${j.id}">✕</button></div>`;
 }
 
-/* =========================================================
-   CHEM VIEW
-   ========================================================= */
 function viewChem(){
   const filtered = chemFilter === 'All' ? chemicals : chemicals.filter(c => c.type === chemFilter);
   const alertCount = chemicals.reduce((n,c) => n + chemStatusFlags(c).length, 0);
@@ -3380,9 +3409,6 @@ function evItem(e){
   return `<div class="item"><div class="tick ${e.done?'on':''}" data-action="toggle-event" data-id="${e.id}">${e.done?'✓':''}</div><div class="item-body"><div class="item-title ${e.done?'done':''}">${esc(e.title)}</div><div class="item-meta"><span class="pill p-type">${EVENT_LABEL[e.type] || e.type}</span><span>${prettyDate(e.date)}</span></div>${e.notes ? `<div class="item-note">${esc(e.notes)}</div>` : ''}</div><button class="del" data-action="del-event" data-id="${e.id}">✕</button></div>`;
 }
 
-/* =========================================================
-   PLANT ID — Phase 5 (multi-photo)
-   ========================================================= */
 function viewPlant(){
   const history = [...(state.plantIds || [])].sort((a,b) => (b.created||'').localeCompare(a.created||''));
   const todayCount = history.filter(p => (p.created||'').slice(0,10) === todayISO()).length;
@@ -3497,7 +3523,8 @@ async function handleChatPhoto(inputEl){
   const file = inputEl.files?.[0]; if(!file) return;
   try{
     toast('Uploading…');
-    const url = await compressImage(file, 900, 0.72);
+    // Phase 6 — downscale crew chat photos to 640px/0.6
+    const url = await compressImage(file, 640, 0.6);
     await sendChatMessage('', url);
     inputEl.value = '';
   }catch(e){ toast('Photo failed'); inputEl.value=''; }
@@ -3574,7 +3601,6 @@ async function compressImage(file, maxSize = 900, quality = 0.75){
   });
 }
 
-/* Phase 5 — camera adds ONE photo to queue */
 async function handlePlantPhoto(inputEl){
   const file = inputEl.files?.[0]; if(!file) return;
   if(_plantPhotoQueue.length >= PLANT_MAX_PHOTOS){
@@ -3599,7 +3625,6 @@ async function handlePlantPhoto(inputEl){
   }
 }
 
-/* Phase 5 — gallery adds UP TO remaining slots, in one go */
 async function handlePlantGallery(inputEl){
   const files = Array.from(inputEl.files || []);
   inputEl.value = '';
@@ -3647,11 +3672,10 @@ async function identifyPlantMultiple(dataUrls){
   try{ return JSON.parse(clean); }catch(e){ throw new Error('AI returned unexpected format'); }
 }
 
-/* Called from the Identify button */
 async function runIdentifyFromQueue(){
   if(!_plantPhotoQueue.length){ toast('Add at least one photo'); return; }
   const snapshot = [..._plantPhotoQueue];
-  openPlantSheet(snapshot, null, true);   // loading view with all queued photos
+  openPlantSheet(snapshot, null, true);
   try{
     const result = await identifyPlantMultiple(snapshot);
     _plantLastResult = result;
@@ -3663,11 +3687,8 @@ async function runIdentifyFromQueue(){
   }
 }
 
-/* Called from the result sheet when the user taps Re-analyse after adding/removing photos */
 async function runReanalyseFromResult(plantId){
-  // plantId null → in-flight new plant; string → existing saved plant
   if(plantId){
-    // Saved plant: re-analyse against the photos stored on the record
     await reidentifyPlant(plantId);
     return;
   }
@@ -3685,7 +3706,6 @@ async function runReanalyseFromResult(plantId){
   }
 }
 
-/* The result sheet. Accepts either an array of photos or a single data URL. */
 function openPlantSheet(photosOrDataUrl, result, loading, errorMsg, plantId){
   const overlay = $('#overlay'); const sheetForm = $('#sheetForm');
   $('#sheetTitle').textContent = loading ? 'Identifying…' : 'Identification';
@@ -3720,7 +3740,6 @@ function openPlantSheet(photosOrDataUrl, result, loading, errorMsg, plantId){
     photosHtml = `<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;margin-bottom:8px">${galleryPhotos.map((p, i) => `<div style="position:relative;flex:0 0 auto"><img src="${p}" style="height:150px;border-radius:12px;object-fit:cover;cursor:zoom-in;display:block" data-action="view-photo" data-src="${p}"><span style="position:absolute;top:6px;left:6px;background:rgba(0,0,0,.55);color:#fff;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:20px">${i+1}/${galleryPhotos.length}</span></div>`).join('')}</div>`;
   }
 
-  // Banner shown when photos have changed since the last AI result (Q1 → Option B)
   let bannerHtml = '';
   if(!plantId && _plantPhotoQueueDirty && _plantLastResult){
     bannerHtml = `<div class="plant-banner">📸 Photo set changed — old answer below. Re-analyse to use all angles?<button type="button" data-action="plant-reanalyse">🔍 Re-analyse</button></div>`;
@@ -3793,7 +3812,6 @@ async function refillFreshPlant(cn, bn){
     const raw = data?.choices?.[0]?.message?.content || '';
     const clean = raw.replace(/^```json\s*|```$/g, '').trim();
     const parsed = JSON.parse(clean);
-    // Use the current queue as the photo set for this in-flight plant
     const photos = [..._plantPhotoQueue];
     _plantLastResult = parsed;
     openPlantSheet(photos, parsed, false);
@@ -3965,6 +3983,7 @@ function showReidentifyResults(plant, results){
   sheetForm.innerHTML = `<div style="font-size:13px;color:var(--muted);margin-bottom:12px">Tap to apply. Current: <b>${esc(plant.name)}</b></div>${cards}<button type="button" class="submit" data-action="view-plant" data-id="${plant.id}" style="background:#eef3ee;color:var(--text)">Cancel</button>`;
 }
 
+/* ============ PHASE 6 — Plant chat with photos ============ */
 async function openPlantChat(plantId){
   const plant = state.plantIds.find(p => p.id === plantId); if(!plant) return;
   let chat = state.plantChats.find(c => c.plantId === plantId);
@@ -3973,14 +3992,30 @@ async function openPlantChat(plantId){
     state.plantChats.push(chat);
     await fsSave('plantChats', chat);
   }
-  renderPlantChat(plant, chat);
+  _activePlantChatId = chat.id;
+  _activePlantId = plantId;
+  await renderPlantChat(plant, chat);
 }
 
-function renderPlantChat(plant, chat){
+async function renderPlantChat(plant, chat){
   const overlay = $('#overlay'); const sheetForm = $('#sheetForm');
   $('#sheetTitle').textContent = 'Ask about this plant';
   sheetForm.onsubmit = (ev) => ev.preventDefault();
-  const msgs = chat.messages.length ? chat.messages.map(m => chatBubble(m)).join('') : `<div style="text-align:center;color:var(--muted);padding:26px 12px;font-size:13px"><div style="font-size:30px;margin-bottom:8px">💬</div>Ask anything about this plant</div>`;
+
+  // Pre-resolve every photo message that has one
+  const resolved = [];
+  for(const m of chat.messages){
+    let photoSrc = null;
+    if(m.hasPhoto && m.photoMsgId){
+      try{ photoSrc = await getChatPhoto(m.photoMsgId); }catch(e){ photoSrc = null; }
+    }
+    resolved.push({ m, photoSrc });
+  }
+
+  const msgs = resolved.length
+    ? resolved.map(({m, photoSrc}) => chatBubbleWithActions(m, photoSrc, plant.id)).join('')
+    : `<div style="text-align:center;color:var(--muted);padding:26px 12px;font-size:13px"><div style="font-size:30px;margin-bottom:8px">💬</div>Ask anything about this plant</div>`;
+
   sheetForm.innerHTML = `
     <div style="display:flex;gap:10px;align-items:center;padding:0 0 12px;border-bottom:1px solid var(--line);margin-bottom:14px">
       ${plant.thumb?`<img src="${plant.thumb}" style="width:46px;height:46px;border-radius:9px;object-fit:cover">`:''}
@@ -3989,9 +4024,12 @@ function renderPlantChat(plant, chat){
     </div>
     <div id="chatMessages" style="min-height:180px;max-height:50vh;overflow-y:auto;padding-right:4px;margin-bottom:12px">${msgs}</div>
     <div style="display:flex;gap:8px;position:sticky;bottom:0;background:#fff;padding:10px 0 4px;border-top:1px solid var(--line)">
+      <button type="button" data-action="plant-chat-photo" data-plant="${plant.id}" style="flex:0 0 46px;height:46px;border-radius:11px;border:1.5px solid var(--line);background:#f7faf7;color:var(--green2);font-size:20px;cursor:pointer;font-family:inherit;display:grid;place-items:center;padding:0">📷</button>
       <input id="chatInput" placeholder="Ask a question..." style="flex:1">
       <button type="button" class="submit" style="margin:0;width:auto;padding:11px 18px;font-size:14px" data-action="chat-send-plant" data-plant="${plant.id}">Send</button>
-    </div>`;
+    </div>
+    <input type="file" id="plantChatCamera" accept="image/*" capture="environment" style="display:none">
+    <input type="file" id="plantChatGallery" accept="image/*" style="display:none">`;
   overlay.classList.remove('hidden'); document.body.style.overflow='hidden';
   setTimeout(() => {
     const el = $('#chatInput');
@@ -4000,15 +4038,35 @@ function renderPlantChat(plant, chat){
   }, 80);
 }
 
-function scrollChatBottom(){ const el = $('#chatMessages'); if(el) el.scrollTop = el.scrollHeight; }
-function chatBubble(m){
+function chatBubbleWithActions(m, photoSrc, plantId){
   const isU = m.role === 'user';
-  return `<div style="display:flex;justify-content:${isU?'flex-end':'flex-start'};margin-bottom:9px"><div style="max-width:82%;padding:9px 13px;border-radius:15px;font-size:13.5px;line-height:1.5;${isU?'background:var(--green);color:#fff;border-bottom-right-radius:5px':'background:#eef3ee;color:var(--text);border-bottom-left-radius:5px'}">${esc(m.content).replace(/\n/g,'<br>')}</div></div>`;
+  const content = esc(m.content || '').replace(/\n/g,'<br>');
+
+  let body;
+  if(photoSrc){
+    body = `<img src="${photoSrc}" class="chat-photo-thumb" data-action="view-photo" data-src="${photoSrc}" alt="">${content ? `<div>${content}</div>` : ''}`;
+  } else if(m.hasPhoto){
+    body = `<div class="chat-photo-chip">🖼 [photo not on this device]</div>${content ? `<div style="margin-top:6px">${content}</div>` : ''}`;
+  } else {
+    body = content;
+  }
+
+  let actions = '';
+  if(isU && m.hasPhoto){
+    actions = `<div class="chat-msg-actions"><button type="button" class="chat-mini-btn save" data-action="plant-chat-save-photo" data-plant="${plantId}" data-msg="${m.id||''}">💾 Save photo to plant record</button></div>`;
+  }
+  if(!isU && m.content){
+    actions = `<div class="chat-msg-actions"><button type="button" class="chat-mini-btn save-note" data-action="plant-chat-save-note" data-plant="${plantId}" data-msg="${m.id||''}">📝 Save answer to notes</button></div>`;
+  }
+
+  return `<div style="display:flex;justify-content:${isU?'flex-end':'flex-start'};margin-bottom:9px"><div style="max-width:82%;padding:9px 13px;border-radius:15px;font-size:13.5px;line-height:1.5;${isU?'background:var(--green);color:#fff;border-bottom-right-radius:5px':'background:#eef3ee;color:var(--text);border-bottom-left-radius:5px'}">${body}${actions}</div></div>`;
 }
+
+function scrollChatBottom(){ const el = $('#chatMessages'); if(el) el.scrollTop = el.scrollHeight; }
 
 async function askAboutPlant(plant, history){
   const sp = `You are a turf management assistant for golf courses in SE Queensland, Australia.\n\n${ausContextBlock()}\n\nPlant: ${plant.name} (${plant.botanicalName})\nCategory: ${plant.category}\nDescription: ${plant.description}\nAction: ${plant.action}\nProducts: ${plant.products}\nSafety: ${plant.safety}\n\nAnswer follow-ups. Be practical, concise, specific to SE QLD. Use AU common names and APVMA products. Under 4 sentences.`;
-  const messages = [{role:'system', content:sp}, ...history.map(m => ({role:m.role, content:m.content}))];
+  const messages = [{role:'system', content:sp}, ...history.map(m => ({role:m.role, content: m.content || (m.hasPhoto ? '[photo attached]' : '')}))];
   const res = await fetch(PROXY_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({messages})});
   if(!res.ok) throw new Error(`Proxy ${res.status}`);
   const data = await res.json();
@@ -4449,12 +4507,66 @@ document.addEventListener('click', async (e) => {
     case 'plant-identify-now': await runIdentifyFromQueue(); break;
     case 'plant-reanalyse': await runReanalyseFromResult(null); break;
     case 'plant-add-angle': {
-      // Close the result sheet, keep the queue, re-open camera
       closeSheet();
       setTimeout(() => {
         if(_plantPhotoQueue.length >= PLANT_MAX_PHOTOS){ toast(`Max ${PLANT_MAX_PHOTOS} photos`); return; }
         $('#plantInputCamera').click();
       }, 220);
+      break;
+    }
+
+    /* ===== PHASE 6 — Plant chat photo actions ===== */
+    case 'plant-chat-photo': {
+      openSheet('Send Photo', `
+        <p style="font-size:13px;color:var(--muted);margin:0 0 14px">Photos in this chat are stored locally on this device only. Other people viewing this chat will see a "[photo not on this device]" placeholder. This keeps your Firestore storage small.</p>
+        <button type="button" class="submit" data-action="plant-chat-photo-camera" style="padding:14px;font-size:15px;margin-bottom:8px">📷 Take Photo</button>
+        <button type="button" class="submit" style="background:#fff;color:var(--green);border:1.5px solid var(--green);padding:13px;font-size:14px" data-action="plant-chat-photo-gallery">🖼 From Gallery</button>`, () => {});
+      break;
+    }
+    case 'plant-chat-photo-camera': closeSheet(); setTimeout(() => { $('#plantChatCamera')?.click(); if(!$('#overlay').classList.contains('hidden')) {} }, 200); break;
+    case 'plant-chat-photo-gallery': closeSheet(); setTimeout(() => $('#plantChatGallery')?.click(), 200); break;
+
+    case 'plant-chat-save-photo': {
+      const pid = el.dataset.plant;
+      const mid = el.dataset.msg;
+      const plant = state.plantIds.find(p => p.id === pid);
+      const chat = state.plantChats.find(c => c.plantId === pid);
+      if(!plant || !chat) break;
+      const msg = chat.messages.find(m => m.id === mid);
+      if(!msg || !msg.photoMsgId){ toast('No photo to save'); break; }
+      const photo = await getChatPhoto(msg.photoMsgId);
+      if(!photo){ toast('Photo not on this device'); break; }
+      const existing = (plant.photos && plant.photos.length) || 0;
+      if(existing >= COMBINED_PHOTO_CAP){
+        if(!confirm(`This plant already has ${existing} photos (cap is ${COMBINED_PHOTO_CAP}). Add anyway?`)) break;
+      }
+      plant.photos = Array.isArray(plant.photos) ? [...plant.photos] : [];
+      plant.photos.push(photo);
+      if(!plant.thumb) plant.thumb = photo;
+      try{
+        await fsSave('plantIds', plant);
+        toast('Saved to plant record ✓');
+        if(!$('#overlay').classList.contains('hidden')) await renderPlantChat(plant, chat);
+      }catch(err){ toast('Save failed'); }
+      break;
+    }
+
+    case 'plant-chat-save-note': {
+      const pid = el.dataset.plant;
+      const mid = el.dataset.msg;
+      const plant = state.plantIds.find(p => p.id === pid);
+      const chat = state.plantChats.find(c => c.plantId === pid);
+      if(!plant || !chat) break;
+      const msg = chat.messages.find(m => m.id === mid);
+      if(!msg || !msg.content){ toast('No text to save'); break; }
+      const stamp = new Date().toLocaleString('en-AU',{day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'});
+      const header = `— AI note · ${stamp} —`;
+      const existingNotes = plant.notes ? plant.notes + '\n\n' : '';
+      plant.notes = `${existingNotes}${header}\n${msg.content}`;
+      try{
+        await fsSave('plantIds', plant);
+        toast('Saved to notes ✓');
+      }catch(err){ toast('Save failed'); }
       break;
     }
 
@@ -4487,7 +4599,6 @@ document.addEventListener('click', async (e) => {
       const dl = $('#plantSaveData');
       if(!dl){ window._plantSaving = false; break; }
       let result; try{ result = JSON.parse(dl.textContent); }catch(e){ window._plantSaving = false; break; }
-      // Phase 5 — save all photos from the queue
       const photos = [..._plantPhotoQueue];
       const thumb = photos[0] || null;
       const rec = { id:uid('pl'), name:result.name || 'Unknown', botanicalName:result.botanicalName || 'Unknown', category:result.category || 'Unknown', confidence:result.confidence || 0, description:result.description || '', action:result.action || '', products:result.products || '', safety:result.safety || '', photos, thumb, created:new Date().toISOString() };
@@ -4509,7 +4620,21 @@ document.addEventListener('click', async (e) => {
       break;
     }
 
-    case 'delete-plant-detail': if(!confirm('Delete plant?')) break; state.plantIds = state.plantIds.filter(x => x.id !== id); state.plantChats = state.plantChats.filter(c => c.plantId !== id); closeSheet(); render(); await fsDelete('plantIds', id); toast('Deleted'); break;
+    case 'delete-plant-detail': {
+      if(!confirm('Delete plant?')) break;
+      const chat = state.plantChats.find(c => c.plantId === id);
+      if(chat && chat.messages && chat.messages.length){
+        for(const m of chat.messages){
+          if(m.photoMsgId){ try{ await delChatPhoto(m.photoMsgId); }catch(e){} }
+        }
+      }
+      state.plantIds = state.plantIds.filter(x => x.id !== id);
+      state.plantChats = state.plantChats.filter(c => c.plantId !== id);
+      closeSheet(); render();
+      await fsDelete('plantIds', id);
+      toast('Deleted');
+      break;
+    }
 
     case 'edit-plant': openPlantEditForm(id); break;
     case 'edit-add-camera': $('#editPhotoCamera')?.click(); break;
@@ -4542,7 +4667,7 @@ document.addEventListener('click', async (e) => {
   }
 });
 
-document.addEventListener('change', (e) => {
+document.addEventListener('change', async (e) => {
   if(e.target.id === 'chemPhotoCamera' || e.target.id === 'chemPhotoGallery') handleChemPhoto(e.target);
   if(e.target.id === 'plantInputCamera') handlePlantPhoto(e.target);
   if(e.target.id === 'plantInputGallery') handlePlantGallery(e.target);
@@ -4551,7 +4676,37 @@ document.addEventListener('change', (e) => {
   if(e.target.id === 'programDocCamera' || e.target.id === 'programDocGallery') handleProgramPhoto(e.target);
   if(e.target.id === 'chatPhotoCamera' || e.target.id === 'chatPhotoGallery') handleChatPhoto(e.target);
   if(e.target.id === 'bgPhotoCamera' || e.target.id === 'bgPhotoGallery') handleBgPhoto(e.target);
+
+  // Phase 6 — plant chat photo inputs
+  if(e.target.id === 'plantChatCamera') await handlePlantChatPhoto(e.target, 'camera');
+  if(e.target.id === 'plantChatGallery') await handlePlantChatPhoto(e.target, 'gallery');
 });
+
+async function handlePlantChatPhoto(inputEl, source){
+  const file = inputEl.files?.[0];
+  inputEl.value = '';
+  if(!file) return;
+  const pid = _activePlantId;
+  const chatId = _activePlantChatId;
+  if(!pid || !chatId){ toast('Chat not open'); return; }
+  const chat = state.plantChats.find(c => c.id === chatId);
+  const plant = state.plantIds.find(p => p.id === pid);
+  if(!chat || !plant){ toast('Chat not found'); return; }
+  try{
+    toast('Compressing…');
+    const url = await compressImage(file, 900, 0.72);
+    const msgId = uid('pcm');
+    const photoMsgId = 'chatphoto_' + msgId;
+    await putChatPhoto(photoMsgId, url);
+    const msg = { id: msgId, role:'user', content:'', hasPhoto:true, photoMsgId, ts:Date.now() };
+    chat.messages.push(msg);
+    await fsSave('plantChats', chat);
+    await renderPlantChat(plant, chat);
+  }catch(err){
+    console.error(err);
+    toast('Photo failed');
+  }
+}
 
 document.addEventListener('visibilitychange', () => {
   if(document.visibilityState === 'visible' && currentUser) checkAndNotify();
